@@ -11,9 +11,13 @@ jobs:
   # Mirrors the house commitlint header pattern; see the commit-and-release skill.
   pr-title:
     name: PR title
-    # Release-please opens its own PR titled `chore(main): release x.y.z`; that is its
-    # convention, not ours, so leave it alone.
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    # Bots do not follow our commit convention: Renovate opens "Configure Renovate" and
+    # "Update dependency x", release-please opens "chore(main): release x.y.z". Both are
+    # their conventions, not ours.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
     steps:
       - name: Check conventional commit format
