@@ -1,0 +1,32 @@
+{
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+	"release-type": "node",
+	"bump-minor-pre-major": true,
+	"bump-patch-for-minor-pre-major": true,
+	"include-v-in-tag": true,
+	"include-component-in-tag": false,
+	"pull-request-header": ":gem: Automated Release",
+	"packages": {
+		".": {
+			"release-type": "node",
+			"package-name": "@linchpinagency/skills",
+			"extra-files": [
+				"README.md"
+			]
+		}
+	},
+	"changelog-sections": [
+		{ "type": "feat", "section": "Features ✨" },
+		{ "type": "fix", "section": "Bug Fixes 🐛" },
+		{ "type": "improve", "section": "Improvements 🎨" },
+		{ "type": "docs", "section": "Documentation 📚" },
+		{ "type": "refactor", "section": "Refactoring ♻️" },
+		{ "type": "perf", "section": "Performance ⚡️" },
+		{ "type": "style", "section": "Styles 💄" },
+		{ "type": "test", "section": "Tests 🧪" },
+		{ "type": "chore", "section": "Miscellaneous 🧹" },
+		{ "type": "revert", "section": "Reverts ⏪️" },
+		{ "type": "ci", "section": "Continuous Integration 👷", "hidden": true },
+		{ "type": "build", "section": "Build System 📦", "hidden": true }
+	]
+}

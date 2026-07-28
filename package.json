@@ -1,0 +1,44 @@
+{
+  "name": "@linchpinagency/skills",
+  "version": "0.1.2",
+  "description": "Linchpin's library of reusable AI agent skills for WordPress projects.",
+  "type": "module",
+  "bin": {
+    "skills": "bin/install.mjs"
+  },
+  "files": [
+    "bin",
+    "skills",
+    "upstream.json",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "list": "node bin/install.mjs --list",
+    "validate": "node scripts/validate-skills.mjs",
+    "test": "npm run validate",
+    "prepublishOnly": "npm run validate"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "github-copilot",
+    "agent-skills",
+    "wordpress",
+    "wordpress-studio"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linchpin/skills.git"
+  },
+  "homepage": "https://github.com/linchpin/skills#readme",
+  "bugs": {
+    "url": "https://github.com/linchpin/skills/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "GPL-2.0-or-later"
+}

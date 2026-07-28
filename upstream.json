@@ -1,0 +1,20 @@
+{
+  "_comment": "Base-layer skills vendored from upstream at install time, installed alongside the portable Linchpin skills in ./skills. Edit `skills` below to curate which generic skills ship. Pin `ref` to a commit SHA (upstream has no releases); bump it deliberately and re-test. Upstream is GPL-2.0-or-later; redistribution is fine with attribution (see README).",
+  "sources": [
+    {
+      "name": "WordPress/agent-skills",
+      "repo": "WordPress/agent-skills",
+      "ref": "aa735ea7111c7924ee988306bcef70439e17dec9",
+      "license": "GPL-2.0-or-later",
+      "skills": [
+        "wp-block-development",
+        "wp-block-themes",
+        "wp-interactivity-api",
+        "wp-performance",
+        "wp-wpcli-and-ops",
+        "wp-plugin-development",
+        "wp-rest-api"
+      ]
+    }
+  ]
+}

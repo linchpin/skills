@@ -1,0 +1,11 @@
+node_modules/
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/
+*.tgz
+
+# Agent tooling — local, per-machine, and never shared
+.claude/settings.local.json
+.gstack/

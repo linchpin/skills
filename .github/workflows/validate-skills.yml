@@ -1,0 +1,60 @@
+name: Validate skills
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  # Squash merges use the PR title as the commit message, and release-please builds
+  # CHANGELOG.md from those messages — so a malformed title quietly corrupts the changelog.
+  # Mirrors the house commitlint header pattern; see the commit-and-release skill.
+  pr-title:
+    name: PR title
+    # Release-please opens its own PR titled `chore(main): release x.y.z`; that is its
+    # convention, not ours, so leave it alone.
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check conventional commit format
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^(improve|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|update)\((([A-Z]+-[0-9]+)|NO-TASK|#[0-9]+|main)\)!?: .+'
+          if echo "$TITLE" | grep -Eq "$PATTERN"; then
+            echo "OK: $TITLE"
+          else
+            echo "::error::PR title does not match the commit convention: $TITLE"
+            echo "Expected: type(LINCHPIN-1234|NO-TASK|#12): Subject in sentence case"
+            echo "Types: improve build chore ci docs feat fix perf refactor revert style test update"
+            echo "The scope is required — it carries the ClickUp key. See the commit-and-release skill."
+            exit 1
+          fi
+
+  validate:
+    name: Skill standard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Enforces skills/write-a-linchpin-skill/SKILL.md: frontmatter, required sections,
+      # portability, referenced files, and the README catalog.
+      - name: Validate skill packages
+        run: node scripts/validate-skills.mjs
+
+      # The installer is the only executable in the package; a syntax error there breaks
+      # every `npx @linchpinagency/skills` run.
+      - name: Smoke-test the installer
+        run: |
+          node bin/install.mjs --list
+          mkdir -p /tmp/install-smoke
+          cd /tmp/install-smoke
+          node "$GITHUB_WORKSPACE/bin/install.mjs" --skip-upstream --agent all
+          test -d .claude/skills/task-tracking
+          test -d .codex/skills/task-tracking
+          test -d .cursor/skills/task-tracking
+          test -d .agents/skills/task-tracking
