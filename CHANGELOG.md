@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.4](https://github.com/linchpin/skills/compare/v0.1.3...v0.1.4) (2026-07-28)
+
+
+### Miscellaneous 🧹
+
+* **deps:** update dependency node to v24 ([#7](https://github.com/linchpin/skills/issues/7)) ([c045a11](https://github.com/linchpin/skills/commit/c045a11a3231b71e5a365aa53e82238fe5b66749))
+* **deps:** update googleapis/release-please-action action to v5 ([#8](https://github.com/linchpin/skills/issues/8)) ([f34e390](https://github.com/linchpin/skills/commit/f34e39095383f789bf9b961c5b40c2d22a0c5ede))
+
 ## [0.1.3](https://github.com/linchpin/skills/compare/v0.1.2...v0.1.3) (2026-07-28)
 
 
