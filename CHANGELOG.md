@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.3](https://github.com/linchpin/skills/compare/v0.1.2...v0.1.3) (2026-07-28)
+
+
+### Miscellaneous 🧹
+
+* **deps:** update actions/checkout action to v7 ([7d89676](https://github.com/linchpin/skills/commit/7d89676f87aa2be202bd22c7f9965fb07866be0c))
+* **deps:** update actions/checkout action to v7 ([df27096](https://github.com/linchpin/skills/commit/df27096962a6dc3f1440fa955b58d5f11ac2bb2e))
+* **deps:** update actions/setup-node action to v7 ([990c441](https://github.com/linchpin/skills/commit/990c4413c1dfad53a992eb1aad4c3028638d5933))
+* **deps:** update actions/setup-node action to v7 ([6cc5a7c](https://github.com/linchpin/skills/commit/6cc5a7c7cfad1afa097c5d845e80219693c4a28c))
+
 ## 0.1.2
 
 Initial public release. This repository was seeded from Linchpin's internal skills library,
