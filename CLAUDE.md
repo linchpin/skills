@@ -34,9 +34,17 @@ node <repo>/bin/install.mjs                          # also fetches the pinned u
 
 Never test with `--global` — that overwrites `~/.claude/skills`.
 
-Publishing (maintainers, from `main`): `npm version patch|minor|major && npm publish`. The
-package ships only `bin/`, `skills/`, `upstream.json`, `README.md` (`files` in
+**Publishing is automated — never `npm version` or `npm publish` by hand.** release-please
+maintains a rolling release PR from the conventional commits on `main`; merging it bumps
+`package.json`, writes `CHANGELOG.md`, tags, and cuts a GitHub Release, which triggers the
+publish job. npm auth is **Trusted Publishing (OIDC)** — this repo and
+`.github/workflows/release-please.yml` are registered as a trusted publisher, so there is no
+token to rotate and no credential to supply.
+
+The package ships only `bin/`, `skills/`, `upstream.json`, `README.md` (`files` in
 `package.json`) — a new top-level file will NOT be published unless added there.
+`README.md` is also a release-please `extra-files` version target, so leave its
+`x-release-please-*` markers alone.
 
 ## Architecture
 
@@ -98,6 +106,13 @@ real project — the checks catch structure, not correctness.
   `docs(LINCHPIN-5163): …`, or `NO-TASK` when there's no ticket. This repo eats its own
   cooking: `task-tracking` owns the key, `commit-and-release` owns the message grammar.
 - Branches: `feat/<slug>` or `issue/<TASK-KEY>`; work lands on `main` via PR.
-- Unlike the projects that consume it, this repo has no commitlint, husky, release-please,
-  or Renovate — it's a plain npm package published by hand. Skills describe the *consuming*
-  projects' automation, which is why they must be verified against those repos, not this one.
+- **No commitlint and no husky here** — unlike the projects that consume it. The convention is
+  enforced instead by the `pr-title` job in `.github/workflows/validate-skills.yml`, which
+  regex-checks the **PR title**, because squash merges make that title the commit message
+  release-please parses. Bots are exempted (Renovate and release-please follow their own
+  conventions). A malformed title fails CI rather than quietly corrupting `CHANGELOG.md`.
+- **release-please and Renovate are both active** (`release-please-config.json`,
+  `.release-please-manifest.json`, `renovate.json`). Don't hand-edit `package.json` versions
+  or `CHANGELOG.md` — release-please owns them, per `commit-and-release`.
+- Skills describe the *consuming* projects' automation too, which is why they must be verified
+  against those repos rather than only this one.
