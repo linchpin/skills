@@ -66,10 +66,31 @@ variation swap an entire palette without touching a pattern; paint names force e
 to carry a specific color, so variations can't swap them.
 
 This is a real regression in our own history, and it played out in two steps: Ollie's 11 role
-slugs became 34 paint names in `base-wp-theme-2026`, and `themes/linchpin` then dropped its
-style variations from 23 to 2 — because once slugs name paint, a color variation can't swap
-them without breaking every pattern that hardcoded one. Paint names don't just make variations
-awkward; they eventually kill them.
+slugs were kept but ~23 paint names were appended alongside them in `base-wp-theme-2026`, and
+`themes/linchpin` then dropped its style variations from 23 to 2 — because a variation has to
+redeclare every slug a pattern might carry, and paint names make that unmaintainable. Paint
+names don't just make variations awkward; they eventually kill them.
+
+### The Linchpin slug vocabulary
+
+Reach for the **structural** slugs — they carry 96% of usage (1,740 of 1,813 references in
+`themes/linchpin`) and they are the ones a style variation can swap: `base` (light surface),
+`main` (Linchpin black), `primary` / `secondary` / `tertiary` (teal / magenta / navy), their
+tints `primary-accent`, `main-accent`, `primary-dark`, `tertiary-dark`, `zebra-dark`, and the
+hairlines `border-light` / `border-dark`.
+
+**Legacy paint names — not for new work:** `true-black`, `almost-black`, `gray`,
+`medium-gray`, `green`, `yellow`, `warm`, `accent`. ~73 references, and the reason color
+variations are impractical. `white-25` and `black-10` are the defensible exceptions — they
+express opacity, not hue.
+
+**`accent` is ambiguous across our themes** — purple `#7D58C6` in `themes/linchpin`, teal
+`#3fc1d0` in `themes/docspress-linchpin`. Read the palette; never assume.
+
+**Retiring a slug is not a rename.** Every `themes/linchpin` slug holds a distinct value, so
+each remap changes appearance — and dropping one stops WordPress emitting its
+`--wp--preset--color--*` rule, silently breaking saved content that carries
+`has-<slug>-background-color`. Audit live content first, and get the visual change signed off.
 
 **Corollary:** a pattern may only carry slugs that exist in **every** variation it will be
 seen under. A slug added to one variation only is a broken pattern waiting for a theme switch.
