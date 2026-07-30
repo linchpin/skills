@@ -9,13 +9,11 @@ version: 0.1.0
 `theme.json` is where a Linchpin theme's design decisions live, and three things about it
 routinely cost an afternoon:
 
-1. **A token edit can appear to do nothing.** WordPress wraps `theme.json` element styles in
-   `:where()`, giving them **zero specificity** — so ordinary SCSS beats them silently. The
-   edit was correct; something else was winning.
+1. **A token edit can appear to do nothing.** WordPress wraps element styles in `:where()`,
+   giving them **zero specificity**, so ordinary SCSS beats them silently.
 2. **Preset arrays replace, they don't merge.** A partial list drops every entry you left out.
-3. **The brand is multi-sourced.** Values live in `theme.json`, in SCSS maps that
-   deliberately override it, and in `settings.custom` tokens that appear in neither palette.
-   Knowing which one governs is most of the job.
+3. **The brand is multi-sourced** — `theme.json`, SCSS maps that deliberately override it, and
+   `settings.custom` tokens in neither palette. Knowing which governs is most of the job.
 
 ## When to use
 
@@ -52,31 +50,46 @@ contrast and performance → [`wp-audit`](../wp-audit/SKILL.md).
 
 ## Where the Linchpin brand lives
 
-| Source | Use it for |
+| Source (in `linchpin.com`) | Use it for |
 | --- | --- |
-| `themes/linchpin/theme.json` in `linchpin.com` | The **exhaustive** brand values. Paint-named slugs (`primary`, `secondary`, `tertiary`, `warm`, `zebra-dark`…) |
-| `themes/docspress-linchpin/theme.json` in `linchpin.com` | The **role-named** re-cut with a full dark-mode set and `color-mix()` derivations — the better model for a new property |
-| `base-wp-theme-2026` | **Nothing.** Never launched, and its palette is stale (`green` `#8fca52` vs `#BFD200`). See [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) |
+| `themes/linchpin/theme.json` | The **exhaustive** brand values, on structural slugs |
+| `themes/docspress-linchpin/theme.json` | The **role-named** re-cut with a dark-mode set and `color-mix()` derivations — the better model for a new property |
+| `base-wp-theme-2026` | **Nothing.** Never launched; palette is stale (`green` `#8fca52` vs `#BFD200`) — see [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) |
 
 ### Role names, not paint names
 
 Name a slug for the **job** it does (`accent`, `ink`, `paper`, `canvas`, `copy`, `muted`,
-`line`), not the paint in it (`teal`, `green`, `dark-gray-2`). Role names let a style
-variation swap an entire palette without touching a pattern; paint names force every pattern
-to carry a specific color, so variations can't swap them.
+`line`), not the paint in it (`teal`, `green`, `dark-gray-2`). A style variation has to
+redeclare every slug a pattern might carry, so role names let it swap a whole palette
+untouched while paint names make it unmaintainable — which is how `themes/linchpin` went from
+23 style variations to 2 after `base-wp-theme-2026` appended ~23 paint names to Ollie's role
+core. Paint names don't just make variations awkward; they eventually kill them.
 
-This is a real regression in our own history, and it played out in two steps: Ollie's 11 role
-slugs became 34 paint names in `base-wp-theme-2026`, and `themes/linchpin` then dropped its
-style variations from 23 to 2 — because once slugs name paint, a color variation can't swap
-them without breaking every pattern that hardcoded one. Paint names don't just make variations
-awkward; they eventually kill them.
+### The Linchpin slug vocabulary
+
+Reach for the **structural** slugs — they carry 96% of usage (1,740 of 1,813 references in
+`themes/linchpin`) and they are the ones a style variation can swap: `base` (light surface),
+`main` (Linchpin black), `primary` / `secondary` / `tertiary` (teal / magenta / navy), their
+tints `primary-accent`, `main-accent`, `primary-dark`, `tertiary-dark`, `zebra-dark`, and the
+hairlines `border-light` / `border-dark`.
+
+**Legacy paint names — not for new work:** `true-black`, `almost-black`, `gray`,
+`medium-gray`, `green`, `yellow`, `warm`, `accent` (~73 references, and the reason color
+variations are impractical). `white-25` / `black-10` are the defensible exceptions — opacity,
+not hue. Note **`accent` is ambiguous across our themes**: purple `#7D58C6` in
+`themes/linchpin`, teal `#3fc1d0` in `themes/docspress-linchpin`. Read the palette.
+
+**Retiring a slug is not a rename.** Every `themes/linchpin` slug holds a distinct value, so
+each remap changes appearance — and dropping one stops WordPress emitting its
+`--wp--preset--color--*` rule, silently breaking saved content that carries
+`has-<slug>-background-color`. Audit live content first, and get the visual change signed off.
 
 **Corollary:** a pattern may only carry slugs that exist in **every** variation it will be
-seen under. A slug added to one variation only is a broken pattern waiting for a theme switch.
+seen under. A slug in one variation only is a broken pattern waiting for a theme switch.
 
 ### The portable token layer
 
-These travel between Linchpin properties unchanged — copy them verbatim into a new theme:
+These travel between Linchpin properties unchanged — copy them verbatim:
 
 - `settings.custom.fontWeight` — the 9-step map. Note **`regular: 425`**, not 400: it's a
   variable-font optical choice, and "correcting" it to 400 visibly lightens body copy.
@@ -152,30 +165,37 @@ then change the values you need.
 
 ### 6. Contrast is part of the token decision
 
-A color pairing is a decision with a measurable outcome. When a palette or button pairing
-falls below WCAG AA (4.5:1 for body text, 3:1 for large text and UI), **state the measured
-ratio and escalate** — don't quietly substitute a different color, and don't ship it
-unremarked either.
+A color pairing is a decision with a measurable outcome. When a pairing falls below WCAG AA
+(4.5:1 for body text, 3:1 for large text and UI), **state the measured ratio and escalate** —
+don't quietly substitute a different color, and don't ship it unremarked either.
 
-Known open item: the button contract `primary` `#3fc1d0` with `#ffffff` text measures
-**2.15:1**, below AA. `settings.custom.button.textOnLight` `#0f2051` on the same teal gives
-7.25:1. Raised in `linchpin.com` PR #918; no decision recorded. Surface it rather than
-assuming it was settled.
+**Measure every state, not just the resting one.** A resting state that passes tells you
+nothing about hover or active. Auditing only rest states is how a button ships that is
+accessible *only while being clicked*.
+
+**Interaction ramp direction follows the label color** — get this backwards and no amount of
+tuning the resting color fixes it:
+
+| Surface | Label | Interaction goes |
+| --- | --- | --- |
+| Light (a bright brand color) | dark | **lighter** |
+| Dark | white | **darker** |
+
+Disabled controls are exempt — WCAG SC 1.4.3 doesn't apply to inactive UI. Note that a
+16px bold button label is **not** "large text" (that needs 18.66px bold), so 4.5:1 applies.
 
 ## Adding or changing a token
 
 1. **Locate the governing source** via Preflight — `theme.json`, an SCSS map, or a variation.
 2. **Change the declaration**, not the usage. New color → palette entry first, then slugs.
-3. **Mirror any duplicated map.** Some themes keep a `$colors` map in
-   `assets/scss/config/_variables.scss` that repeats the palette; it drifts if left behind.
-4. **Check every variation** in `styles/` still declares the slug (rule: role names + the
-   corollary above).
-5. **Measure contrast** if the change touches a text/background pairing.
-6. **Flush and verify** (below). → the emitted `--wp--preset--*` property shows the new value.
+   Mirror any duplicated SCSS `$colors` map, or it drifts.
+3. **Check every variation** in `styles/` still declares the slug.
+4. **Measure contrast in every state** if the change touches a text/background pairing.
+5. **Flush and verify** (below). → the emitted `--wp--preset--*` property shows the new value.
 
 ## Verify a token change
 
-`theme.json` is read live — there is no build step, but there *is* a cache. Via
+`theme.json` is read live — no build step, but there *is* a cache. Via
 [`wp-studio-cli`](../wp-studio-cli/SKILL.md):
 
 ```bash
@@ -217,7 +237,8 @@ context and the admin bar differ.
 - **Never add a slug to one style variation only** — patterns using it break on a theme switch.
 - **Never claim a token change works without flushing** `wp_clean_theme_json_cache()` and
   confirming the emitted custom property.
-- **Never ship a text/background pairing below AA without stating the measured ratio.**
+- **Never judge contrast from the resting state alone** — measure hover and active too, and
+  never ship a pairing below AA without stating the measured ratio.
 - **Never treat `base-wp-theme-2026` as a brand source** — it was never launched and its
   palette is stale.
 - If a change needs `!important` to land, something out-specifies `theme.json` — find it

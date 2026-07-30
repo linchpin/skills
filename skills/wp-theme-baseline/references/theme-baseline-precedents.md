@@ -36,9 +36,26 @@ Measured across the three themes (counts verified against the files):
 
 | | Ollie | `base-wp-theme-2026` | `themes/linchpin` |
 | --- | --- | --- | --- |
-| Palette entries | **11**, all role-named — `primary`, `main`, `base`, `tertiary`, `border-light`… | **34** paint names — `green`, `orange`, `true-black`, `lgt-gray-2`… (33 distinct: `base` is declared twice) | 23, still paint-named |
+| Palette entries | **11**, all role-named — `primary`, `main`, `base`, `tertiary`, `border-light`… | **34** (33 distinct — `base` is declared twice); Ollie's 11 kept, plus ~23 paint names bolted on | 23 — Ollie's structural core, plus a ~10-slug paint tail |
 | Style variations | **27** (5 full presets, 7 color, 10 typography, 5 button) | 23 — most of Ollie's kept | **2** — only `styles/block/` |
 | Build | None. Hand-written CSS, clone-and-go | `wp-scripts` + webpack + SCSS | same |
+
+Measured against the 265 pattern and part files in `themes/linchpin` — 1,813 slug
+references in total — the damage is narrower than the palette size suggests:
+
+- **96% of usage already flows through Ollie's structural slugs.** The top six are `base`
+  (557), `primary` (277), `border-light` (236), `main-accent` (203), `secondary` (178) and
+  `main` (143).
+- **The paint tail is 73 references, about 4%** — `true-black` 35, `white-25` 11, `green` 5,
+  `gray` 4, `medium-gray` 4, `warm` 4, `black-10` 4, `yellow` 2, `accent` 2, `almost-black` 2.
+
+So the fork did not throw the vocabulary away; it kept the structural core and appended paint
+names alongside. That tail is still what makes a color style variation impractical — a
+variation has to redeclare every slug a pattern might carry — but retiring it is **not** a
+mechanical rename. Every slug in the palette is a distinct value (there are no duplicates), so
+each remap is a visual change, and dropping a slug also breaks saved post content carrying
+`has-<slug>-background-color`. Treat it as design work with a content audit, not a find and
+replace.
 
 The two regressions happened at different stages, and the order is the point:
 
