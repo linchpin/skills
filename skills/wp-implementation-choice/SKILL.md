@@ -31,8 +31,15 @@ Answer these before designing anything custom; each "yes" removes work:
 
 1. **Does a core block or pattern do it?** Check the site's registered patterns and template
    parts first — [`wordpress-blocks`](../wordpress-blocks/SKILL.md) covers reuse-before-build.
+   Check what core actually ships *on this version* rather than from memory: core has absorbed
+   a lot recently, and a block library that was the right answer two releases ago may now be
+   duplicating core. Accordions are the current example — `core/accordion` +
+   `accordion-item` / `accordion-heading` / `accordion-panel` landed in **6.9**, with
+   `autoclose`, real heading levels and the Interactivity API. On 6.9+ that beats both
+   `core/details` and any bundled accordion block. Verify with `list_registered_blocks`.
 2. **Does the shared block library already have it?** `linchpin/linchpin-blocks` ships
-   accordion, tabs, cards, slider, counter, and more.
+   accordion, tabs, cards, slider, counter, and more. Prefer core when core has caught up —
+   a plugin dependency for something core does is a maintenance cost with no upside.
 3. **Does a well-known plugin own this problem?** Ecommerce is WooCommerce; forms, SEO, and
    membership all have mature answers. Building a lesser version is a liability you maintain
    forever.
