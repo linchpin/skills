@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.5](https://github.com/linchpin/skills/compare/v0.1.4...v0.1.5) (2026-07-30)
+
+
+### Features ✨
+
+* **NO-TASK:** Add wp-theme-baseline and wp-design-tokens skills ([#10](https://github.com/linchpin/skills/issues/10)) ([117de3e](https://github.com/linchpin/skills/commit/117de3e724bb62da0c07d6ae2a4a34028d6b110d))
+
+
+### Documentation 📚
+
+* **LINCHPIN-5253:** Document the Linchpin slug vocabulary and correct the paint-name claim ([#13](https://github.com/linchpin/skills/issues/13)) ([9fd1988](https://github.com/linchpin/skills/commit/9fd19880811c6cce3a77160db2b8b11237e642f2))
+* **LINCHPIN-5254:** Correct the release tooling described in CLAUDE.md ([#12](https://github.com/linchpin/skills/issues/12)) ([129b0e2](https://github.com/linchpin/skills/commit/129b0e2e31f7889e1f7bb2347ea8e9464f9b28df))
+
 ## [0.1.4](https://github.com/linchpin/skills/compare/v0.1.3...v0.1.4) (2026-07-28)
 
 
