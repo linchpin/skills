@@ -1,7 +1,7 @@
 ---
 name: wp-audit
 description: Audit a WordPress site for performance, accessibility, and visible frontend quality, then report prioritized fixes and re-measure after changes. Use when asked to review, optimize, QA, or "check why the site is slow", when Core Web Vitals or Lighthouse scores come up, when a client asks about accessibility or WCAG, or before handing a build back to a client. Measures locally via the Studio MCP; production numbers require the live site. Not for fixing lint or tests — use `quality-gates`.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # WordPress audit
@@ -86,6 +86,11 @@ What this pass reliably catches: low text/background contrast, weak or ambiguous
 missing or invisible focus states, animation with no `prefers-reduced-motion` fallback,
 readability problems from font size / line height / density, and meaning carried by color
 alone. Use `inspect_design` for computed styles when it beats reading the CSS.
+
+A contrast finding is fixed as a **token** change — a palette slug or the button tokens in
+`theme.json`, per [`wp-design-tokens`](../wp-design-tokens/SKILL.md) — never as an inline
+override on the one block where you noticed it. Report the measured ratio for both the current
+and proposed pairing so the decision is reviewable.
 
 ## Guardrails
 

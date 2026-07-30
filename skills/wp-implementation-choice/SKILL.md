@@ -1,7 +1,7 @@
 ---
 name: wp-implementation-choice
 description: Decide which WordPress abstraction a request should become — theme/template work, a custom block, a functionality plugin, existing core blocks and patterns, or an off-the-shelf plugin — before any code is written. Use when a WordPress request could be built more than one way, when someone proposes a custom plugin or block, when scoping a new feature, or when reviewing an approach that feels heavier than the problem. Not for how to build the thing once chosen.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Choosing the WordPress implementation
@@ -42,7 +42,9 @@ Answer these before designing anything custom; each "yes" removes work:
 
 | The deliverable is really… | Build it as | Then use |
 | --- | --- | --- |
-| Layout, templates, styling, a visual redesign | **Theme work** (`theme.json`, templates, parts) | Upstream `wp-block-themes` |
+| A whole new theme for a site or property | **A baseline decision** — child theme, fresh, or fork | [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) |
+| Color, type, spacing, or shadow values | **Token work** in `theme.json` | [`wp-design-tokens`](../wp-design-tokens/SKILL.md) |
+| Layout, templates, parts, a visual redesign | **Theme work** | Upstream `wp-block-themes` |
 | Page/post content composed from existing blocks | **Content**, not code | [`wordpress-blocks`](../wordpress-blocks/SKILL.md) |
 | An editor-insertable content component that core can't express | **Custom block** | [`wp-block-conventions`](../wp-block-conventions/SKILL.md) |
 | Reusable behavior that must survive a theme change — admin UI, settings, REST endpoints, cron, integrations, post types | **Functionality plugin** | Upstream `wp-plugin-development` |

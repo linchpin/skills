@@ -212,7 +212,9 @@ A project that wants skills in more than one agent's directory should run
 
 | Skill | Domain | What it does |
 | --- | --- | --- |
-| `wp-local-setup` | WordPress | Stand up the Linchpin baseline local environment — scaffold a new wp-content-shaped project repo (Composer plugins from wpackagist + packagist.linchpin.com, theme from `base-wp-theme-2026`) and/or wire a repo into a WordPress Studio site by symlinking it in as `wp-content`. |
+| `wp-local-setup` | WordPress | Stand up the Linchpin baseline local environment — scaffold a new wp-content-shaped project repo (Composer plugins from wpackagist + packagist.linchpin.com) and/or wire a repo into a WordPress Studio site by symlinking it in as `wp-content`. |
+| `wp-theme-baseline` | WordPress | Choose and stand up the baseline for a new theme — a child theme of a parent that owns behavior, a fresh block theme, or (last resort) a fork — with the token-coverage check that decides it and the precedents that close the recurring questions. |
+| `wp-design-tokens` | WordPress | Make `theme.json` the source of truth for color, type, spacing, and shadow — the slug vocabulary, the theme.json-vs-SCSS precedence rules that make an edit appear to do nothing, and where the Linchpin brand values live. |
 | `wp-studio-cli` | WordPress | Operate a local WordPress Studio site — the wordpress-studio MCP first (`wp_cli`, `validate_blocks`, `take_screenshot`), the `studio` CLI as fallback — including the PHP-WASM `ABSPATH` rule. |
 | `wp-audit` | WordPress | Audit a site for performance, accessibility, and visible frontend quality against Core Web Vitals thresholds; prioritized findings with labeled evidence, and before/after re-measurement. |
 | `wp-pressable` | WordPress | Operate a Pressable-hosted site (prod/staging) via the Pressable MCP or SSH+WP-CLI; safely diagnose and fix the "renders locally but not on prod" FSE bug where DB template overrides shadow deployed theme files. |

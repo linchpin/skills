@@ -1,7 +1,7 @@
 ---
 name: wp-local-setup
-description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, a theme started from base-wp-theme-2026, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one.
-version: 1.0.0
+description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one. Not for choosing or building the theme itself — use `wp-theme-baseline`.
+version: 1.1.0
 ---
 
 # WordPress local setup (Linchpin baseline)
@@ -27,6 +27,8 @@ setting up local development for an existing one (wire it into Studio).
 
 **Not this for:**
 
+- **Choosing or building the project theme** (child theme vs fresh vs fork, `theme.json`) →
+  `wp-theme-baseline`.
 - **Operating a running Studio site** (WP-CLI, credentials, `eval`) → `wp-studio-cli`.
 - **Live servers** (Pressable prod/staging, deploy pipeline detail) → `wp-pressable`.
 - **Seeding local content/database** → out of scope; follow that project's own docs.
@@ -38,7 +40,7 @@ Target shape (the repo root doubles as `wp-content`):
 
 ```
 <project>/
-  themes/<project>/            # committed — the project theme (from base-wp-theme-2026)
+  themes/<project>/            # committed — the project theme (see wp-theme-baseline)
   plugins/<project>-functionality/  # committed — client-functionality plugin (if needed)
   composer.json                # plugin/theme dependencies + PHP QA tooling
   package.json                 # JS tooling (theme builds via @wordpress/scripts)
@@ -114,21 +116,13 @@ otherwise the `/plugins/*` rule silently keeps it out of git.
 
 ### The project theme
 
-Start from the baseline theme, don't build from scratch:
+The theme lives in `themes/<project>/` and is committed. **Which baseline it starts from is a
+decision, not a default** — child theme, fresh block theme, or fork — and
+[`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) owns it. **Do not clone
+`base-wp-theme-2026`**; earlier versions of this skill said to, and it was never launched.
 
-```bash
-git clone https://github.com/linchpin/base-wp-theme-2026.git themes/<project>
-rm -rf themes/<project>/.git
-```
-
-Then rebrand: update `style.css` (`Theme Name`, `Theme URI`, `Description`,
-`Text Domain`) and `package.json` (`name`), and search-replace the text domain in PHP
-files. It's a block theme (`theme.json`, `templates/`, `parts/`, `patterns/`) built
-with `@wordpress/scripts`:
-
-```bash
-cd themes/<project> && npm install && npm run build   # npm start = watch mode
-```
+If the theme has a build (`package.json` with `@wordpress/scripts` — a child theme often has
+none): `cd themes/<project> && npm install && npm run build` (`npm start` to watch).
 
 ## Part 2 — Wire the repo into a Studio site
 
@@ -199,10 +193,6 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
 - **`wp-config.php` lives in the site root**, above `wp-content` — never in the repo.
   Studio strips the MySQL `DB_*` constants; don't add them back, and don't reference
   them in code (SQLite handles the connection via `db.php`).
-- **Never commit the Studio runtime pieces** (`db.php`, `/database`,
-  `mu-plugins/sqlite-database-integration`). They're local-only; on a Pressable deploy
-  they would shadow the host's real MySQL setup.
-- **Never delete them locally either** — the site dies without its database layer.
 - **Composer writes into `plugins/` and `themes/`** (via `installer-paths`) and those
   paths are gitignored — that's by design. CI runs `composer install` at deploy time;
   a plugin "missing from git" is usually just Composer-managed.
@@ -217,11 +207,11 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
 
 | Task | Command |
 | --- | --- |
-| Clone base theme | `git clone https://github.com/linchpin/base-wp-theme-2026.git themes/<project>` (then `rm -rf .git`, rebrand) |
+| Start the project theme | see [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) — child / fresh / fork |
 | Install plugins | `composer install` (repo root) |
 | Add a wordpress.org plugin | `composer require wpackagist-plugin/<slug>` |
 | Add a premium/shared plugin | `composer require linchpin/<slug>` (packagist.linchpin.com) |
-| Build the theme | `npm run build` in `themes/<project>` (`npm start` to watch) |
+| Build the theme (if it has a build) | `npm run build` in `themes/<project>` (`npm start` to watch) |
 | Symlink repo into Studio | `mv <site>/wp-content <site>/wp-content-studio-default && ln -s <repo> <site>/wp-content` |
 | Start the site | `studio start --skip-browser --path ~/Studio/<project>` |
 | Activate the theme | `studio wp theme activate <project> --path ~/Studio/<project>` |
@@ -254,6 +244,8 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
 
 ## Related skills
 
+- [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) — choosing and standing up the project
+  theme that lands in `themes/<project>/`.
 - [`wp-studio-cli`](../wp-studio-cli/SKILL.md) — operating the running Studio site (WP-CLI
   passthrough, `eval`, the PHP-WASM `ABSPATH` rule).
 - [`wp-pressable`](../wp-pressable/SKILL.md) — the hosted environments this baseline deploys
