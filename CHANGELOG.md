@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/linchpin/skills/compare/v0.1.5...v0.1.6) (2026-07-30)
+
+
+### Bug Fixes 🐛
+
+* **NO-TASK:** Route accordions to core/accordion instead of details ([#14](https://github.com/linchpin/skills/issues/14)) ([261cc4d](https://github.com/linchpin/skills/commit/261cc4d04cb3fcafb8888301f7979de33c111ef6))
+
 ## [0.1.5](https://github.com/linchpin/skills/compare/v0.1.4...v0.1.5) (2026-07-30)
 
 
