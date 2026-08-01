@@ -1,6 +1,6 @@
 {
   "name": "@linchpinagency/skills",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Linchpin's library of reusable AI agent skills for WordPress projects.",
   "type": "module",
   "bin": {
