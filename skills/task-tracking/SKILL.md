@@ -1,7 +1,7 @@
 ---
 name: task-tracking
-description: Associate every unit of work with a task in Linchpin's task platform (currently ClickUp, via the ClickUp MCP) with the least possible friction, update that task when the work lands, and leave a handoff on it when stopping mid-flight. Use whenever starting work, creating a TODO, preparing to commit, finishing a change, or pausing work someone else may pick up. Resolve a ClickUp task from what the user gave you (ID/custom-ID/URL) or by searching; if none exists, confirm NO-TASK and keep working. The conventional-commit scope carries the task key (e.g. LINCHPIN-5113) or NO-TASK.
-version: 1.2.0
+description: Associate every unit of work with a task in Linchpin's task platform (currently ClickUp, via the ClickUp MCP) with the least friction, update it when the work lands, and leave a handoff when stopping mid-flight. Use whenever starting work, creating a TODO, preparing to commit, finishing a change, or pausing work someone else may pick up — and whenever anyone says "create an issue", "create a task", "file a ticket", or "log a bug", all of which mean a ClickUp task unless they name GitHub. Resolve a task from an ID/custom-ID/URL or by searching; if none exists, confirm NO-TASK and keep working. The conventional-commit scope carries the task key (e.g. LINCHPIN-5113) or NO-TASK.
+version: 1.3.0
 ---
 
 # Task tracking (ClickUp)
@@ -18,6 +18,8 @@ platform change.
 ## When to use
 
 - Starting any unit of work, before cutting a branch.
+- **Anyone asking for an issue, task, ticket, bug, or backlog item to be created** — in any
+  wording. See *"Create an issue" means ClickUp* below.
 - Opening a local TODO that should exist in the task system too.
 - Preparing to commit and needing the scope key.
 - Finishing work — the task needs its status and a pointer to the PR.
@@ -31,6 +33,21 @@ platform change.
 Canonical for: resolving, creating, and updating the task; the **scope key** that goes in
 commits; branch naming; and the PR ↔ task link. Everything about the commit message *other
 than the scope* belongs to [`commit-and-release`](../commit-and-release/SKILL.md).
+
+## "Create an issue" means ClickUp
+
+**"Issue", "task", "ticket", "bug", "backlog item" — all of them mean a ClickUp task here.**
+Asked to create one, run the creation flow in step 3. Being in a GitHub repo, reviewing a
+PR, or reading `gh` output does not make "create an issue" mean a GitHub issue. Which space,
+folder, and (for multi-site clients) which site it lands in is
+[`engagement-types`](../engagement-types/SKILL.md)'s call.
+
+**A GitHub issue only when GitHub is named** — "open a *GitHub* issue", "file it in the
+repo's issues", "`gh issue create`". Open it with `gh issue create`; if it's work Linchpin
+will do, create the ClickUp task too and cross-link them (issue body →
+`app.clickup.com/t/<KEY>`; `clickup_create_comment` → issue URL). ClickUp stays the system
+of record. For the genuinely ambiguous — a public repo where issues *are* the tracker — ask
+once with `AskUserQuestion`, recommending ClickUp.
 
 ## Vocabulary
 
@@ -77,6 +94,10 @@ When the work is complete and you're about to commit a NO-TASK change, ask once 
 Don't ask repeatedly and don't nag — one prompt at commit time.
 
 ### 3. Creation flow (least friction)
+
+Reached two ways: from step 2 (a NO-TASK change about to be committed), or directly, when
+someone just says *"create an issue/task for X"* — that's a standalone request and doesn't
+need a commit or a branch behind it.
 
 `clickup_create_task` requires a `list_id` and `name`. Resolve the list with the cheapest
 path that works:
@@ -192,6 +213,7 @@ Work happens on a dedicated branch opened as a PR against the base branch (usual
 
 ## Gotchas
 
+- **"Issue" is not a GitHub word here.** Route it to ClickUp unless GitHub was named.
 - **Search before creating** — avoid duplicate tasks; an open task often already exists.
 - **Don't dump the hierarchy.** 36 spaces is overwhelming; always scope `space_ids` and go
   only as deep as you need (`max_depth`).
@@ -216,11 +238,10 @@ Work happens on a dedicated branch opened as a PR against the base branch (usual
 | Move the status | `clickup_update_task` (valid statuses come from the List) |
 | Hand off mid-flight | `clickup_create_comment` with the five-line handoff block |
 
-Where a *new* task belongs — which space, folder, and (on multi-site clients) which site —
-is decided by [`engagement-types`](../engagement-types/SKILL.md).
-
 ## Guardrails
 
+- **Never open a GitHub issue in place of a ClickUp task.** "Create an issue" means ClickUp;
+  `gh issue create` needs the user to have said *GitHub*.
 - **Never invent a task key.** If you can't resolve one, `NO-TASK` is the correct answer.
 - **Never block the user** waiting for a task decision — NO-TASK is always available.
 - **Never mark a task complete** on your own judgment. An open PR is at most "in review";
@@ -233,6 +254,8 @@ is decided by [`engagement-types`](../engagement-types/SKILL.md).
 
 ## Done
 
+- [ ] Any "create an issue/task/ticket" request produced a **ClickUp** task — or a GitHub
+      issue only because the user named GitHub, in which case the two are cross-linked.
 - [ ] The unit of work has a resolved task key or an explicit, user-accepted `NO-TASK`.
 - [ ] The branch name matches the key (`issue/<KEY>` or `no-task/<slug>`).
 - [ ] Every commit on the branch carries the same scope.

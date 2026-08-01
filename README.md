@@ -81,6 +81,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Understand a repo you just cloned | "what am I working with here?" | `project-context` |
 | Find out why something's broken | "the hero image 404s on mobile" | `investigate` |
 | Test a site like a user, and fix what's found | "QA the checkout flow" | `web-qa` |
+| File work for later | "create an issue for the broken footer link" | `task-tracking` |
 | Check it's ready to commit | "is this ready to commit?" | `quality-gates` |
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
@@ -232,7 +233,7 @@ A project that wants skills in more than one agent's directory should run
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, security advisories, `@wordpress/*` package sets. |
 | `commit-and-release` | Workflow | Write commits, branches, and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). |
-| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, offer to create one before committing, update it when the work lands, and carry the task key in the conventional-commit scope. |
+| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), update it when the work lands, and carry the task key in the conventional-commit scope. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |
 
 _(More WordPress, React, Cloudflare Workers, marketing, and design skills to come.)_
