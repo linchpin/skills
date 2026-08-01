@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/linchpin/skills/compare/v0.1.6...v0.1.7) (2026-08-01)
+
+
+### Features ✨
+
+* **LINCHPIN-5308:** Route generic "issue" and "task" requests to ClickUp ([#16](https://github.com/linchpin/skills/issues/16)) ([31831aa](https://github.com/linchpin/skills/commit/31831aa30b5619406996d4b0b8fe77cbef77a32a))
+
 ## [0.1.6](https://github.com/linchpin/skills/compare/v0.1.5...v0.1.6) (2026-07-30)
 
 
