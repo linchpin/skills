@@ -15,6 +15,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = path.resolve(__dirname, '..');
 const SKILLS_ROOT = path.join(PKG_ROOT, 'skills');
 const UPSTREAM_MANIFEST = path.join(PKG_ROOT, 'upstream.json');
+const PKG_MANIFEST = path.join(PKG_ROOT, 'package.json');
+
+// Version stamp + a self-contained copy of the update checker, written into each install
+// directory. Dot-prefixed and without a SKILL.md, so no agent mistakes it for a skill.
+const STAMP_DIR = '.linchpin-skills';
+const STAMP_FILE = 'version.json';
+const CHECKER = 'update-check.mjs';
 
 // Per-agent install locations. `project` paths are relative to cwd, `global` to home.
 // These follow the Agent Skills conventions each tool reads from. An agent may read more
@@ -77,6 +84,50 @@ function readUpstreamManifest() {
     return Array.isArray(m.sources) ? m.sources : [];
   } catch {
     return [];
+  }
+}
+
+function packageVersion() {
+  try {
+    return JSON.parse(fs.readFileSync(PKG_MANIFEST, 'utf8')).version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+// The exact command that reproduces this install, recorded in the stamp so the update
+// checker can tell someone how to re-run it with the flags they actually used.
+function updateCommand(opts) {
+  const parts = ['npx @linchpinagency/skills'];
+  if (opts.skills.length) parts.push(...opts.skills);
+  if (opts.agent !== 'claude-code') parts.push('--agent', opts.agent);
+  if (opts.global) parts.push('--global');
+  if (opts.skipUpstream) parts.push('--skip-upstream');
+  return parts.join(' ');
+}
+
+// Record what landed here and leave the checker beside it. Best-effort: a stamp we can't
+// write costs an upgrade nudge, not the install.
+function writeStamp(target, { version, opts, skills, upstream }) {
+  const dir = path.join(target.dir, STAMP_DIR);
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const stamp = {
+      package: '@linchpinagency/skills',
+      version,
+      installedAt: new Date().toISOString(),
+      agent: target.agent,
+      scope: opts.global ? 'global' : 'project',
+      updateCommand: updateCommand(opts),
+      skills,
+      upstream,
+    };
+    fs.writeFileSync(path.join(dir, STAMP_FILE), JSON.stringify(stamp, null, 2) + '\n');
+    fs.copyFileSync(path.join(__dirname, CHECKER), path.join(dir, CHECKER));
+    return true;
+  } catch (err) {
+    console.warn(`  ! Could not write the version stamp in ${dir}: ${err.message}`);
+    return false;
   }
 }
 
@@ -193,12 +244,15 @@ async function main() {
     process.exit(1);
   }
 
-  // One flat list of destination dirs across every selected agent.
-  const bases = agentIds.flatMap((id) =>
-    (opts.global ? AGENTS[id].global : AGENTS[id].project).map((rel) =>
-      opts.global ? path.join(os.homedir(), rel) : path.join(process.cwd(), rel)
-    )
+  // Every destination across every selected agent, each tagged with the agent it belongs to
+  // (the stamp records it; the copy loops only need the directory).
+  const targets = agentIds.flatMap((id) =>
+    (opts.global ? AGENTS[id].global : AGENTS[id].project).map((rel) => ({
+      agent: id,
+      dir: opts.global ? path.join(os.homedir(), rel) : path.join(process.cwd(), rel),
+    }))
   );
+  const bases = targets.map((t) => t.dir);
 
   const wanted = opts.skills.length ? opts.skills : all;
   const unknown = wanted.filter((s) => !all.includes(s));
@@ -221,10 +275,25 @@ async function main() {
   const labels = agentIds.map((id) => AGENTS[id].label).join(', ');
   console.log(`\nInstalled ${wanted.length} Linchpin skill(s) for ${labels}.`);
 
+  const upstream = [];
   if (!opts.skipUpstream && sources.length) {
     console.log('\nVendoring pinned base layer (upstream WordPress/agent-skills):');
-    for (const s of sources) await installUpstreamSource(s, bases);
+    for (const s of sources) {
+      const installed = await installUpstreamSource(s, bases);
+      upstream.push({ repo: s.repo, ref: s.ref, installed });
+    }
     console.log('\nTip: --skip-upstream installs Linchpin skills only.');
+  }
+
+  // Stamp last, so `upstream` reflects what actually landed rather than what was intended.
+  const version = packageVersion();
+  const stamped = targets.filter((t) => writeStamp(t, { version, opts, skills: wanted, upstream }));
+  if (stamped.length && agentIds.includes('claude-code')) {
+    const rel = path.join(STAMP_DIR, CHECKER);
+    console.log(
+      `\nStamped v${version}. To be told when these skills go stale, add a SessionStart hook:` +
+        `\n  node ${path.join(opts.global ? '~/.claude/skills' : '.claude/skills', rel)} --hook`
+    );
   }
 }
 

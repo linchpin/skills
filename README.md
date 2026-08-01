@@ -191,6 +191,33 @@ npx @linchpinagency/skills --skip-upstream
 **Updating:** re-run the same command. The installer overwrites each skill in place, so a
 fresh run always pulls the latest published version.
 
+### Keeping skills current
+
+Installed skills are a snapshot — nothing about a copy in `.claude/skills/` knows a newer
+release exists. So every install writes a stamp beside the skills, in
+`<skills-dir>/.linchpin-skills/`: `version.json` (the version, the date, the agent, the exact
+command that produced the install, and the upstream ref that was vendored) plus a
+self-contained copy of the update checker.
+
+```bash
+# Are these skills behind? One line if yes, nothing if no.
+node .claude/skills/.linchpin-skills/update-check.mjs
+
+# Print the Claude Code SessionStart hook that runs it for you
+node .claude/skills/.linchpin-skills/update-check.mjs --hook
+```
+
+With the hook installed, a stale install announces itself at the start of a session —
+`SessionStart` stdout becomes context, so the agent sees it too and can offer to run the
+update command the stamp recorded. Hooks are a Claude Code feature; under Copilot, Codex, or
+Cursor the same check still runs, just when you ask it to.
+
+The check is deliberately unobtrusive: it queries the npm registry at most once a day (a
+known-newer version keeps surfacing from cache in between), stays silent when it can't reach
+the network, and always exits 0 — a session never fails to start because of it. It reports;
+it never upgrades anything. Set `LINCHPIN_SKILLS_UPDATE_CHECK=0` to switch it off, and it
+skips itself whenever `CI` is set.
+
 ### Where skills land
 
 | Agent (`--agent`) | Project scope | Global scope (`--global`) |
