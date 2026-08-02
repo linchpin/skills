@@ -102,9 +102,11 @@ need a commit or a branch behind it.
 `clickup_create_task` requires a `list_id` and `name`. Resolve the list with the cheapest
 path that works:
 
-1. **Use a known default if the project has one.** If the project pins a default list
-   (see *Reducing friction*), confirm it in one line ("Create in *Linchpin › linchpin.com ›
-   Development*?") rather than making the user navigate.
+1. **Read `.clickup.json` first.** If the repo root has one, it pins the Space, a default
+   list, and often a routing map from source directory → list — confirm the destination in
+   one line ("Create in *Mantle › Modules › Security*?") rather than making the user
+   navigate. A ClickUp section in the project's `CLAUDE.md`/`AGENTS.md` counts too. Schema
+   and lookup order: [`references/clickup-json.md`](references/clickup-json.md).
 2. **Otherwise present a picker** built from `clickup_get_workspace_hierarchy`:
    - Call it with `max_depth: 2` **scoped to the likely Space** (pass `space_ids`) so you
      return Folders + Lists for one space, not the whole workspace.
@@ -202,10 +204,13 @@ Work happens on a dedicated branch opened as a PR against the base branch (usual
 
 ## Reducing friction
 
-- **Pin a default list per project.** Record the project's usual Space/List (id + path) in
-  the project's `CLAUDE.md` or a small `.clickup.json`, so creation becomes a one-line
-  confirm instead of navigation — e.g. `<Space> › <Project> › Development` with its
-  `list_id`. The id belongs in that project's repo, not in this shared library.
+- **Pin the routing per project in `.clickup.json`.** A small file at the repo root holding
+  the Space, a default list, and (where the board mirrors the code) a directory → list map,
+  so creation becomes a one-line confirm instead of navigation. Schema, worked example, and
+  packaging notes: [`references/clickup-json.md`](references/clickup-json.md). The ids belong
+  in that project's repo, not in this shared library.
+- **Write the file when you had to look it up.** Resolving a list the slow way is the moment
+  to offer to pin it — otherwise the next agent pays the same cost.
 - **Remember the last-used list** within a session and reuse it.
 - **Infer the Space from the repo** to scope every search and hierarchy call.
 - **Batch the questions**: when you must ask, resolve task-vs-NO-TASK and (if creating) the
