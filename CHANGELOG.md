@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/linchpin/skills/compare/v0.1.8...v0.1.9) (2026-08-02)
+
+
+### Features ✨
+
+* **LINCHPIN-5310:** Formalise .clickup.json as a project routing convention ([#20](https://github.com/linchpin/skills/issues/20)) ([f61fc2b](https://github.com/linchpin/skills/commit/f61fc2bd0a628630e92c6bcf6b4d0b0b3f8be99d))
+
 ## [0.1.8](https://github.com/linchpin/skills/compare/v0.1.7...v0.1.8) (2026-08-01)
 
 
