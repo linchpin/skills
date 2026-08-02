@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/linchpin/skills/compare/v0.1.7...v0.1.8) (2026-08-01)
+
+
+### Features ✨
+
+* **LINCHPIN-5309:** Report when installed skills are behind the release ([#18](https://github.com/linchpin/skills/issues/18)) ([e966da2](https://github.com/linchpin/skills/commit/e966da2f3f2da01545412dfc6fbc1cd2a22c49dd))
+
 ## [0.1.7](https://github.com/linchpin/skills/compare/v0.1.6...v0.1.7) (2026-08-01)
 
 
