@@ -259,8 +259,8 @@ A project that wants skills in more than one agent's directory should run
 | `engagement-types` | Project mgmt | Tell support, site maintenance, projects, product/plugin work, and pre-sales apart — each lives somewhere different in ClickUp and is planned and closed differently. |
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, security advisories, `@wordpress/*` package sets. |
-| `commit-and-release` | Workflow | Write commits, branches, and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). |
-| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), update it when the work lands, and carry the task key in the conventional-commit scope. |
+| `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
+| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands, and carry the task key in the commit scope. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |
 
 _(More WordPress, React, Cloudflare Workers, marketing, and design skills to come.)_

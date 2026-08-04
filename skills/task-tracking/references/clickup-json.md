@@ -25,6 +25,20 @@ Check in this order, and stop at the first hit:
 3. Nothing pinned → fall back to the hierarchy lookup in the main skill, and **offer to write
    `.clickup.json`** once the list has been resolved, so the next agent doesn't repeat the work
 
+## When nothing is pinned — the picker
+
+Falling back to a lookup is fine; doing it unscoped is not. `clickup_get_workspace_hierarchy`
+will happily return dozens of spaces and bury the prompt.
+
+1. Call it with `max_depth: 2` and **`space_ids` set to the likely Space**, so you get Folders
+   + Lists for one space rather than the whole workspace.
+2. Offer the candidate Lists via `AskUserQuestion` — e.g. `linchpin.com › Development`,
+   `linchpin.com › Deploy`, `Internal Projects › …`.
+3. Only widen to a Space picker first when the Space genuinely can't be inferred from the git
+   remote or repo name.
+
+Then write the file, so the next agent skips all of this.
+
 ## Schema
 
 Every field is optional except `space` and `defaultList` — a two-key file is already useful.
