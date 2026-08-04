@@ -1,0 +1,24 @@
+{
+  "$comment": "ClickUp routing for this repo. IDs are workspace-stable; names are for humans. Schema: skills/task-tracking/references/clickup-json.md",
+  "space": {
+    "id": "90140688927",
+    "name": "Linchpin",
+    "customIdPrefix": "LINCHPIN"
+  },
+  "defaultList": {
+    "id": "901418800354",
+    "name": "Backlog",
+    "path": "Linchpin › Skills - Claude/AI › Backlog",
+    "use": "All work on this library — new skills, edits to existing ones, the installer, and the validator."
+  },
+  "lists": {
+    "Skills - Claude/AI › Backlog": "901418800354"
+  },
+  "folders": {
+    "Skills - Claude/AI": "901411316535"
+  },
+  "unmapped": {
+    "$comment": "No moduleRouting: the board does not mirror skills/ one list per skill, and shouldn't — a skill is rarely more than one task.",
+    "listsWithoutModule": []
+  }
+}

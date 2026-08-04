@@ -193,11 +193,11 @@ not by hand.
 Work happens on a dedicated branch opened as a PR against the base branch (usually `main`) —
 never commit straight to `main`.
 
-- **Branch naming**, cut from an up-to-date `main`: **`issue/<ISSUE-KEY>`** with a task (e.g.
-  `issue/LINCHPIN-5113`), else **`no-task/<short-kebab-slug>`** describing the change — a bare
-  `issue/no-task` would collide across changes. Started NO-TASK and created a task before
-  pushing? `git branch -m issue/<ISSUE-KEY>`.
-- **The PR body links the ClickUp task** — paste `https://app.clickup.com/t/<ISSUE-KEY>` and
+- **Branch naming**, cut from an up-to-date `main`: **`issue/<custom_id>`** — the ClickUp
+  custom ID verbatim (`issue/LINCHPIN-5113`), never the internal id and never a slug. Without
+  a task, **`no-task/<short-kebab-slug>`**, since a bare `issue/no-task` would collide. Created
+  a task after starting NO-TASK? `git branch -m issue/<custom_id>`.
+- **The PR body links the ClickUp task** — paste `https://app.clickup.com/t/<custom_id>` and
   the key so GitHub ↔ ClickUp stay connected; for NO-TASK, note there's no task. The title
   follows the commit convention, whose grammar is `commit-and-release`'s.
 - Keep every commit on the branch using the same scope.
@@ -246,8 +246,8 @@ Call signatures for every step: [`references/clickup-mcp-tools.md`](references/c
       back from `custom_id` rather than taken from an internal id.
 - [ ] Work spanning sessions, contexts, or PRs was split deliberately with the user, and
       every task or subtask carries a "done when".
-- [ ] The branch matches the key (`issue/<KEY>` or `no-task/<slug>`), every commit on it
-      carries the same scope, and the PR body links `app.clickup.com/t/<KEY>`.
+- [ ] The branch matches the key (`issue/<custom_id>` or `no-task/<slug>`), every commit on it
+      carries the same scope, and the PR body links `app.clickup.com/t/<custom_id>`.
 - [ ] For task-backed work: a comment with the PR link exists, and the status reflects
       reality without over-claiming completion.
 - [ ] If work is pausing unfinished, a handoff comment exists that a teammate could act on
