@@ -105,7 +105,8 @@ real project — the checks catch structure, not correctness.
 - Conventional commits with the ClickUp task key as the scope: `feat(LINCHPIN-5164): …`,
   `docs(LINCHPIN-5163): …`, or `NO-TASK` when there's no ticket. This repo eats its own
   cooking: `task-tracking` owns the key, `commit-and-release` owns the message grammar.
-- Branches: `feat/<slug>` or `issue/<TASK-KEY>`; work lands on `main` via PR.
+- Branches: `issue/<custom_id>` (e.g. `issue/LINCHPIN-5164`) or `no-task/<slug>`; work lands
+  on `main` via PR. `task-tracking` owns this — don't restate a different form here.
 - **No commitlint and no husky here** — unlike the projects that consume it. The convention is
   enforced instead by the `pr-title` job in `.github/workflows/validate-skills.yml`, which
   regex-checks the **PR title**, because squash merges make that title the commit message

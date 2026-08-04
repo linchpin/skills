@@ -1,7 +1,7 @@
 ---
 name: commit-and-release
-description: Write commits, branches, and PR titles that satisfy a Linchpin repo's own commitlint rules, and stay out of the way of release-please, which owns versions and CHANGELOG.md. Use when composing a commit message, when commitlint or a husky hook rejects one, when opening a PR, when asked how a change gets released or deployed, or before touching a version number anywhere. Not for running lint or tests — use `quality-gates`.
-version: 1.0.0
+description: Write commit messages and PR titles that satisfy a Linchpin repo's own commitlint rules, and stay out of the way of release-please, which owns versions and CHANGELOG.md. Use when composing a commit message, when commitlint or a husky hook rejects one, when opening a PR, when asked how a change gets released or deployed, or before touching a version number anywhere. Not for running lint or tests — use `quality-gates`. Not for naming the branch or resolving the task key in the scope — use `task-tracking`.
+version: 1.1.0
 ---
 
 # Commit and release
@@ -17,20 +17,21 @@ Two pieces of automation own this pipeline, and both bite when you guess:
 
 ## When to use
 
-- Composing a commit message, branch name, or PR title.
+- Composing a commit message or PR title.
 - A commit was rejected by commitlint or a husky hook.
 - The user asks how a change reaches staging or production.
 - Anything is about to touch a version number or `CHANGELOG.md`.
 - Reviewing or merging a release PR.
 
 **Not this skill:** running lint/tests before the commit — [`quality-gates`](../quality-gates/SKILL.md).
-Finding or creating the task whose key goes in the scope — [`task-tracking`](../task-tracking/SKILL.md).
+Naming the branch, and finding or creating the task whose key goes in the scope —
+[`task-tracking`](../task-tracking/SKILL.md).
 
 ## Owns
 
-Canonical for: commit message grammar, branch and PR-title rules, and the boundary between
-what you write and what release-please generates. Defers task resolution to
-[`task-tracking`](../task-tracking/SKILL.md) and verification to [`quality-gates`](../quality-gates/SKILL.md).
+Canonical for: commit message grammar, PR-title rules, and the boundary between what you
+write and what release-please generates. Defers task resolution **and branch naming** to
+[`task-tracking`](../task-tracking/SKILL.md), verification to [`quality-gates`](../quality-gates/SKILL.md).
 
 ## Preflight — the rules are per-repo
 
