@@ -1,6 +1,6 @@
 ---
 name: design-previews
-description: Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile with the Chrome DevTools MCP (or Playwright), and get the client's pick before any theme or block work starts. Use when kicking off a design, when someone asks for design options or mockups, when a brief is vague and needs something to react to, or before building a homepage or landing page. Not for auditing an existing design — use `wp-audit`.
+description: Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile, and get the client's pick before any theme or block work starts. Use when kicking off a design, when someone asks for design options or mockups, when a brief is vague and needs something to react to, or before building a homepage or landing page. Not for auditing an existing design — use `wp-audit`. Not for choosing a browser tool — use `browser-automation`.
 version: 1.1.0
 ---
 
@@ -27,7 +27,8 @@ and [`wp-block-conventions`](../wp-block-conventions/SKILL.md).
 ## Owns
 
 Canonical for: the brief template, how directions are differentiated, preview output rules,
-the review loop, and the handoff. Implementation belongs to the skills above.
+the review loop, and the handoff. Implementation belongs to the skills above; getting a
+browser to screenshot with belongs to [`browser-automation`](../browser-automation/SKILL.md).
 
 ## Preflight — confirm the brief first
 
@@ -68,10 +69,10 @@ three palettes of one layout still isn't.
    gitignored; the repo is `wp-content` and previews must never ship). One file per
    direction, generated in parallel when the harness supports it.
    → `design-1.html`, `design-2.html`, `design-3.html` exist and open standalone.
-3. **Screenshot each at desktop and mobile.** Prefer the **Chrome DevTools MCP** —
-   `new_page`, `navigate_page` to the `file://` path, `resize_page` or `emulate`, then
-   `take_screenshot`. Use **Playwright** when you need scripted runs or Chrome isn't
-   available. → Six images: three directions × two widths.
+3. **Screenshot each at desktop and mobile.** Get a browser via
+   [`browser-automation`](../browser-automation/SKILL.md), which owns the tool choice and its
+   order — navigate to the `file://` path, set each viewport, capture. Don't pick a browser
+   tool here. → Six images: three directions × two widths.
 4. **Present for a decision** — each direction as name, file path, screenshot, and one line
    on what makes it different. Offer exactly three responses: pick one, pick one with
    modifications, or regenerate all three.

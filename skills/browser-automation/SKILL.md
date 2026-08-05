@@ -13,7 +13,10 @@ parallel runs.
 
 Skills that need a browser ([`web-qa`](../web-qa/SKILL.md),
 [`wp-audit`](../wp-audit/SKILL.md), [`design-previews`](../design-previews/SKILL.md))
-reference this rather than each choosing their own way in.
+reference this rather than each choosing their own way in. **The one exception is a local
+Studio site**, whose MCP has its own `take_screenshot` and `inspect_design` against PHP-WASM
+— that isn't a browser and doesn't come through this ladder; see
+[`wp-studio-cli`](../wp-studio-cli/SKILL.md).
 
 ## When to use
 
@@ -81,6 +84,9 @@ session and are not part of this ladder.
 - **Never store credentials, cookies, or auth state in the repo.** Use the browser's existing
   session or a gitignored auth file.
 - **Never navigate anywhere the task didn't call for.** Stay on the target application.
+- **Never reach for `claude-in-chrome` tools.** They fight the Chrome DevTools MCP for the
+  same browser session; the ladder above is the whole set. This is stated here as well as in
+  the ladder because it's the one rule another skill is most likely to trip over.
 - If the browser tooling fails twice in a row, stop and report it rather than cycling through
   variations of the same call.
 
