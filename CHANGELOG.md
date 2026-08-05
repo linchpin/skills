@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.10](https://github.com/linchpin/skills/compare/v0.1.9...v0.1.10) (2026-08-05)
+
+
+### Features ✨
+
+* **LINCHPIN-5321:** Add task-tracking preflight and multi-session task splitting ([#22](https://github.com/linchpin/skills/issues/22)) ([126bb3b](https://github.com/linchpin/skills/commit/126bb3b6bd6b8f48eeee15776fa1dd96821d1ae4))
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-5331:** Route all browser work through browser-automation ([#24](https://github.com/linchpin/skills/issues/24)) ([68779a3](https://github.com/linchpin/skills/commit/68779a395736adea69a055b12aa6d9b680ce0036))
+* **LINCHPIN-5336:** Gate the body-length warning on missing references ([#25](https://github.com/linchpin/skills/issues/25)) ([130e8c0](https://github.com/linchpin/skills/commit/130e8c02efb80e8ef879f8ff543fb32b526fa2ff))
+
 ## [0.1.9](https://github.com/linchpin/skills/compare/v0.1.8...v0.1.9) (2026-08-02)
 
 
