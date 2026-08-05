@@ -27,6 +27,11 @@ the fallback and the scripting route.
 [`wp-audit`](../wp-audit/SKILL.md). A legacy project on wp-env or LocalWP — use that
 project's tooling ([`quality-gates`](../quality-gates/SKILL.md) detects which).
 
+`take_screenshot` and `inspect_design` below are **Studio's own**, rendering PHP-WASM rather
+than driving a browser — enough for markup and layout checks. When you need a *real* browser
+against the Studio URL (actual session state, extensions, console and network behaviour), get
+one via [`browser-automation`](../browser-automation/SKILL.md).
+
 ## Preflight — pick the interface
 
 1. **Try MCP first.** A cheap call like `site_list` confirms it's connected.

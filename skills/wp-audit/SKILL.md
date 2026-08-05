@@ -35,8 +35,8 @@ the code being changed.
 | Target | How | Caveat |
 | --- | --- | --- |
 | Local Studio site | [`wp-studio-cli`](../wp-studio-cli/SKILL.md) → `need_for_speed`, `take_screenshot`, `inspect_design` | **Synthetic.** PHP-WASM + SQLite, no CDN, no production cache — good for diagnosis and before/after, not a production claim |
-| Production / staging | Real-browser tooling against the live URL; server state via [`wp-pressable`](../wp-pressable/SKILL.md) read-only commands | The only numbers you can quote to a client as real |
-| Legacy local (wp-env / LocalWP) | Browser tooling against the local URL | Studio MCP tools won't apply |
+| Production / staging | A real browser via [`browser-automation`](../browser-automation/SKILL.md) against the live URL; server state via [`wp-pressable`](../wp-pressable/SKILL.md) read-only commands | The only numbers you can quote to a client as real |
+| Legacy local (wp-env / LocalWP) | [`browser-automation`](../browser-automation/SKILL.md) against the local URL | Studio MCP tools won't apply |
 
 Resolve two things before measuring: **which environment**, and **which URL path** (default
 `/` if unspecified). State both in the report — an audit without them isn't reproducible.
