@@ -51,68 +51,14 @@ Target shape (the repo root doubles as `wp-content`):
   .gitignore                   # allowlist pattern — see below
 ```
 
-### composer.json baseline
+### composer.json and .gitignore baselines
 
-```json
-{
-  "name": "linchpin/<project>",
-  "repositories": [
-    { "type": "composer", "url": "https://wpackagist.org" },
-    { "type": "composer", "url": "https://packagist.linchpin.com" }
-  ],
-  "require": {
-    "php": ">=8.2"
-  },
-  "require-dev": {
-    "composer/installers": "^2"
-  },
-  "extra": {
-    "installer-paths": {
-      "plugins/{$name}/": ["type:wordpress-plugin"],
-      "themes/{$name}/": ["type:wordpress-theme"]
-    }
-  }
-}
-```
+Both templates, the package-name conventions for each dependency source, and the allowlist
+trap: [`references/scaffold-baselines.md`](references/scaffold-baselines.md).
 
-- wordpress.org plugins/themes → `wpackagist-plugin/<slug>` / `wpackagist-theme/<slug>`.
-- Premium or shared-private packages → `linchpin/<slug>` from packagist.linchpin.com.
-- A plugin built **only for this client** is committed to `plugins/` instead (and
-  allowlisted in `.gitignore`).
-- Which plugins a project needs is project-specific — don't copy another site's list.
-- Mature projects add the PHP QA stack to `require-dev` (`wp-coding-standards/wpcs`,
-  `phpstan/phpstan` + `szepeviktor/phpstan-wordpress`, `php-parallel-lint/php-parallel-lint`,
-  `friendsofphp/php-cs-fixer`) — mirror `linchpin/linchpin.com` when setting that up.
-
-### .gitignore baseline (allowlist pattern)
-
-Ignore everything Composer or the runtime writes; explicitly re-include what's ours:
-
-```gitignore
-# Plugins/themes are Composer-installed — commit only project code
-/plugins/*
-!plugins/<project>-functionality/
-!plugins/<project>-functionality/**
-/themes/*
-!themes/<project>/
-!themes/<project>/**
-/vendor
-node_modules
-
-# WordPress runtime
-debug.log
-/uploads/
-/upgrade/
-
-# WordPress Studio runtime (SQLite) — never commit these
-db.php
-/database
-/mu-plugins/sqlite-database-integration
-mu-plugins/99-studio-loader.php
-```
-
-Adding a new **committed** plugin later requires a new `!plugins/<name>/` pair —
-otherwise the `/plugins/*` rule silently keeps it out of git.
+Two things worth knowing before you open it: **which plugins a project needs is
+project-specific** — don't copy another site's list — and the `.gitignore` is an *allowlist*,
+so every committed plugin needs its own re-include pair or git silently ignores it.
 
 ### The project theme
 
@@ -203,19 +149,6 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
 - **Media isn't in git** (`/uploads/` is ignored). Getting real content/uploads locally
   is per-project — check that project's docs.
 
-## Quick reference
-
-| Task | Command |
-| --- | --- |
-| Start the project theme | see [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) — child / fresh / fork |
-| Install plugins | `composer install` (repo root) |
-| Add a wordpress.org plugin | `composer require wpackagist-plugin/<slug>` |
-| Add a premium/shared plugin | `composer require linchpin/<slug>` (packagist.linchpin.com) |
-| Build the theme (if it has a build) | `npm run build` in `themes/<project>` (`npm start` to watch) |
-| Symlink repo into Studio | `mv <site>/wp-content <site>/wp-content-studio-default && ln -s <repo> <site>/wp-content` |
-| Start the site | `studio start --skip-browser --path ~/Studio/<project>` |
-| Activate the theme | `studio wp theme activate <project> --path ~/Studio/<project>` |
-| Site URL + credentials | `studio site status --path ~/Studio/<project> --format json` |
 
 ## Guardrails
 
@@ -231,7 +164,8 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
 - **Never commit Composer-installed plugins/themes** — `installer-paths` writes into
   gitignored directories by design.
 - Don't hand-edit versions or `CHANGELOG.md` in a scaffolded repo — release-please owns
-  them ([`commit-and-release`](../commit-and-release/SKILL.md)).
+  them ([`commit-and-release`](../commit-and-release/SKILL.md)), and tie the setup work to a
+  task before committing ([`task-tracking`](../task-tracking/SKILL.md)).
 
 ## Done
 
@@ -241,14 +175,3 @@ correct. From here, day-to-day operation is `wp-studio-cli`.
       and the SQLite runtime pieces intact.
 - [ ] The site loads, the project theme is active, and the admin URL/credentials are known.
 - [ ] `.gitignore` allowlists only project code; `git status` is clean of vendored plugins.
-
-## Related skills
-
-- [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md) — choosing and standing up the project
-  theme that lands in `themes/<project>/`.
-- [`wp-studio-cli`](../wp-studio-cli/SKILL.md) — operating the running Studio site (WP-CLI
-  passthrough, `eval`, the PHP-WASM `ABSPATH` rule).
-- [`wp-pressable`](../wp-pressable/SKILL.md) — the hosted environments this baseline deploys
-  to, and the release-please → `linchpin/actions` pipeline.
-- [`task-tracking`](../task-tracking/SKILL.md) — tie the setup work to a ClickUp task before
-  committing.

@@ -90,7 +90,10 @@ owner per concern is itself one of the rules.
 What the validator enforces mechanically: `name` matches the directory, `description`
 carries a "Use when …" trigger (80–1000 chars), semver `version`, the three required
 sections (`## When to use`, `## Guardrails`, `## Done`), no machine-specific absolute
-paths, referenced files exist, and a README catalog row.
+paths, referenced files exist, and a README catalog row. It also warns when a `SKILL.md`
+body passes 200 lines with **no `references/` directory at all** — undisclosed sprawl, not
+length, is the fault. Promote the templates and command matrices; never compress prose to
+clear it.
 
 The four house rules, in one line each, since they shape every skill in the library:
 **detect don't assume** (our repos differ — read their config), **one owner per concern**

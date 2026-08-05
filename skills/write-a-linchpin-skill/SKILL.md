@@ -61,6 +61,13 @@ hand-roll this parse and drift"). If you can't name one, drop to B.
 Most skills here are **A or B**. `wordpress-blocks` is the reference B (recipes and grammar
 live in `references/`); this library's own `scripts/validate-skills.mjs` is the C pattern.
 
+**What the validator checks:** a body over **200 lines with no `references/` at all** warns —
+that combination is Tier B content held in Tier A. Length alone is never the fault;
+`wordpress-blocks` runs 877 lines across its package and passes, because the
+reference-shaped parts were promoted. **Don't compress prose to clear this warning** —
+promote the templates, command matrices, and schemas. That's the only fix that improves the
+skill rather than just the number.
+
 ## Step 3 — Write `SKILL.md`
 
 ### Frontmatter (all required)
