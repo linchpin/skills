@@ -35,7 +35,13 @@ const PLACEHOLDER_USERS = new Set(['me', 'you', 'user', 'username', 'your-user',
 const DESC_MIN = 80;
 const DESC_MAX = 1000;
 const DESC_WARN = 700;
-const BODY_WARN_LINES = 250;
+
+// Undisclosed sprawl, not length, is what the tier model cares about: a long body is fine
+// when the reference-shaped parts (templates, command matrices, schemas) have been promoted
+// to `references/`. Gating on that presence makes the check unsatisfiable by compressing
+// prose — which is how a plain line ceiling gets gamed, at the cost of the very clarity it
+// was meant to protect.
+const BODY_WARN_LINES = 200;
 
 /**
  * Parse the leading `---` frontmatter block. Supports flat `key: value` pairs plus
@@ -120,8 +126,11 @@ function validateSkill(name, readme) {
   }
 
   const lineCount = body.split('\n').length;
-  if (lineCount > BODY_WARN_LINES) {
-    warnings.push(`SKILL.md body is ${lineCount} lines — promote detail to references/ (see the tier model)`);
+  if (lineCount > BODY_WARN_LINES && !fs.existsSync(path.join(dir, 'references'))) {
+    warnings.push(
+      `SKILL.md body is ${lineCount} lines with no references/ — promote the templates, ` +
+        `command matrices, and schemas (Tier B; see the tier model)`
+    );
   }
 
   // --- Portability -----------------------------------------------------------------
