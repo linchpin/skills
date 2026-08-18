@@ -66,9 +66,10 @@ Then start a new session in your project and ask for something real — "what ki
 is this?" should pull in `project-context` and get you a summary of the repo shape, local
 environment, and host.
 
-**Re-run the same command to update.** There's no upgrade command; the installer overwrites
-in place and always pulls the latest published version. Do it every few weeks, or when
-someone announces a new skill.
+**Re-run the same command to update.** There's no upgrade command — the installer diffs each
+skill's version against what you have, shows what would change, and asks before applying it.
+A run with nothing to change exits immediately, so re-running costs nothing. Do it every few
+weeks, or when someone announces a new skill.
 
 Full flag reference: [Install options](#install-options).
 
@@ -87,7 +88,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 
-The full list is in [Available skills](#available-skills) — 20 of them, each with a
+The full list is in [Available skills](#available-skills) — 23 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -177,6 +178,9 @@ npx @linchpinagency/skills --global
 
 # Install the Linchpin skills only, without the upstream base layer
 npx @linchpinagency/skills --skip-upstream
+
+# Audit every scope for duplicate installs; install nothing
+npx @linchpinagency/skills --check
 ```
 
 > Pin a version when you need reproducibility — `npx @linchpinagency/skills@0.1.1` — or omit
@@ -188,8 +192,38 @@ npx @linchpinagency/skills --skip-upstream
 > network access and a system `tar`; if either is missing it warns and still installs the
 > Linchpin skills. Pass `--skip-upstream` to install the Linchpin skills alone.
 
-**Updating:** re-run the same command. The installer overwrites each skill in place, so a
-fresh run always pulls the latest published version.
+**Updating:** re-run the same command — that *is* the update path. Rather than overwriting
+silently, the installer compares each skill's own `version` against what is installed,
+prints the diff, and asks before touching anything:
+
+```
+@linchpinagency/skills v0.2.0 — Claude Code
+
+  task-tracking        v1.3.0 -> v1.4.0   update
+  agent-capabilities            -> v1.0.0   new
+  quality-gates        v1.0.0             local edits will be lost
+  (20 unchanged)
+
+3 change(s): 1 update, 1 new, 1 modified
+
+Apply? [y/N]
+```
+
+A run with nothing to change says so and exits without prompting, so re-running is cheap
+and safe. `--dry-run` shows the diff and writes nothing; `--yes` skips the prompt;
+`--force` reinstalls everything regardless.
+
+> A **non-interactive** run — piped stdin, CI, a script — proceeds without prompting, so
+> existing automation keeps working. Use `--dry-run` when you want a preview rather than an
+> install.
+
+Three statuses are worth knowing:
+
+- **local edits will be lost** — the installed copy was hand-edited. Skills are owned by
+  this package; change them here and re-install rather than editing an install in place.
+- **DOWNGRADE** — the package you invoked is *older* than what is installed. Usually a
+  pinned `npx @linchpinagency/skills@0.1.1` you meant to drop.
+- **new** — the skill did not exist in your installed version.
 
 ### Keeping skills current
 
@@ -231,6 +265,34 @@ skips itself whenever `CI` is set.
 A project that wants skills in more than one agent's directory should run
 `--agent all` rather than copying directories around by hand.
 
+### One scope per skill
+
+Agents load **every** skills directory they find and **do not dedupe by name**. A skill
+installed both globally and in a project is listed twice, and its `description` is loaded
+twice in every session before any work starts.
+
+So the installer refuses to create the second copy:
+
+```
+Refusing to install: 22 of these skills are already installed at another scope.
+```
+
+It reports which directory, what would be duplicated, and the command to remove just the
+overlapping skills — never the whole directory, which usually holds skills from other
+sources too. `--force` overrides it for the rare case where you want both.
+
+```bash
+npx @linchpinagency/skills --check                  # audit; exits 1 if duplicates exist
+npx @linchpinagency/skills --check --agent codex    # a different agent's directories
+```
+
+`--check` also catches the accident that is easiest to miss: an install in a *parent* of the
+repo (running the installer from `~/GitHub` rather than inside a checkout), which shadows
+nothing and duplicates everything below it.
+
+Choosing a scope, the MCP-server equivalent of the same problem, and how to record the
+decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.md).
+
 > Skills are loaded by the **agent/harness**, not the model — so "Copilot running Claude"
 > still needs the skill installed in Copilot's own directory. The installer handles that.
 
@@ -251,6 +313,7 @@ A project that wants skills in more than one agent's directory should run
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |
 | `project-context` | Workflow | Orient before acting — repo shape, local environment, host, ClickUp space, and release model, read from the project's own config rather than assumed. Referenced by other skills' Preflight. |
+| `agent-capabilities` | Workflow | Right-size what a project loads — audit skill installs for cross-scope duplicates (`--check`), decide which MCP servers the repo actually needs, and scope them so every session stops paying for all of them. |
 | `quality-gates` | Workflow | Run a project's own lint, PHPCS, PHPStan, and test gates before committing — detected from `composer.json`, `package.json`, `phpcs.xml.dist`, and `lint-staged`, never assumed. |
 | `web-qa` | Workflow | QA like a real user and fix what you find — front end, wp-admin, and block editor, with severity, evidence, one atomic commit per fix, and a report-only mode. |
 | `investigate` | Workflow | Root-cause a bug before changing anything — reproduce, read the real error, isolate the layer, explain the mechanism, with WordPress first checks. |
