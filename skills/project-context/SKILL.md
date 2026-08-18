@@ -1,7 +1,7 @@
 ---
 name: project-context
 description: Orient before acting on a Linchpin project — identify the repo and branch, the local environment (Studio, wp-env, LocalWP), the host (Pressable or Cloudflare), the ClickUp space, and the release model, from .linchpin.json, composer.json, package.json, and the git remote. Use when starting work on an unfamiliar repo, before running commands that assume an environment, when a skill's Preflight needs the project's shape, or when something behaves differently than expected. Not for running the checks themselves.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Project context
@@ -55,6 +55,21 @@ Then read what exists:
 | `commitlint.config.js` | This repo's allowed commit types — they differ between repos |
 | Deploy workflows referencing Pressable | Hosted on Pressable ([`wp-pressable`](../wp-pressable/SKILL.md)) |
 | Git remote name | Infers the ClickUp space ([`task-tracking`](../task-tracking/SKILL.md)) |
+| `.mcp.json` | The MCP servers this repo declares it needs ([`agent-capabilities`](../agent-capabilities/SKILL.md)) |
+
+## Capability surface
+
+Part of "what am I working in?" is what the agent itself loaded. If the project's shape and
+its capabilities disagree — WordPress skills on a Workers repo, no `.mcp.json` on a repo
+whose work needs one, the same skill listed twice — say so once and move on;
+[`agent-capabilities`](../agent-capabilities/SKILL.md) owns the fix.
+
+Worth a look on an unfamiliar repo, not every session:
+
+```bash
+npx @linchpinagency/skills --check   # duplicate skill installs across scopes
+claude mcp list                      # configured servers and their scope
+```
 
 ## What to report
 
