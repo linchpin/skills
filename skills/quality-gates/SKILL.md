@@ -11,7 +11,10 @@ scripts, `package.json` scripts, `phpcs.xml.dist`, `lint-staged.config.js`. Your
 **find those declarations and run them**, not to invent commands. Getting this right is
 what makes the difference between a clean PR and a red CI run.
 
-The gates are the same ones CI runs, so passing here means passing there.
+The gates are the same ones CI runs, so passing here almost always means passing there.
+Almost: see [Green locally, red in CI](#green-locally-red-in-ci) for the one way the
+shared lint workflow disagrees with a clean local run, which is not a difference in what
+is checked but in what counts as a failure.
 
 ## When to use
 
@@ -69,6 +72,55 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
    repo lacks a house script, propose it (see `references/toolchain.md`) and add it **only
    with approval**. → Then go to [`commit-and-release`](../commit-and-release/SKILL.md).
 
+## Green locally, red in CI
+
+The shared lint workflow (`linchpin/actions`) runs the same phpcs you do, and then does
+two things to the result that your terminal does not.
+
+**It sniffs only the files the PR changed.** `git diff --diff-filter=ACMRT <base>...HEAD`,
+which means **you inherit the debt of every file you touch**. A file carrying violations
+nobody has cleaned up becomes your problem the moment you edit one line of it.
+
+**It pipes the report through `cs2pr`, and `cs2pr` fails on warnings.** This is the part
+that surprises people:
+
+```bash
+phpcs -q --runtime-set ignore_warnings_on_exit 1 --report=checkstyle "${files[@]}" | cs2pr
+```
+
+`ignore_warnings_on_exit` does exactly what it says — **phpcs itself exits 0** on a
+warnings-only run. But the checkstyle report still lists every warning as
+`<error severity="warning">`, `cs2pr` turns each into an annotation and exits non-zero
+when there is one, and the step runs under `set -e` with the pipeline's exit code being
+the last command's. So `composer lint` is green, `phpcs` on its own is green, and the job
+is red.
+
+Put together: **one unfixed warning in a file makes every future PR that touches it red on
+arrival.** Seen twice on linchpin.com — `PSR1.Files.SideEffects` on the standard
+`defined( 'ABSPATH' ) || exit;` guard (which cost a PR merged red), and
+`WordPress.WP.Capabilities.Unknown` on two custom capabilities.
+
+Check the same thing CI checks — the count of annotations, warnings included, over the
+files the PR changed:
+
+```bash
+git diff --name-only --diff-filter=ACMRT "$(git merge-base HEAD origin/main)"...HEAD -- '*.php' \
+  | tr '\n' '\0' | xargs -0 vendor/bin/phpcs -q --report=checkstyle \
+  | grep -c 'severity='
+```
+
+Zero means the job will pass. Any other number is what CI will annotate, whether phpcs
+called them errors or not. (Piped through `xargs -0` rather than an unquoted `$files`
+because zsh does not word-split, so the obvious version passes phpcs one long filename
+and reports a file that does not exist.)
+
+Fixing it is the same rule as everywhere else in this skill — **fix the warning, do not
+silence the sniff.** Most are legitimately configuration rather than code: a custom
+capability belongs in `custom_capabilities` in `phpcs.xml.dist`, a text domain in
+`text_domain`. Register the real value and say in a comment where it comes from; a typo
+registered there hides exactly the bug the sniff exists to catch. Setting the sniff to
+`<severity>0</severity>` is the last resort, not the first.
+
 ## Guardrails
 
 - **Never** commit with `--no-verify`. The hook is the gate; if it blocks you, fix the code.
@@ -90,5 +142,6 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
 - [ ] PHP gate passed (or is correctly not applicable — no `phpcs.xml.dist`, no PHP changed).
 - [ ] JS/CSS gate passed in the owning workspace (or correctly not applicable).
 - [ ] Tests run for touched, covered code.
+- [ ] The changed-file annotation count is zero — warnings included, not just errors.
 - [ ] No suppressions, config widenings, or `--no-verify` were used to get green.
 - [ ] Skipped gates and missing house scripts are named in the report.
