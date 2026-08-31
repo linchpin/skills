@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.11](https://github.com/linchpin/skills/compare/v0.1.10...v0.1.11) (2026-08-31)
+
+
+### Features ✨
+
+* **NO-TASK:** Add agent-capabilities skill and stop duplicate skill installs ([#26](https://github.com/linchpin/skills/issues/26)) ([999fd53](https://github.com/linchpin/skills/commit/999fd53aef2fe63dc3a5cd5b3d3a81294d064408))
+
+
+### Documentation 📚
+
+* **NO-TASK:** Document the 100 character header limit and the PR title lint ([#28](https://github.com/linchpin/skills/issues/28)) ([4391d44](https://github.com/linchpin/skills/commit/4391d44f08006dc6fd0d15bccdefdc2927c8c025))
+* **NO-TASK:** Explain why a clean phpcs run can still fail the lint job ([#29](https://github.com/linchpin/skills/issues/29)) ([c98623b](https://github.com/linchpin/skills/commit/c98623bcca03ffeee7b20daa8fa2146f119a6950))
+
 ## [0.1.10](https://github.com/linchpin/skills/compare/v0.1.9...v0.1.10) (2026-08-05)
 
 
