@@ -39,6 +39,8 @@ write and what release-please generates. Defers task resolution **and branch nam
 | --- | --- |
 | `commitlint.config.js` → `type-enum` | The types **this** repo accepts — they are not the same everywhere |
 | `commitlint.config.js` → `parserOpts.headerPattern` | The exact header regex, including which scopes count (`NO-TASK`, sometimes `NO-JIRA`, `#123`) |
+| `commitlint.config.js` → `extends` | What is inherited but never written down locally. `@commitlint/config-conventional` is where `header-max-length` comes from — see below |
+| `.github/workflows/` → the commit-message job | Whether CI **also** lints the PR title, which the husky hook never sees |
 | `release-please-config.json` → `changelog-sections` | Which types appear in the changelog, and which are hidden |
 | `release-please-config.json` → `extra-files` | **Every file whose version string is machine-owned** — never hand-edit these |
 | `.release-please-manifest.json` | The current version (also machine-owned) |
@@ -67,10 +69,27 @@ fix(LINCHPIN-4980): Correct masthead gutter on columns children
 improve(NO-TASK): Tidy editorconfig and ignore rules
 ```
 
+**Length: 100 characters, and it is an error.** `header-max-length` is not in Linchpin's
+shared config — it arrives through `extends: ['@commitlint/config-conventional']`, at
+severity `error`, counting the whole header including `type(SCOPE): `. A task key plus a
+colon and a space is ~22 of the budget, so the subject has about 78. Count it before you
+push; a title that reads well in a PR form is easily 110.
+
 **Punctuation gotcha:** the header pattern accepts only letters, digits, spaces, commas and
-hyphens in the subject. Periods, colons, parentheses and slashes cut the parsed subject
-short — so `Update wp-scripts to v27.1` parses as `Update wp-scripts to v27`. Keep version
-numbers and punctuation out of subjects, or put them in the body.
+hyphens in the subject — `[\w\d\s,\-]`. Everything else cuts the parsed subject short at
+the first offender, silently, because what is left still matches. Periods, colons,
+parentheses and slashes are the obvious ones: `Update wp-scripts to v27.1` parses as
+`Update wp-scripts to v27`.
+
+The two that catch people writing a prose-y PR title are less obvious, because both are
+what a careful writer reaches for:
+
+- **The apostrophe.** `\w` is `[A-Za-z0-9_]`, so `WooCommerce's account menu` parses as
+  `WooCommerce`. Write `the WooCommerce account menu`.
+- **The em dash.** Not in the set either, so a title with a `—` clause keeps only the half
+  before it. Use a comma, or split the thought into the body.
+
+Keep version numbers, possessives, dashes and punctuation out of subjects entirely.
 
 **Breaking changes:** `feat(KEY)!: …` or a `BREAKING CHANGE: …` footer. This drives a major
 version bump, so use it deliberately.
@@ -90,6 +109,34 @@ use `main` as a scope for normal work.
 5. **Push the branch and open the PR.** Title follows the same convention (squash merges use
    the PR title as the commit message, so a malformed title breaks the changelog); body
    links the ClickUp task. → PR open against the base branch, never a push to `main`.
+
+   **The PR title is linted separately, and the husky hook never saw it.** The shared
+   workflow pipes `gh pr view --json title -q .title` through commitlint as its own step, so
+   every commit can pass locally and the PR still go red — the usual cause is the 100-char
+   limit, since a PR title is written in a web form with no counter. Check it before you
+   wait on CI:
+
+   ```bash
+   # Before opening: is the title you are about to use legal?
+   title="feat(PROJ-123): Subject in sentence case"
+   printf '%s' "$title" | npx commitlint --verbose
+
+   # Already open: lint the live title, and see its length.
+   gh pr view <number> --json title -q .title | tee >(awk '{print length" chars"}' >&2) \
+     | npx commitlint --verbose
+   ```
+
+   Fixing it takes two steps, because the shared workflow runs on
+   `pull_request: types: [opened, synchronize, reopened]` — `edited` is not in that list, so
+   correcting the title does **not** re-run anything and the PR sits on a stale red check:
+
+   ```bash
+   gh pr edit <number> --title 'feat(PROJ-123): A legal subject'
+   gh run rerun <run-id> --job <job-id>   # both are in `gh pr checks <number>`
+   ```
+
+   `gh run rerun` is refused while the run is still in progress, so wait for it to finish
+   before retrying.
 6. **Let release-please do the release.** Merging to `main` opens or updates a release PR
    that bumps versions and writes `CHANGELOG.md`; merging *that* tags the release, which is
    what deploy workflows trigger from. → Confirm the release PR reflects your change under
@@ -131,6 +178,9 @@ release note — pick the type that reflects what actually changed.
 - [ ] Type is in **this** repo's `type-enum`; subject is sentence case with no trailing
       period or mid-subject punctuation.
 - [ ] Commit passed the husky/commitlint hook without `--no-verify`.
-- [ ] PR title follows the same convention and the body links the ClickUp task.
+- [ ] Header is under 100 characters, and carries no apostrophe, em dash or other
+      punctuation outside `[\w\d\s,\-]`.
+- [ ] PR title follows the same convention, was linted in its own right (not just the
+      commits), and the body links the ClickUp task.
 - [ ] No version string, `CHANGELOG.md`, manifest, or tag was written by hand.
 - [ ] The resulting release PR shows the change under the expected section.
