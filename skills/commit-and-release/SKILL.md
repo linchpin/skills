@@ -116,6 +116,10 @@ use `main` as a scope for normal work.
    limit, since a PR title is written in a web form with no counter. Check it before you
    wait on CI:
 
+   Run these from inside the repo whose rules you are checking — commitlint resolves the
+   config from the working directory, and from anywhere else it reports
+   "Please add rules to your `commitlint.config.js`" rather than an answer about your title:
+
    ```bash
    # Before opening: is the title you are about to use legal?
    title="feat(PROJ-123): Subject in sentence case"
