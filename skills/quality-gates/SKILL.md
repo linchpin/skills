@@ -1,7 +1,7 @@
 ---
 name: quality-gates
-description: Run a Linchpin project's own lint, coding-standards, static-analysis, and test gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
-version: 1.0.0
+description: Run a Linchpin project's own lint, coding-standards, static-analysis, test and Plugin Check gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, when a plugin has to pass Plugin Check before it ships, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
+version: 1.1.0
 ---
 
 # Quality gates
@@ -22,6 +22,7 @@ is checked but in what counts as a failure.
 - The user asks whether a change is ready to ship.
 - CI lint / PHPCS / PHPStan failed and you need to reproduce and fix it locally.
 - A husky pre-commit hook is blocking a commit.
+- A plugin is heading for WordPress.org, packagist.linchpin.com, or a release.
 - A repo is missing the house lint scripts and should get them.
 
 **Not this skill:** the commit message, branch, or release — [`commit-and-release`](../commit-and-release/SKILL.md).
@@ -47,6 +48,7 @@ the same conventions but expose different gates.
 | `package.json` → `scripts` | JS/CSS gates (`lint:js`, `lint:css`, `format`, `lint:check`) | Fall back to `eslint`/`prettier` only if configured |
 | `lint-staged.config.js` + `.husky/` | Pre-commit is already wired — **mirror those exact commands** | Run the scripts directly |
 | Nested `package.json` (e.g. `themes/*`, `plugins/*`, `src/`) | Gates run **in that workspace**, not the root | Root only |
+| A plugin header (`Plugin Name:`) plus `readme.txt`, or `.github/workflows/plugin-check.yml` | It is a distributed plugin → **Plugin Check applies** | Skip it; Plugin Check is meaningless for a theme or a site repo |
 | `.linchpin.json` | Project metadata and local environments | Not every repo has one |
 
 Full command matrix: [`references/toolchain.md`](references/toolchain.md).
@@ -68,7 +70,13 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
 5. **Fix, don't silence.** Auto-fixers first (`composer run phpcbf`, `composer run fixer`,
    `npm run format`), then re-run the gate; hand-fix what remains. → Gate passes with the
    fix in the code, not in the config.
-6. **Report gaps, then hand off.** State which gates ran, which were skipped and why. If the
+6. **Plugin Check gate** — distributed plugins only. `composer run plugin-check` where the
+   repo has it, otherwise the commands in
+   [`references/toolchain.md`](references/toolchain.md#plugin-check). It builds the
+   distributable and boots WordPress, so it is slower than the rest: run it before opening
+   the PR rather than on every commit. → Zero findings, **warnings included**, or each one
+   fixed or excluded with a stated reason.
+7. **Report gaps, then hand off.** State which gates ran, which were skipped and why. If the
    repo lacks a house script, propose it (see `references/toolchain.md`) and add it **only
    with approval**. → Then go to [`commit-and-release`](../commit-and-release/SKILL.md).
 
@@ -133,6 +141,14 @@ registered there hides exactly the bug the sniff exists to catch. Setting the sn
   dependency change ([`dependency-updates`](../dependency-updates/SKILL.md)), not a fix.
 - **Never** commit `vendor/`, `node_modules/`, or build output unless the repo already
   tracks it — check `.gitignore` and `.distignore` first.
+- **Never** read a green "Plugin Check" tick on a PR as a passing Plugin Check.
+  `wordpress/plugin-check-action` fails the job on *errors* only, so a plugin carrying
+  warnings — the ones WordPress.org review actually raises — shows a passing check. The
+  local run is the one that tells the truth, because it treats any finding as a failure.
+- **Never** assume `composer phpcs` covers Plugin Check. Plugin Check ships its own
+  `PluginCheck.*` sniffs inside the plugin-check plugin; they are not part of the Linchpin
+  standard, so `phpcs.xml.dist` cannot reference them and PHPCS runs green while Plugin
+  Check reports findings. Two gates, not one gate twice.
 - If a tool can't run (not installed, no config, requires Docker that isn't up), **say so
   explicitly**. A silently skipped gate reads as a passing gate.
 
@@ -143,5 +159,7 @@ registered there hides exactly the bug the sniff exists to catch. Setting the sn
 - [ ] JS/CSS gate passed in the owning workspace (or correctly not applicable).
 - [ ] Tests run for touched, covered code.
 - [ ] The changed-file annotation count is zero — warnings included, not just errors.
+- [ ] For a distributed plugin: Plugin Check run **locally** with zero findings, warnings
+      included — not merely a green badge on the PR.
 - [ ] No suppressions, config widenings, or `--no-verify` were used to get green.
 - [ ] Skipped gates and missing house scripts are named in the report.
