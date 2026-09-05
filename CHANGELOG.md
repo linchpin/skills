@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.12](https://github.com/linchpin/skills/compare/v0.1.11...v0.1.12) (2026-09-05)
+
+
+### Features ✨
+
+* **LINCHPIN-5510:** Document the library and publish to docs.linchpin.com ([#32](https://github.com/linchpin/skills/issues/32)) ([1328731](https://github.com/linchpin/skills/commit/1328731f871c2c0c4552d12f08232071fd3c8442))
+
+
+### Documentation 📚
+
+* **NO-TASK:** Add Plugin Check to the gates and say why CI cannot be trusted for it ([#30](https://github.com/linchpin/skills/issues/30)) ([5915fe6](https://github.com/linchpin/skills/commit/5915fe620ab63dba90271432df8527f6c2419e9d))
+
 ## [0.1.11](https://github.com/linchpin/skills/compare/v0.1.10...v0.1.11) (2026-08-31)
 
 
