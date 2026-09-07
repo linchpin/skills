@@ -352,8 +352,18 @@ function writeStamp(target, { version, opts, skills, upstream }) {
 // dirs into every directory in `bases`. Best-effort: any failure (offline, no `tar`,
 // missing skill) warns and returns false rather than aborting the Linchpin install.
 async function installUpstreamSource(source, bases) {
-  const { repo, ref, skills = [] } = source;
+  // `path` is where skills live *inside* the source repo. Upstreams disagree:
+  // WordPress/agent-skills uses `skills/`, Automattic/docspress uses `.claude/skills/`.
+  // Defaults to `skills` so existing sources need no change.
+  const { repo, ref, skills = [], path: skillsPath = 'skills' } = source;
   if (!repo || !ref || !skills.length) return false;
+
+  // Keep a source manifest from reaching outside its own tarball.
+  const segments = String(skillsPath).split('/').filter(Boolean);
+  if (!segments.length || segments.includes('..') || path.isAbsolute(skillsPath)) {
+    console.warn(`  ! ${repo}: ignoring unsafe path ${JSON.stringify(skillsPath)} — skipped`);
+    return false;
+  }
 
   const url = `https://codeload.github.com/${repo}/tar.gz/${ref}`;
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lp-skills-'));
@@ -376,9 +386,9 @@ async function installUpstreamSource(source, bases) {
 
     let count = 0;
     for (const name of skills) {
-      const from = path.join(extractDir, topdir, 'skills', name);
+      const from = path.join(extractDir, topdir, ...segments, name);
       if (!fs.existsSync(path.join(from, 'SKILL.md'))) {
-        console.warn(`  ! ${repo}:${name} not found at ${ref} — skipped`);
+        console.warn(`  ! ${repo}:${name} not found at ${ref} under ${segments.join('/')}/ — skipped`);
         continue;
       }
       for (const base of bases) {
@@ -648,7 +658,7 @@ async function main() {
 
   const upstream = [];
   if (!opts.skipUpstream && sources.length) {
-    console.log('\nVendoring pinned base layer (upstream WordPress/agent-skills):');
+    console.log(`\nVendoring pinned base layer (${sources.map((s) => s.repo).join(', ')}):`);
     for (const s of sources) {
       const installed = await installUpstreamSource(s, bases);
       upstream.push({ repo: s.repo, ref: s.ref, installed });

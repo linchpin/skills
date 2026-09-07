@@ -88,7 +88,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 
-The full list is in [Available skills](#available-skills) — 23 of them, each with a
+The full list is in [Available skills](#available-skills) — 24 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -137,7 +137,7 @@ middle one**:
 
 | Tier | Where it lives | What it owns |
 | --- | --- | --- |
-| **Base layer** (upstream) | [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills), vendored + pinned via [`upstream.json`](upstream.json) | Generic "how WordPress works" — block.json, theme.json mechanics, the Interactivity API, performance, WP-CLI ops. |
+| **Base layer** (upstream) | [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) and [`linchpin/docspress`](https://github.com/linchpin/docspress) (our fork of [`Automattic/docspress`](https://github.com/Automattic/docspress)), vendored + pinned via [`upstream.json`](upstream.json) | Generic "how WordPress works" — block.json, theme.json mechanics, the Interactivity API, performance, WP-CLI ops — plus generating docs from a source tree. |
 | **Linchpin tooling** (**this repo**) | `skills/` | **Portable, cross-project** ways the agency works — operating Studio/Pressable, tying work to ClickUp. Things true on *every* Linchpin project. |
 | **Project layer** (per-repo) | that project's own `AGENTS.md` / `CLAUDE.md` | One project's specific blocks, theme conventions, file paths, and quirks. |
 
@@ -147,10 +147,15 @@ middle one**:
 > shared library. The test for "does it belong in this repo?" is: *would it be true on a
 > different client's WordPress project?* If not, it's project layer.
 
-The base layer is pinned to a commit SHA in [`upstream.json`](upstream.json) (upstream has
-no releases yet) and fetched at install time. Bump the `ref` there deliberately and re-test;
-don't float it, or agent behavior changes silently. New **generic** WordPress knowledge
-should be contributed **upstream**, not added here.
+Each base-layer source is pinned to a commit SHA in [`upstream.json`](upstream.json)
+(neither upstream publishes releases) and fetched at install time. Bump a `ref` there
+deliberately and re-test; don't float it, or agent behavior changes silently. New
+**generic** WordPress knowledge should be contributed **upstream**, not added here.
+
+A source may set `path` to say where skills live inside its repo — `WordPress/agent-skills`
+uses `skills/`, DocsPress keeps a copy in both `.agents/skills/` and `.claude/skills/` and
+we vendor `.agents/` because upstream lets the other one fall behind. It defaults to
+`skills`, and a value that would escape the fetched tarball is refused.
 
 ## Install options
 
@@ -312,6 +317,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `wp-block-conventions` | WordPress | Build custom blocks the Linchpin way — apiVersion 3 under `linchpin/`, dynamic `render.php` + Interactivity API `view.js`, parent/child block context, and the `wp-scripts` build/registration chain shared by `linchpin-blocks` and project functionality plugins. |
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |
+| `docspress-publish` | Workflow | Publish a repo's Markdown docs to `docs.linchpin.com` via DocsPress — the shared page tree, the pinned fork whose `managed-path` stops one repo trashing another's pages, the per-repo token, and the dry-run → draft → publish ladder. Wraps upstream `generate-docs-from-source`, which writes the content. |
 | `project-context` | Workflow | Orient before acting — repo shape, local environment, host, ClickUp space, and release model, read from the project's own config rather than assumed. Referenced by other skills' Preflight. |
 | `agent-capabilities` | Workflow | Right-size what a project loads — audit skill installs for cross-scope duplicates (`--check`), decide which MCP servers the repo actually needs, and scope them so every session stops paying for all of them. |
 | `quality-gates` | Workflow | Run a project's own lint, PHPCS, PHPStan, and test gates before committing — detected from `composer.json`, `package.json`, `phpcs.xml.dist`, and `lint-staged`, never assumed. |
@@ -330,10 +336,13 @@ _(More WordPress, React, Cloudflare Workers, marketing, and design skills to com
 
 ### Base layer (vendored from upstream, pinned)
 
-Fetched at install time from [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills)
-at the SHA pinned in [`upstream.json`](upstream.json). Curate the set there. Currently:
-`wp-block-development`, `wp-block-themes`, `wp-interactivity-api`, `wp-performance`,
-`wp-wpcli-and-ops`, `wp-plugin-development`, `wp-rest-api`.
+Fetched at install time at the SHAs pinned in [`upstream.json`](upstream.json). Curate the
+set there.
+
+| Source | Licence | Skills |
+| --- | --- | --- |
+| [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) | GPL-2.0-or-later | `wp-block-development`, `wp-block-themes`, `wp-interactivity-api`, `wp-performance`, `wp-wpcli-and-ops`, `wp-plugin-development`, `wp-rest-api` |
+| [`linchpin/docspress`](https://github.com/linchpin/docspress) — our fork of [`Automattic/docspress`](https://github.com/Automattic/docspress) | GPL-3.0-or-later | `generate-docs-from-source` — wrapped by `docspress-publish`, which owns the `docs.linchpin.com` target. The fork adds the per-repo `.docspress/brief.md` contract that wrapper depends on |
 
 ## Adding a skill
 
@@ -430,12 +439,21 @@ in `package.json`).
   builds on, and our own `@linchpinagency/worktree-utils`. Derivative distributions stay
   open, which is the point.
 - **Base layer:** the upstream skills are **not stored in this repo** — the installer
-  fetches them from [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) at
-  the pinned SHA, onto the user's machine, at install time. They are
-  **GPL-2.0-or-later**, © WordPress Contributors. Credit to that project for the generic
-  WordPress expertise our overlay builds on. (Upstream is v1 and AI-authored then
-  human-reviewed — treat it as a strong baseline, which is exactly why house rules win on
-  conflict.)
+  fetches them at the pinned SHA, onto the user's machine, at install time.
+  - [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) —
+    **GPL-2.0-or-later**, © WordPress Contributors. Credit to that project for the generic
+    WordPress expertise our overlay builds on. (Upstream is v1 and AI-authored then
+    human-reviewed — treat it as a strong baseline, which is exactly why house rules win on
+    conflict.)
+  - [`linchpin/docspress`](https://github.com/linchpin/docspress) —
+    **GPL-3.0-or-later**, © Fatih Kadir Akin, **modified by Linchpin**. Our fork of
+    [`Automattic/docspress`](https://github.com/Automattic/docspress); the modifications
+    (a per-repo `.docspress/brief.md` contract and catalog-shaped repository support) are
+    marked as such in that repository's history, as GPL-3 requires. Provides
+    `generate-docs-from-source`, which
+    [`docspress-publish`](skills/docspress-publish/SKILL.md) wraps rather than duplicates.
+    Fetched to the user's machine, never redistributed by this package, so the two licences
+    do not mix in anything we ship.
 
 ## Status
 
