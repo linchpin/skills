@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/linchpin/skills/compare/v0.1.12...v0.1.13) (2026-09-07)
+
+
+### Features ✨
+
+* **NO-TASK:** Add docspress-publish and vendor the generator from our fork ([#33](https://github.com/linchpin/skills/issues/33)) ([9e3fd30](https://github.com/linchpin/skills/commit/9e3fd3079dde831d9628c3c183c2c2602eaff862))
+
 ## [0.1.12](https://github.com/linchpin/skills/compare/v0.1.11...v0.1.12) (2026-09-05)
 
 
