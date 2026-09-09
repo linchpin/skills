@@ -88,7 +88,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 
-The full list is in [Available skills](#available-skills) — 24 of them, each with a
+The full list is in [Available skills](#available-skills) — 25 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -318,6 +318,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |
 | `docspress-publish` | Workflow | Publish a repo's Markdown docs to `docs.linchpin.com` via DocsPress — the shared page tree, the pinned fork whose `managed-path` stops one repo trashing another's pages, the per-repo token, and the dry-run → draft → publish ladder. Wraps upstream `generate-docs-from-source`, which writes the content. |
+| `github-repo-setup` | Workflow | Create a repo under the `linchpin` org and wire it for deployments — name-collision check, populated from a source repo the user is always asked to name, all changes on `issue/<task-key>`, then `<stage>-<slug>` environments and the `linchpin/actions` **v3** secrets and variables at the right scope, with the scaffold→project rename pass. |
 | `project-context` | Workflow | Orient before acting — repo shape, local environment, host, ClickUp space, and release model, read from the project's own config rather than assumed. Referenced by other skills' Preflight. |
 | `agent-capabilities` | Workflow | Right-size what a project loads — audit skill installs for cross-scope duplicates (`--check`), decide which MCP servers the repo actually needs, and scope them so every session stops paying for all of them. |
 | `quality-gates` | Workflow | Run a project's own lint, PHPCS, PHPStan, and test gates before committing — detected from `composer.json`, `package.json`, `phpcs.xml.dist`, and `lint-staged`, never assumed. |

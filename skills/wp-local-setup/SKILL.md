@@ -1,7 +1,7 @@
 ---
 name: wp-local-setup
-description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one. Not for choosing or building the theme itself — use `wp-theme-baseline`.
-version: 1.1.0
+description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one. Not for choosing or building the theme itself — use `wp-theme-baseline`; not for creating the GitHub repo or its deploy secrets — use `github-repo-setup`.
+version: 1.2.0
 ---
 
 # WordPress local setup (Linchpin baseline)
@@ -31,6 +31,8 @@ setting up local development for an existing one (wire it into Studio).
   `wp-theme-baseline`.
 - **Operating a running Studio site** (WP-CLI, credentials, `eval`) → `wp-studio-cli`.
 - **Live servers** (Pressable prod/staging, deploy pipeline detail) → `wp-pressable`.
+- **Creating the GitHub repo and its deploy wiring** (repo creation, scaffold population,
+  environments, secrets/variables) → [`github-repo-setup`](../github-repo-setup/SKILL.md).
 - **Seeding local content/database** → out of scope; follow that project's own docs.
 - **One site's specific blocks/conventions** → that project's `AGENTS.md`/`CLAUDE.md`.
 
