@@ -20,6 +20,7 @@ stale, so pick it only because the user asked for it:
 ```bash
 gh repo create linchpin/<name> --private --template linchpin/deploy-scaffold \
   --description "<one line>"
+gh repo clone linchpin/<name> "$DEST"     # $DEST from step 5 — never the current directory
 ```
 
 It ships the tooling baseline (composer.json, phpcs, phplint, commitlint, release-please,
@@ -47,10 +48,11 @@ that matches how we build now. Also the route when this isn't a WordPress site r
 # If it is a template repo
 gh repo create linchpin/<name> --private --template linchpin/<source>
 
-# Otherwise: copy the tree, not the history
+# Otherwise: copy the tree, not the history.
+# $DEST is the location agreed in step 5 — outside every existing checkout.
 gh repo create linchpin/<name> --private --description "<one line>"
-git clone --depth 1 git@github.com:linchpin/<source>.git <name>
-cd <name> && rm -rf .git && git init -b main
+git clone --depth 1 git@github.com:linchpin/<source>.git "$DEST"
+cd "$DEST" && rm -rf .git && git init -b main
 git remote add origin git@github.com:linchpin/<name>.git
 
 # Land the source tree on main UNCHANGED, so the rename is a reviewable diff
