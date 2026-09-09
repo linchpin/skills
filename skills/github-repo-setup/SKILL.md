@@ -1,7 +1,7 @@
 ---
 name: github-repo-setup
 description: Create a GitHub repo under the linchpin org and wire it for deployments — populated from a source repo you always ask the user to name, with the environments plus the repository and environment secrets and variables that linchpin/actions v3 reads. Use when starting a new client site or product repo, when asked to "create the repo", "set it up for deploys", or "add the deploy secrets/variables" — including when the repo already exists and only needs wiring — when the repo name is already taken, when a deploy fails because HOST or ENVIRONMENT is empty, or when workflows point at `@main` and no longer resolve. Not for the repo contents or local Studio wiring — use `wp-local-setup`.
-version: 2.4.0
+version: 2.5.1
 ---
 
 # New GitHub repo, ready to deploy
@@ -183,10 +183,34 @@ Result: the repo exists, with the source's contents on `main`, untouched.
 
 ### 5. Cut the working branch — nothing lands on `main` directly
 
+**Clone it somewhere of its own first.** You are almost certainly sitting in an unrelated
+checkout — the skills library, another client project — and a bare `gh repo clone` drops the
+new project *inside* it. Ask where the user keeps their repos (`~/GitHub/<name>` is the usual
+shape; a project that has a `.linchpin.json` records the house base path as `agentBasePath`),
+then refuse to clone anywhere inside an existing working tree:
+
 ```bash
-gh repo clone linchpin/<name> && cd <name>
+DEST="$HOME/GitHub/<name>"            # confirm this with the user
+PARENT="$(dirname "$DEST")"; mkdir -p "$PARENT"
+
+if git -C "$PARENT" rev-parse --show-toplevel >/dev/null 2>&1; then
+  echo "REFUSE: $PARENT is inside $(git -C "$PARENT" rev-parse --show-toplevel)"
+  echo "Pick a location outside any checkout."
+else
+  gh repo clone linchpin/<name> "$DEST" && cd "$DEST"
+fi
+
 git switch -c issue/<TASK-KEY>        # or no-task/<short-kebab-slug>
 ```
+
+**Keep `$DEST` and `$PARENT` quoted in every command that touches them.** Repo folders often
+sit under a directory with a space in its name (`~/Only Repos`, `~/Documents/GitHub Projects`),
+and an unquoted `cd $DEST` or `gh repo clone … $DEST` splits it into two arguments — which
+fails in the confusing way, by creating or acting on the wrong path rather than erroring.
+Every snippet here is already quoted; keep it that way when you adapt them.
+
+Everything after this runs in `$DEST`. If a command later in this skill seems to be acting on
+the wrong repo, check `git rev-parse --show-toplevel` before anything else.
 
 **If the repo is empty, `main` does not exist yet** — a repo with no commits has an unborn
 branch, so there is nothing to base a PR on and `git clone` says so ("you appear to have
@@ -209,7 +233,8 @@ Steps 8–10 are the exception, and not by choice: environments, variables, and 
 **repository settings, not files**. They apply the moment you set them, on no branch, and
 are not part of the PR. Say that in the handoff.
 
-Result: `git branch --show-current` is `issue/<TASK-KEY>`, and `main` is untouched.
+Result: `git rev-parse --show-toplevel` is the new project's own directory,
+`git branch --show-current` is `issue/<TASK-KEY>`, and `main` is untouched.
 
 ### 6. Check what the scaffold gave you, and pin `@v3`
 
@@ -514,6 +539,9 @@ production is the release-triggered path and deploys to a live site.
 - **Never delete, rename, or archive an existing repo** whose name you want — report what
   is there and let the user decide. Never sidestep a name collision by inventing a variant
   (`-2`, `-new`, `-2026`).
+- **Never clone the new repo into the directory you happen to be in.** It nests a client
+  project inside an unrelated checkout, and the first `git add -A` there commits it to the
+  wrong repo. Confirm a location outside every working tree.
 - **Never commit the rename or workflow changes straight to `main`.** They belong on
   `issue/<task-key>` and reach `main` by PR.
 - **Never migrate a repo between v3 and v4 as a side effect of setting it up.** If a repo
@@ -546,7 +574,8 @@ production is the release-triggered path and deploys to a live site.
 
 - [ ] A task key was resolved (or `NO-TASK` agreed) before anything was created.
 - [ ] The name was checked for collision, and any existing repo was reported to the user.
-- [ ] Repo exists under the confirmed owner/name/visibility, and is cloned locally.
+- [ ] Repo exists under the confirmed owner/name/visibility, and is cloned to its own
+      directory outside any other checkout.
 - [ ] Work happened on `issue/<task-key>` (or `no-task/<slug>`); `main` holds only the
       initial source commit until the PR merges.
 - [ ] The user was **asked** which repo to populate from — no source was assumed — and
