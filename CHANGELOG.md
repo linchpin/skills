@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.14](https://github.com/linchpin/skills/compare/v0.1.13...v0.1.14) (2026-09-09)
+
+
+### Features ✨
+
+* **LINCHPIN-5549:** Add github-repo-setup for standing up deploy-ready repos ([#35](https://github.com/linchpin/skills/issues/35)) ([edb4d59](https://github.com/linchpin/skills/commit/edb4d59c46765bf2fd0cb55eb5e6ea31ae6c92c1))
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-5549:** Clone the new repo outside the current checkout ([#37](https://github.com/linchpin/skills/issues/37)) ([c18e3f1](https://github.com/linchpin/skills/commit/c18e3f18af45273f0ce45c88fe6723d25c9e0890))
+
 ## [0.1.13](https://github.com/linchpin/skills/compare/v0.1.12...v0.1.13) (2026-09-07)
 
 
