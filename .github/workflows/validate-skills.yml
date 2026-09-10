@@ -121,7 +121,20 @@ jobs:
           set -euo pipefail
           node bin/update-check.mjs --help > /dev/null
           node bin/update-check.mjs --hook | grep -q SessionStart
-          # Unreachable registry: silent, and still a clean exit.
-          LINCHPIN_SKILLS_REGISTRY=http://127.0.0.1:9/nope node bin/update-check.mjs
-          LINCHPIN_SKILLS_REGISTRY=http://127.0.0.1:9/nope node bin/update-check.mjs --json | grep -q registry-unreachable
-          node bin/update-check.mjs --scan > /dev/null
+
+          # CI is set in Actions and is itself an opt-out, so every assertion below states
+          # what it expects of CI rather than inheriting it — otherwise these pass locally
+          # and mean something different here.
+          export LINCHPIN_SKILLS_REGISTRY=http://127.0.0.1:9/nope
+
+          # Opted out because CI is set: no output, clean exit.
+          CI=1 node bin/update-check.mjs | tee /tmp/ci-out
+          test ! -s /tmp/ci-out
+          CI=1 node bin/update-check.mjs --json | grep -q '"reason":"CI"'
+
+          # Not CI, but the registry is unreachable: still silent, still a clean exit.
+          env -u CI node bin/update-check.mjs | tee /tmp/off-out
+          test ! -s /tmp/off-out
+          env -u CI node bin/update-check.mjs --json | grep -q registry-unreachable
+
+          env -u CI node bin/update-check.mjs --scan > /dev/null
