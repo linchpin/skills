@@ -398,12 +398,23 @@ load that skill and follow it. It owns the placement test, the tier model (A: `S
 only → B: `+ references/` → C: `+ scripts/`), required frontmatter, the section skeleton,
 and the four house rules. It isn't restated here on purpose: one owner per concern.
 
-The short version:
+**Start with the scaffolder** — it creates the directory from the house template, wires up
+the tier you asked for, and adds a draft catalog row (the row the validator would otherwise
+fail you for forgetting):
+
+```bash
+npm run new-skill -- wp-thing --tier b
+```
+
+It leaves placeholders on purpose, and the validator **rejects** them — a half-written skill
+should never look valid. Fill in the `description` first; it's the whole retrieval surface.
+
+The shape it produces:
 
 ```
 skills/
   <name>/
-    SKILL.md            # required — frontmatter: name, description, version
+    SKILL.md            # required — frontmatter: name, description, version, allowed-tools
     references/*.md     # Tier B — detail promoted out of SKILL.md
     scripts/*.mjs       # Tier C — only when determinism is genuinely needed
 ```
@@ -412,14 +423,20 @@ skills/
   Prefix by domain — `wp-`, `react-`, `cf-`, `seo-`, `design-` — and leave cross-cutting
   workflow skills (`task-tracking`, `quality-gates`) un-prefixed.
 - Every `SKILL.md` needs `## When to use`, `## Guardrails`, and `## Done`.
-- Add a row to the **Available skills** table above.
+- `allowed-tools` grants the **read-only** commands the skill actually runs. Never bare
+  `Bash` — the validator treats it as an error.
 
-Then validate — CI runs the same command on every PR:
+Then validate — CI runs both of these on every PR:
 
 ```bash
 npm run validate                          # every skill
 node scripts/validate-skills.mjs <name>   # just the one you touched
+npm run version-gate                      # every skill you changed has a version bump
 ```
+
+**Bump the `version` of any skill you change.** It's the only signal a consuming project
+gets: the installer compares versions to decide what to offer as an update, so an edit
+shipped on an unbumped version lands as "unchanged" and nobody re-reads it. CI enforces it.
 
 > **Keep it portable.** Every skill here must be true on *any* Linchpin project of its kind
 > — don't bake in one site's blocks, palette, or file paths. Project-specific conventions
@@ -446,7 +463,8 @@ Releases follow the house convention — **release-please**, same as every other
 2. Merge that PR when you want to cut a release. It bumps `package.json`, writes
    `CHANGELOG.md`, tags `vX.Y.Z`, and publishes a GitHub Release.
 3. That release flips `release_created`, which triggers the `publish` job:
-   `npm run validate`, then `npm publish --provenance --access public`.
+   `npm run validate`, then `npm publish --access public`. No `--provenance` flag is
+   needed — Trusted Publishing generates provenance automatically.
 
 **Never hand-edit `package.json`'s version or `CHANGELOG.md`** — release-please owns both
 (see [`commit-and-release`](skills/commit-and-release/SKILL.md)).

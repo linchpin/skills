@@ -167,6 +167,16 @@ function validateSkill(name, readme) {
       if (!TRIGGER_RE.test(fm.description)) errors.push('frontmatter: `description` must state when to reach for the skill ("Use when …")');
     }
 
+    // A scaffold whose placeholders are still in place otherwise reads as valid: the
+    // template's `description` contains a literal "Use when <trigger>", which satisfies both
+    // the length and trigger checks. Nothing else in the library puts angle brackets in
+    // frontmatter, so treating them as unfilled is unambiguous.
+    for (const [key, value] of Object.entries(fm)) {
+      if (/<[^>]+>/.test(value)) {
+        errors.push(`frontmatter: \`${key}\` still contains a template placeholder — fill it in`);
+      }
+    }
+
     if (!fm.version) errors.push('frontmatter: `version` is required (semver)');
     else if (!SEMVER_RE.test(fm.version)) errors.push(`frontmatter: \`version: ${fm.version}\` is not semver`);
 
@@ -229,6 +239,17 @@ function validateSkill(name, readme) {
     if (!headings.some((h) => section.test(h))) errors.push(`missing required section \`${section.label}\``);
   }
 
+  // House rule 2 ("one owner per concern") is otherwise unenforced: a skill with no
+  // declared boundary is where duplication starts, because nothing says which of two
+  // overlapping skills is canonical. A warning, not an error — the rule is about the
+  // library's shape, and a genuinely self-contained skill can argue its way out.
+  if (!headings.some((h) => h === 'owns')) {
+    warnings.push(
+      'no `## Owns` — declare what this skill is canonical for and what it defers to a ' +
+        'sibling, or the next skill to touch the same ground will restate it'
+    );
+  }
+
   const lineCount = body.split('\n').length;
   if (lineCount > BODY_WARN_LINES && !fs.existsSync(path.join(dir, 'references'))) {
     warnings.push(
@@ -285,6 +306,23 @@ function main() {
   const readme = fs.existsSync(README) ? fs.readFileSync(README, 'utf8') : '';
   const results = targets.map((name) => validateSkill(name, readme));
 
+  // The mirror image of the per-skill "not listed in the README" error: a catalog row for a
+  // skill that no longer exists. It points readers at a skill they cannot install and, on a
+  // rename, is how the old name outlives the new one. Scoped to the Linchpin subsection on
+  // purpose — the base-layer table lists upstream skills that have no directory here by
+  // design. Only reported on a full run, since a single-skill run sees a partial picture.
+  const staleRows = [];
+  if (!requested.length) {
+    const section = readme.match(/^###\s+Linchpin tooling[^\n]*\n([\s\S]*?)(?=^###\s)/m);
+    if (section) {
+      for (const line of section[1].split('\n')) {
+        if (!line.trimStart().startsWith('|')) continue;
+        const cell = line.match(/`([a-z0-9][a-z0-9-]*)`/);
+        if (cell && !all.includes(cell[1])) staleRows.push(cell[1]);
+      }
+    }
+  }
+
   let errorCount = 0;
   let warningCount = 0;
   for (const { name, errors, warnings } of results) {
@@ -297,6 +335,17 @@ function main() {
     console.log(`${errors.length ? '✗' : '⚠'} ${name}`);
     for (const e of errors) console.log(`    error:   ${e}`);
     for (const w of warnings) console.log(`    warning: ${w}`);
+  }
+
+  if (staleRows.length) {
+    errorCount += staleRows.length;
+    console.log('✗ README.md');
+    for (const name of staleRows) {
+      console.log(
+        `    error:   catalog row for \`${name}\`, which has no skills/${name}/ — ` +
+          `remove the row, or add the skill to retired.json if it was renamed`
+      );
+    }
   }
 
   const summary = `\n${targets.length} skill(s) checked — ${errorCount} error(s), ${warningCount} warning(s).`;
