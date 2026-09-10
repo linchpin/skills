@@ -27,12 +27,18 @@ Verify the installer end-to-end without touching your real skills dirs — it wr
 
 ```bash
 mkdir -p /tmp/skills-test && cd /tmp/skills-test
+node <repo>/bin/install.mjs --skip-upstream --dry-run     # plan only, writes nothing
 node <repo>/bin/install.mjs --skip-upstream          # Linchpin skills only, offline-safe
 node <repo>/bin/install.mjs --skip-upstream --agent all   # all four agent directories
 node <repo>/bin/install.mjs                          # also fetches the pinned upstream tarball
 ```
 
-Never test with `--global` — that overwrites `~/.claude/skills`.
+Never test with `--global` — that overwrites `~/.claude/skills`. Two things make a scratch
+run more hermetic than it looks: the installer **refuses** to create a second copy of a skill
+you already have at another scope (so a machine with a global install will abort a project-scope
+test until you `export HOME=/tmp/whatever` or pass `--force`), and a full run **prunes**, so
+seed the stamp deliberately when testing that. `--dry-run` is the safe way to exercise any of
+it, `--global` included.
 
 **Publishing is automated — never `npm version` or `npm publish` by hand.** release-please
 maintains a rolling release PR from the conventional commits on `main`; merging it bumps

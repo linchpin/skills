@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = path.resolve(__dirname, '..');
 const SKILLS_ROOT = path.join(PKG_ROOT, 'skills');
 const UPSTREAM_MANIFEST = path.join(PKG_ROOT, 'upstream.json');
+const RETIRED_MANIFEST = path.join(PKG_ROOT, 'retired.json');
 const PKG_MANIFEST = path.join(PKG_ROOT, 'package.json');
 
 // Version stamp + a self-contained copy of the update checker, written into each install
@@ -24,6 +25,10 @@ const PKG_MANIFEST = path.join(PKG_ROOT, 'package.json');
 const STAMP_DIR = '.linchpin-skills';
 const STAMP_FILE = 'version.json';
 const CHECKER = 'update-check.mjs';
+// Shipped into the install too, so "what changed?" is answerable at the install site. The
+// package lands in the npx cache and is gone by the next session; the skills directory is
+// what persists, so anything an agent needs to read later has to live beside them.
+const CHANGELOG = 'CHANGELOG.md';
 
 // Per-agent install locations. `project` paths are relative to cwd, `global` to home.
 // These follow the Agent Skills conventions each tool reads from. An agent may read more
@@ -52,6 +57,7 @@ function parseArgs(argv) {
     check: false,
     yes: false,
     dryRun: false,
+    withHook: false,
     skills: [],
   };
   for (let i = 0; i < argv.length; i++) {
@@ -64,6 +70,7 @@ function parseArgs(argv) {
     else if (a === '--check') opts.check = true;
     else if (a === '--yes' || a === '-y') opts.yes = true;
     else if (a === '--dry-run' || a === '-n') opts.dryRun = true;
+    else if (a === '--with-hook') opts.withHook = true;
     else if (a === '--agent') opts.agent = argv[++i];
     else if (a.startsWith('--agent=')) opts.agent = a.slice('--agent='.length);
     else if (a.startsWith('-')) {
@@ -304,6 +311,115 @@ function readUpstreamManifest() {
   }
 }
 
+function readRetiredManifest() {
+  try {
+    const m = JSON.parse(fs.readFileSync(RETIRED_MANIFEST, 'utf8'));
+    return Array.isArray(m.retired) ? m.retired.filter((r) => r && typeof r.name === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+// --- Pruning -------------------------------------------------------------------------
+// Re-running the installer overwrites what it installs, but nothing removes what it no
+// longer ships. A deleted or renamed skill therefore survives in every install forever:
+// still loaded, still costing its description every session, still firing on triggers
+// nobody maintains any more. Pruning closes that.
+//
+// The safety rule is narrow on purpose: only in a directory this package has stamped, and
+// only for a name we can show we put there — recorded in that install's own stamp, listed
+// in retired.json, or vendored from an upstream source we have since curated out. A
+// directory we cannot account for is somebody else's, and not ours to delete.
+
+function prunePlanFor(base, keep, { all, retired, upstreamSkills }) {
+  const stamp = readStamp(base);
+  if (!stamp) return []; // no record of installing here — hands off
+  const out = new Map();
+  const consider = (name, reason) => {
+    if (!name || keep.has(name) || out.has(name)) return;
+    if (!fs.existsSync(path.join(base, name, 'SKILL.md'))) return;
+    out.set(name, { name, reason });
+  };
+
+  // Shipped by a previous install of this package, gone from it now.
+  for (const name of Array.isArray(stamp.skills) ? stamp.skills : []) {
+    if (!all.includes(name)) consider(name, 'no longer in the package');
+  }
+  // Explicitly retired — covers installs whose stamp predates the skill's removal.
+  for (const r of retired) {
+    consider(r.name, r.replacedBy ? `retired, replaced by ${r.replacedBy}` : 'retired');
+  }
+  // Vendored from upstream by a previous install, since curated out of upstream.json.
+  const prevUpstream = (Array.isArray(stamp.upstream) ? stamp.upstream : []).flatMap((u) =>
+    Array.isArray(u.skills) ? u.skills : []
+  );
+  for (const name of prevUpstream) {
+    if (!upstreamSkills.has(name)) consider(name, 'dropped from the upstream base layer');
+  }
+  return [...out.values()];
+}
+
+// --- SessionStart hook ---------------------------------------------------------------
+// The update checker only helps if something runs it. Printing the snippet and hoping
+// someone pastes it is the step where staying-current dies, so offer to write it.
+
+function hookCommand() {
+  const run =
+    'f=.claude/skills/.linchpin-skills/update-check.mjs; ' +
+    '[ -f "$f" ] || f=$HOME/.claude/skills/.linchpin-skills/update-check.mjs; ' +
+    '[ -f "$f" ] && node "$f" || true';
+  return `bash -c '${run}'`;
+}
+
+/**
+ * Merge the hook into the settings file Claude Code reads, without disturbing what is
+ * already there. `settings.json` deliberately, not `settings.local.json`: the shared file
+ * is committable, which is the whole point at project scope — one person adds it and
+ * everyone who clones the repo gets told when their skills go stale.
+ */
+function installHook(opts) {
+  const file = path.join(opts.global ? os.homedir() : process.cwd(), '.claude', 'settings.json');
+  let settings = {};
+  if (fs.existsSync(file)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      console.warn(`  ! ${file} is not valid JSON (${err.message}) — left untouched.`);
+      console.warn(`    Add the hook by hand: node <skills-dir>/${STAMP_DIR}/${CHECKER} --hook`);
+      return false;
+    }
+  }
+  if (settings === null || typeof settings !== 'object' || Array.isArray(settings)) {
+    console.warn(`  ! ${file} is not a JSON object — left untouched.`);
+    return false;
+  }
+
+  if (typeof settings.hooks !== 'object' || settings.hooks === null || Array.isArray(settings.hooks)) {
+    settings.hooks = {};
+  }
+  if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
+  const list = settings.hooks.SessionStart;
+
+  // Idempotent on the checker's filename rather than the exact command string, so a hook
+  // someone has since hand-tweaked still counts as present and never gets duplicated.
+  if (JSON.stringify(list).includes(CHECKER)) {
+    console.log(`  = SessionStart hook already in ${file}`);
+    return true;
+  }
+
+  list.push({ matcher: '*', hooks: [{ type: 'command', command: hookCommand(), timeout: 10 }] });
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(settings, null, 2) + '\n');
+  } catch (err) {
+    console.warn(`  ! Could not write ${file}: ${err.message}`);
+    return false;
+  }
+  console.log(`  + SessionStart hook added to ${file}`);
+  if (!opts.global) console.log('    Commit it — everyone who clones this repo gets the check.');
+  return true;
+}
+
 function packageVersion() {
   try {
     return JSON.parse(fs.readFileSync(PKG_MANIFEST, 'utf8')).version || '0.0.0';
@@ -325,7 +441,7 @@ function updateCommand(opts) {
 
 // Record what landed here and leave the checker beside it. Best-effort: a stamp we can't
 // write costs an upgrade nudge, not the install.
-function writeStamp(target, { version, opts, skills, upstream }) {
+function writeStamp(target, { version, opts, skills, upstream, pruned }) {
   const dir = path.join(target.dir, STAMP_DIR);
   try {
     fs.mkdirSync(dir, { recursive: true });
@@ -338,9 +454,14 @@ function writeStamp(target, { version, opts, skills, upstream }) {
       updateCommand: updateCommand(opts),
       skills,
       upstream,
+      pruned,
     };
     fs.writeFileSync(path.join(dir, STAMP_FILE), JSON.stringify(stamp, null, 2) + '\n');
     fs.copyFileSync(path.join(__dirname, CHECKER), path.join(dir, CHECKER));
+    // Best-effort: a missing changelog costs the "what's new" summary, not the install.
+    // It is absent when running from a checkout whose CHANGELOG has not been generated.
+    const changelog = path.join(PKG_ROOT, CHANGELOG);
+    if (fs.existsSync(changelog)) fs.copyFileSync(changelog, path.join(dir, CHANGELOG));
     return true;
   } catch (err) {
     console.warn(`  ! Could not write the version stamp in ${dir}: ${err.message}`);
@@ -350,19 +471,21 @@ function writeStamp(target, { version, opts, skills, upstream }) {
 
 // Fetch a repo tarball at a pinned ref, extract it once, and copy the requested skill
 // dirs into every directory in `bases`. Best-effort: any failure (offline, no `tar`,
-// missing skill) warns and returns false rather than aborting the Linchpin install.
+// missing skill) warns and returns no skills rather than aborting the Linchpin install.
+// Returns `{ ok, skills }` — the names matter, because the stamp records them so a later
+// run can prune whatever gets curated out of upstream.json.
 async function installUpstreamSource(source, bases) {
   // `path` is where skills live *inside* the source repo. Upstreams disagree:
   // WordPress/agent-skills uses `skills/`, Automattic/docspress uses `.claude/skills/`.
   // Defaults to `skills` so existing sources need no change.
   const { repo, ref, skills = [], path: skillsPath = 'skills' } = source;
-  if (!repo || !ref || !skills.length) return false;
+  if (!repo || !ref || !skills.length) return { ok: false, skills: [] };
 
   // Keep a source manifest from reaching outside its own tarball.
   const segments = String(skillsPath).split('/').filter(Boolean);
   if (!segments.length || segments.includes('..') || path.isAbsolute(skillsPath)) {
     console.warn(`  ! ${repo}: ignoring unsafe path ${JSON.stringify(skillsPath)} — skipped`);
-    return false;
+    return { ok: false, skills: [] };
   }
 
   const url = `https://codeload.github.com/${repo}/tar.gz/${ref}`;
@@ -384,7 +507,7 @@ async function installUpstreamSource(source, bases) {
     const topdir = fs.readdirSync(extractDir).find((n) => fs.statSync(path.join(extractDir, n)).isDirectory());
     if (!topdir) throw new Error('unexpected tarball layout (no top-level dir)');
 
-    let count = 0;
+    const landed = [];
     for (const name of skills) {
       const from = path.join(extractDir, topdir, ...segments, name);
       if (!fs.existsSync(path.join(from, 'SKILL.md'))) {
@@ -397,13 +520,13 @@ async function installUpstreamSource(source, bases) {
         fs.cpSync(from, dest, { recursive: true });
       }
       console.log(`  ✓ ${name}  (${repo})`);
-      count++;
+      landed.push(name);
     }
-    return count > 0;
+    return { ok: landed.length > 0, skills: landed };
   } catch (err) {
     console.warn(`  ! Skipped base layer from ${repo}: ${err.message}`);
     console.warn(`    (Linchpin skills installed fine. Re-run online, or use --skip-upstream to silence.)`);
-    return false;
+    return { ok: false, skills: [] };
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -435,6 +558,8 @@ Options:
                     at another scope
   -y, --yes         Skip the confirmation prompt (implied when not a TTY)
   -n, --dry-run     Show what would change and exit without writing anything
+      --with-hook   Also add the SessionStart update check to .claude/settings.json
+                    (Claude Code only; idempotent, and committable at project scope)
   -h, --help        Show this help
 
 Updating:
@@ -442,6 +567,15 @@ Updating:
   is installed, prints what would change, and asks before touching anything. A run with
   nothing to change exits early. --dry-run shows the diff and writes nothing; note that a
   non-interactive run (piped stdin, CI) proceeds without prompting.
+
+  A full run also removes skills this package no longer ships — ones dropped from it,
+  retired in retired.json, or curated out of upstream.json — but only from directories it
+  has stamped, and never during a partial run that names specific skills.
+
+Staying current:
+  Each install gets a version stamp and a copy of the update checker beside the skills.
+  --with-hook wires it into SessionStart so a stale install says so at the start of a
+  session; from there, ask an agent to "update the skills" (see the skill-updates skill).
 
 Scopes:
   Agents load every skills directory they find and do not dedupe by name, so a skill
@@ -455,6 +589,7 @@ Examples:
   npx @linchpinagency/skills --check            # audit scopes, install nothing
   npx @linchpinagency/skills --dry-run          # preview an update, write nothing
   npx @linchpinagency/skills --yes              # update without the confirmation prompt
+  npx @linchpinagency/skills --with-hook        # install + wire up the staleness check
   npx @linchpinagency/skills --skip-upstream    # Linchpin skills only
   npx @linchpinagency/skills --agent github-copilot
   npx @linchpinagency/skills --agent all        # every agent dir in this project
@@ -547,6 +682,18 @@ async function main() {
   const plans = targets.map((t) => ({ target: t, plan: planFor(t.dir, wanted) }));
   const changed = plans.flatMap((p) => p.plan).filter((p) => p.status !== 'unchanged');
 
+  // Pruning is skipped on a partial install (`npx ... one-skill`). There, `wanted` is a
+  // subset, so a previous full install's stamp lists names this run isn't installing —
+  // and every one of them would look like a removal. Nobody asking for one skill expects
+  // two dozen deletions.
+  const retired = readRetiredManifest();
+  const upstreamSkills = new Set(sources.flatMap((s) => s.skills || []));
+  const keep = new Set([...wanted, ...upstreamSkills]);
+  const prunePlans = opts.skills.length
+    ? targets.map((t) => ({ target: t, plan: [] }))
+    : targets.map((t) => ({ target: t, plan: prunePlanFor(t.dir, keep, { all, retired, upstreamSkills }) }));
+  const pruning = prunePlans.flatMap((p) => p.plan);
+
   // A skill that is 'new' in every target but already present at another scope is a
   // duplicate about to be born — that we refuse. A skill already installed here is an
   // update; refusing it would only strand someone on a stale copy without removing the
@@ -596,17 +743,21 @@ async function main() {
 
   // A re-run is the update path, so most runs land here with a handful of skills to
   // update and the rest already current.
-  if (!changed.length && !opts.force) {
+  if (!changed.length && !pruning.length && !opts.force && !opts.withHook) {
     console.log(`Already up to date — ${wanted.length} skill(s) for ${labels}, nothing to change.`);
     if (!opts.dryRun) console.log('Re-run with --force to reinstall anyway.');
     return;
   }
 
-  if (changed.length) {
+  if (changed.length || pruning.length) {
     console.log(`@linchpinagency/skills v${version} — ${labels}\n`);
+    const pruneByDir = new Map(prunePlans.map(({ target, plan }) => [target.dir, plan]));
     for (const { target, plan } of plans) {
       if (plans.length > 1) console.log(`${target.dir}`);
       renderPlan(plan);
+      for (const p of pruneByDir.get(target.dir) || []) {
+        console.log(`  ${p.name}   remove — ${p.reason}`);
+      }
       if (plans.length > 1) console.log();
     }
 
@@ -623,17 +774,13 @@ async function main() {
 
     const counts = ['new', 'update', 'downgrade', 'modified']
       .map((k) => [k, changed.filter((p) => p.status === k).length])
+      .concat(pruning.length ? [['remove', pruning.length]] : [])
       .filter(([, n]) => n)
       .map(([k, n]) => `${n} ${k}`)
       .join(', ');
-    console.log(`\n${changed.length} change(s): ${counts}`);
+    console.log(`\n${changed.length + pruning.length} change(s): ${counts}`);
 
-    if (opts.dryRun) {
-      console.log('\nDry run — nothing was written.');
-      return;
-    }
-
-    if (!opts.yes && !opts.force) {
+    if (!opts.dryRun && !opts.yes && !opts.force) {
       if (!process.stdin.isTTY) {
         console.log('Non-interactive — proceeding. Pass --yes to silence this notice.');
       } else if (!(await confirm('\nApply? [y/N] '))) {
@@ -642,6 +789,13 @@ async function main() {
       }
     }
     console.log();
+  }
+
+  // Outside the plan block on purpose: --with-hook keeps this function running even with
+  // nothing to install, and a dry run must not write the hook either.
+  if (opts.dryRun) {
+    console.log('Dry run — nothing was written.');
+    return;
   }
 
   const applied = new Set(changed.map((p) => p.name));
@@ -656,23 +810,45 @@ async function main() {
   }
   console.log(`\nInstalled ${wanted.length} Linchpin skill(s) for ${labels}.`);
 
+  const pruned = [];
+  for (const { target, plan } of prunePlans) {
+    for (const p of plan) {
+      fs.rmSync(path.join(target.dir, p.name), { recursive: true, force: true });
+      console.log(`− ${p.name} <- ${target.dir}  (${p.reason})`);
+      pruned.push(p.name);
+    }
+  }
+  if (pruned.length) {
+    console.log(`\nRemoved ${pruned.length} skill(s) this package no longer ships.`);
+  }
+
   const upstream = [];
   if (!opts.skipUpstream && sources.length) {
     console.log(`\nVendoring pinned base layer (${sources.map((s) => s.repo).join(', ')}):`);
     for (const s of sources) {
-      const installed = await installUpstreamSource(s, bases);
-      upstream.push({ repo: s.repo, ref: s.ref, installed });
+      const { ok, skills } = await installUpstreamSource(s, bases);
+      upstream.push({ repo: s.repo, ref: s.ref, installed: ok, skills });
     }
     console.log('\nTip: --skip-upstream installs Linchpin skills only.');
   }
 
   // Stamp last, so `upstream` reflects what actually landed rather than what was intended.
-  const stamped = targets.filter((t) => writeStamp(t, { version, opts, skills: wanted, upstream }));
-  if (stamped.length && agentIds.includes('claude-code')) {
+  const stamped = targets.filter((t) =>
+    writeStamp(t, { version, opts, skills: wanted, upstream, pruned: [...new Set(pruned)] })
+  );
+
+  if (opts.withHook) {
+    if (agentIds.includes('claude-code')) {
+      console.log('\nSessionStart hook:');
+      installHook(opts);
+    } else {
+      console.warn(`\n! --with-hook is Claude Code only; ${labels} has no equivalent. Skipped.`);
+    }
+  } else if (stamped.length && agentIds.includes('claude-code')) {
     const rel = path.join(STAMP_DIR, CHECKER);
     console.log(
-      `\nStamped v${version}. To be told when these skills go stale, add a SessionStart hook:` +
-        `\n  node ${path.join(opts.global ? '~/.claude/skills' : '.claude/skills', rel)} --hook`
+      `\nStamped v${version}. To be told when these skills go stale, re-run with --with-hook,` +
+        `\nor add the hook yourself:  node ${path.join(opts.global ? '~/.claude/skills' : '.claude/skills', rel)} --hook`
     );
   }
 }
