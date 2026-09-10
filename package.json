@@ -10,6 +10,8 @@
     "bin",
     "skills",
     "upstream.json",
+    "retired.json",
+    "CHANGELOG.md",
     "README.md"
   ],
   "engines": {

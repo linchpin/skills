@@ -87,6 +87,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
+| Get the newest version of these skills | "update the skills" | `skill-updates` |
 
 The full list is in [Available skills](#available-skills) — 25 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
@@ -233,29 +234,59 @@ Three statuses are worth knowing:
 ### Keeping skills current
 
 Installed skills are a snapshot — nothing about a copy in `.claude/skills/` knows a newer
-release exists. So every install writes a stamp beside the skills, in
+release exists, and a stale copy doesn't look wrong. It just quietly gives last month's
+answer. So every install writes a stamp beside the skills, in
 `<skills-dir>/.linchpin-skills/`: `version.json` (the version, the date, the agent, the exact
-command that produced the install, and the upstream ref that was vendored) plus a
-self-contained copy of the update checker.
+command that produced the install, what it installed, and what it pruned), a self-contained
+copy of the update checker, and `CHANGELOG.md` so "what changed?" is answerable later.
+
+**The one thing worth doing per project**, so nobody has to remember any of this:
 
 ```bash
-# Are these skills behind? One line if yes, nothing if no.
-node .claude/skills/.linchpin-skills/update-check.mjs
-
-# Print the Claude Code SessionStart hook that runs it for you
-node .claude/skills/.linchpin-skills/update-check.mjs --hook
+npx @linchpinagency/skills --with-hook
 ```
 
-With the hook installed, a stale install announces itself at the start of a session —
-`SessionStart` stdout becomes context, so the agent sees it too and can offer to run the
-update command the stamp recorded. Hooks are a Claude Code feature; under Copilot, Codex, or
-Cursor the same check still runs, just when you ask it to.
+That installs, then merges a `SessionStart` hook into `.claude/settings.json` — idempotently,
+leaving any hooks and permissions already there alone. At project scope that file is
+committable, which is the point: one person adds it and everyone who clones the repo gets
+told when their skills go stale. `SessionStart` stdout becomes session context, so the agent
+sees the notice too, and asking it to **"update the skills"** runs the
+[`skill-updates`](skills/skill-updates/SKILL.md) skill: find every install, apply the command
+each one recorded, verify, and summarize what changed.
+
+Hooks are a Claude Code feature. Under Copilot, Codex, or Cursor the same check works, just
+when you ask for it.
+
+```bash
+# Is this install behind? One line if yes, nothing if no.
+node .claude/skills/.linchpin-skills/update-check.mjs
+
+# Every install this machine has, across agents and scopes, with each one's update command
+node .claude/skills/.linchpin-skills/update-check.mjs --scan
+
+# Preferences, so an agent never has to hand-edit config
+node .claude/skills/.linchpin-skills/update-check.mjs --enable-auto   # apply without asking
+node .claude/skills/.linchpin-skills/update-check.mjs --snooze        # 24h, then 48h, then a week
+node .claude/skills/.linchpin-skills/update-check.mjs --disable       # stop checking
+```
+
+`--scan` exists because **most machines have more than one install** — a global copy plus a
+project copy, or Copilot's two directories. Updating only the one that printed the notice is
+how a stale skill survives an "update".
 
 The check is deliberately unobtrusive: it queries the npm registry at most once a day (a
 known-newer version keeps surfacing from cache in between), stays silent when it can't reach
-the network, and always exits 0 — a session never fails to start because of it. It reports;
-it never upgrades anything. Set `LINCHPIN_SKILLS_UPDATE_CHECK=0` to switch it off, and it
-skips itself whenever `CI` is set.
+the network, honors a snooze, and always exits 0 — a session never fails to start because of
+it. It reports; it never installs anything. `LINCHPIN_SKILLS_UPDATE_CHECK=0` switches it off,
+and it skips itself whenever `CI` is set. Preferences live in
+`${XDG_CONFIG_HOME:-~/.config}/linchpin-skills/config.json`.
+
+**Retired skills get removed.** A full re-run also deletes skills the package no longer ships
+— dropped from it, listed in [`retired.json`](retired.json), or curated out of
+`upstream.json` — so a deleted skill stops loading instead of lingering forever. It only ever
+touches directories the installer has stamped, and never during a partial run that names
+specific skills (there, everything you didn't name would look like a removal). `--dry-run`
+shows the whole plan, removals included, and writes nothing.
 
 ### Where skills land
 
@@ -329,6 +360,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `engagement-types` | Project mgmt | Tell support, site maintenance, projects, product/plugin work, and pre-sales apart — each lives somewhere different in ClickUp and is planned and closed differently. |
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, security advisories, `@wordpress/*` package sets. |
+| `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
 | `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands, and carry the task key in the commit scope. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |

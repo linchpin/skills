@@ -1,0 +1,4 @@
+{
+  "_comment": "Skills this package used to ship and no longer does. The installer prunes these from directories it manages, because re-running the installer overwrites what it installs but would otherwise leave a deleted skill in place forever — still loaded, still costing its description, still firing on triggers nobody maintains. Add a row when you delete or rename a skill; never remove a row (an install that skipped several releases still needs it). `replacedBy` is optional and only used for the message. Pruning also covers skills dropped from a previous install's stamp and from upstream.json, so a row here is only needed for names this package shipped.",
+  "retired": []
+}
