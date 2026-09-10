@@ -10,7 +10,9 @@ required and the validator enforces them.
 ---
 name: <kebab-case-name-matching-the-directory>
 description: <What this does, capability first>. Use when <trigger in the user's words>, <a second, differently-worded trigger>, or <a third>. <Optional: Not for X — use `<sibling-skill>`.>
+when_to_use: <Optional, Claude Code only. Extra phrasings that didn't fit above — never phrasings moved out of `description`, which must stand alone.>
 version: 0.1.0
+allowed-tools: Read Grep Glob <Bash(<read-only command this skill actually runs>)>
 ---
 
 # <Title>
@@ -81,3 +83,20 @@ Then grep the library for collisions before you commit:
 ```bash
 grep -h '^description:' skills/*/SKILL.md
 ```
+
+Overlap on its own isn't a defect — most of it is two skills correctly naming each other's
+boundary. What matters is that any overlapping pair says which one wins, in a
+`Not this skill:` line on both sides.
+
+## Choosing `allowed-tools`
+
+Work from the commands the file actually contains, not from what the skill is about:
+
+```bash
+grep -ohE '`[^`]*\b(npm run|composer|git |gh |wp |node |npx )[^`]*`' skills/<name>/SKILL.md | sort -u
+```
+
+Then split that list in two. **Read-only commands get granted; anything that writes doesn't**
+— it should stop and ask. Watch for a wildcard that catches a mutating sibling: `Bash(npm
+audit*)` also grants `npm audit fix`, so grant `Bash(npm audit)` exactly. A missing grant
+costs one prompt, so when in doubt, leave it out.

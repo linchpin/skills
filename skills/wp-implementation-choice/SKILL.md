@@ -1,7 +1,8 @@
 ---
 name: wp-implementation-choice
 description: Decide which WordPress abstraction a request should become — theme/template work, a custom block, a functionality plugin, existing core blocks and patterns, or an off-the-shelf plugin — before any code is written. Use when a WordPress request could be built more than one way, when someone proposes a custom plugin or block, when scoping a new feature, or when reviewing an approach that feels heavier than the problem. Not for how to build the thing once chosen.
-version: 1.1.0
+version: 1.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # Choosing the WordPress implementation

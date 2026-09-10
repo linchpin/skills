@@ -1,7 +1,8 @@
 ---
 name: engagement-types
 description: Work out what kind of Linchpin work a request is — a support request, recurring site maintenance, a scoped project, product/plugin development, or pre-sales — because each is planned, tracked, and finished differently, and each lives in a different ClickUp space and folder. Use when picking up unfamiliar work, when deciding where a task belongs, when a request may be out of scope for a retainer, or when planning work for a client with multiple sites. Baseline map, refined with the team over time.
-version: 0.1.0
+version: 0.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # Engagement types

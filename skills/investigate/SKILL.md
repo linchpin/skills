@@ -1,7 +1,9 @@
 ---
 name: investigate
 description: Find the root cause of a bug before changing anything — reproduce it reliably, read the actual error, bisect to the responsible layer, and confirm the mechanism, with WordPress-specific first checks (debug log, plugin conflict, template hierarchy, cache, DB overrides). Use when something is broken, erroring, or behaving differently than expected, when a fix didn't hold, or when the cause isn't obvious. Not for finding unknown bugs by exploration — use `web-qa`.
-version: 1.0.0
+when_to_use: Also when someone says "why is this happening", "it worked yesterday", "the fix didn't stick", or "check the debug log" — and before changing code to fix something whose cause is not yet proven.
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(git log*) Bash(git diff*) Bash(git status*) Bash(tail*)
 ---
 
 # Investigate

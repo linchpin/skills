@@ -1,7 +1,9 @@
 ---
 name: web-qa
 description: QA a site or app like a real user and fix what you find — explore the front end, wp-admin, and the block editor in a browser, record findings with severity and evidence, then fix each bug in its own atomic commit and re-verify. Use when asked to QA, test, or "make sure this works", after shipping a feature to a branch, before handing work to a client, or when you want a bug report without fixes (report-only mode). Not for lint or unit tests — use `quality-gates`.
-version: 1.0.0
+when_to_use: Also when someone says "click through the site", "does the form actually work", "test it like a user would", or wants a page checked on mobile before it ships.
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(git status --porcelain*) Bash(git diff --name-only*)
 ---
 
 # Web QA

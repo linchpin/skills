@@ -1,7 +1,8 @@
 ---
 name: wp-audit
 description: Audit a WordPress site for performance, accessibility, and visible frontend quality, then report prioritized fixes and re-measure after changes. Use when asked to review, optimize, QA, or "check why the site is slow", when Core Web Vitals or Lighthouse scores come up, when a client asks about accessibility or WCAG, or before handing a build back to a client. Measures locally via the Studio MCP; production numbers require the live site. Not for fixing lint or tests — use `quality-gates`.
-version: 1.1.0
+version: 1.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # WordPress audit

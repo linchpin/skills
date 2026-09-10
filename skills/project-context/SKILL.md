@@ -1,7 +1,9 @@
 ---
 name: project-context
 description: Orient before acting on a Linchpin project — identify the repo and branch, the local environment (Studio, wp-env, LocalWP), the host (Pressable or Cloudflare), the ClickUp space, and the release model, from .linchpin.json, composer.json, package.json, and the git remote. Use when starting work on an unfamiliar repo, before running commands that assume an environment, when a skill's Preflight needs the project's shape, or when something behaves differently than expected. Not for running the checks themselves.
-version: 1.1.0
+when_to_use: Also when someone asks "what is this repo", "what am I working with", "where does this deploy", or "which environment am I on" — and before running any command that assumes a local environment or host.
+version: 1.2.0
+allowed-tools: Read Grep Glob Bash(git branch --show-current*) Bash(git remote get-url*) Bash(git rev-parse*) Bash(git status*)
 ---
 
 # Project context

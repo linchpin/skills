@@ -1,7 +1,8 @@
 ---
 name: wp-block-conventions
 description: Build and edit custom Gutenberg blocks the way Linchpin structures them — apiVersion 3 under the `linchpin/` namespace, dynamic `render.php` plus Interactivity API `view.js`, parent/child blocks wired through block context, and the shared wp-scripts build with `--blocks-manifest --webpack-copy-php --experimental-modules`. Use when creating a custom block, editing an existing one, deciding whether a block belongs in the shared linchpin-blocks plugin or a project's functionality plugin, or reviewing block code. Not for authoring page content from blocks — use `wordpress-blocks`.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(npm run lint:js) Bash(npm run lint:css) Bash(npm run build)
 ---
 
 # Linchpin block conventions

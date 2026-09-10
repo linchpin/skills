@@ -1,7 +1,9 @@
 ---
 name: skill-updates
 description: Bring a project's installed Linchpin skills up to the published release — find every install across agents and scopes, apply the update each one recorded, and report what changed. Use when a session opens saying skills are behind, when asked "are my skills up to date", "update the skills", or "upgrade the skills", when a skill's instructions don't match how this repo actually works, or after someone adds a skill to the library. Not for npm or Composer packages — use `dependency-updates`.
-version: 1.0.0
+when_to_use: Also when someone asks "am I on the latest skills", says their skills look out of date, asks to re-run the installer, or when a session opened with a line saying a newer release is available.
+version: 1.1.0
+allowed-tools: Read Grep Glob
 ---
 
 # Keep installed skills current

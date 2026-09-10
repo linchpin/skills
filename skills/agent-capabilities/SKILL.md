@@ -1,7 +1,8 @@
 ---
 name: agent-capabilities
 description: Right-size what an agent loads on a project — audit skill installs for cross-scope duplicates, work out which MCP servers this repo actually needs, and scope them so every session stops paying for all of them. Use when context feels full before any work starts, when the same skill appears twice in the skills list, when deciding whether an MCP server belongs globally or in one repo, when onboarding a repo, or when someone asks which skills or servers a project should have. Not for writing a skill — use `write-a-linchpin-skill`.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(npx @linchpinagency/skills --check*)
 ---
 
 # Agent capabilities

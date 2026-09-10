@@ -1,7 +1,8 @@
 ---
 name: docspress-publish
 description: Publish a repo's Markdown docs to docs.linchpin.com with DocsPress — the shared page tree, the pinned linchpin/docspress fork that scopes deletion per repo, the WP_ACCESS_TOKEN secret, and the dry-run to draft to publish promotion ladder. Use when a project needs documentation published, when asked to "set up docspress" or "get these docs on the docs site", when a sync-docs workflow fails or deletes another repo's pages, or when docs exist in the repo but nowhere else. Not for writing the docs themselves — that's `generate-docs-from-source`, vendored from the same fork.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(git remote get-url*) Bash(gh secret list*)
 ---
 
 # Publish docs with DocsPress

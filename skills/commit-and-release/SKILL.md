@@ -1,7 +1,9 @@
 ---
 name: commit-and-release
 description: Write commit messages and PR titles that satisfy a Linchpin repo's own commitlint rules, and stay out of the way of release-please, which owns versions and CHANGELOG.md. Use when composing a commit message, when commitlint or a husky hook rejects one, when opening a PR, when asked how a change gets released or deployed, or before touching a version number anywhere. Not for running lint or tests — use `quality-gates`. Not for naming the branch or resolving the task key in the scope — use `task-tracking`.
-version: 1.1.0
+when_to_use: Also when commitlint or a husky hook rejects a commit message, when a PR title fails the convention check, when asked what version a change will cut or how it gets deployed, or before touching a version number or CHANGELOG.md by hand.
+version: 1.2.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(git log*) Bash(git diff*) Bash(gh pr view*) Bash(gh pr checks*) Bash(npx commitlint*)
 ---
 
 # Commit and release

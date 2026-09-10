@@ -1,7 +1,9 @@
 ---
 name: safety-hooks
 description: Turn on enforced guardrails for risky work — a PreToolUse hook that makes destructive commands (wp db drop, search-replace without --dry-run, DROP TABLE, git push --force, rm -rf) require confirmation, and an optional edit boundary that blocks writes outside one directory. Use when touching production or a client database, debugging a live site, working in an unfamiliar repo, or when asked for careful mode, safety mode, or to lock down edits. Claude Code only.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob
+compatibility: Claude Code — hooks are required to enforce this; elsewhere it degrades to documentation.
 ---
 
 # Safety hooks
