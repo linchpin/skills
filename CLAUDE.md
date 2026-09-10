@@ -10,17 +10,26 @@ installer that copies them into a coding agent's skills directory.
 
 **The skills are the product; the installer is ~200 lines of plumbing.** Most work here is
 writing/editing Markdown that another agent will later follow as instructions. There is no
-build step and no runtime dependencies — the only automated check is the skill validator.
+build step and no runtime dependencies — the automated checks are the skill validator and
+the version gate.
 
 ## Commands
 
 ```bash
+npm run new-skill -- <name> [--tier a|b|c]  # scaffold from the house template + a draft README row
 npm run validate                          # node scripts/validate-skills.mjs — CI runs this on every PR
 node scripts/validate-skills.mjs <name>   # just one skill
 node scripts/validate-skills.mjs --strict # warnings fail too
+npm run version-gate                      # every skill changed vs origin/main has a version bump
 node bin/install.mjs --list               # or: npm run list
 node bin/install.mjs --help
 ```
+
+**Bump a skill's frontmatter `version` whenever you change its package.** It is the only
+signal a consuming project gets — `bin/install.mjs` diffs versions to decide what to offer
+as an update, so an edit on an unbumped version shows as "unchanged" and nobody re-reads the
+skill. `version-gate` fails CI on it. This is separate from `package.json`'s version, which
+release-please owns and you never touch.
 
 Verify the installer end-to-end without touching your real skills dirs — it writes to
 `$CWD/.claude/skills`, so run it from a throwaway directory:
@@ -96,10 +105,20 @@ owner per concern is itself one of the rules.
 What the validator enforces mechanically: `name` matches the directory, `description`
 carries a "Use when …" trigger (80–1000 chars), semver `version`, the three required
 sections (`## When to use`, `## Guardrails`, `## Done`), no machine-specific absolute
-paths, referenced files exist, and a README catalog row. It also warns when a `SKILL.md`
-body passes 200 lines with **no `references/` directory at all** — undisclosed sprawl, not
-length, is the fault. Promote the templates and command matrices; never compress prose to
-clear it.
+paths, referenced files exist, a README catalog row — **and no stale row** pointing at a
+skill that no longer exists. On frontmatter it enforces a **key allowlist** (`name`,
+`description`, `when_to_use`, `version`, `allowed-tools`, `license`, `compatibility`,
+`metadata`), rejects unfilled `<placeholders>`, caps `description` + `when_to_use` at the
+1,536 chars Claude Code actually reads, and treats a bare `Bash` grant as an error. It warns
+on a missing `## Owns`, and when a `SKILL.md` body passes 200 lines with **no `references/`
+directory at all** — undisclosed sprawl, not length, is the fault. Promote the templates and
+command matrices; never compress prose to clear it.
+
+Two frontmatter decisions worth not re-litigating: `allowed-tools` is a **pre-approval, not
+a restriction** (grant read-only commands, never the ones that write — under-granting costs
+a prompt, over-granting silently pre-approves), and `when_to_use` is **Claude Code only**, so
+it may only *add* phrasings — `description` has to keep standing alone for Copilot, Codex and
+Cursor. `triggers:` is read by no runtime and is rejected outright.
 
 The four house rules, in one line each, since they shape every skill in the library:
 **detect don't assume** (our repos differ — read their config), **one owner per concern**

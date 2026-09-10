@@ -35,6 +35,29 @@ jobs:
             exit 1
           fi
 
+  # A skill's frontmatter `version` is the only signal a consuming project has that it
+  # changed: bin/install.mjs compares versions to decide what to offer as an update, so a
+  # behaviour change on an unbumped version lands as "unchanged" and nobody re-reads it.
+  # Needs full history to diff against the base.
+  version-gate:
+    name: Skill versions
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Every changed skill has a version bump
+        run: node scripts/version-gate.mjs --base "origin/${{ github.base_ref }}"
+
   validate:
     name: Skill standard
     runs-on: ubuntu-latest
@@ -49,6 +72,23 @@ jobs:
       # portability, referenced files, and the README catalog.
       - name: Validate skill packages
         run: node scripts/validate-skills.mjs
+
+      # The scaffolder has to keep producing something the validator accepts once its
+      # placeholders are filled — and it reads the template rather than carrying its own
+      # copy, so a change to the template that breaks it would otherwise surface only when
+      # someone next added a skill.
+      - name: Smoke-test the skill scaffolder
+        run: |
+          set -euo pipefail
+          node scripts/new-skill.mjs ci-scaffold-probe --tier b
+          test -f skills/ci-scaffold-probe/SKILL.md
+          test -d skills/ci-scaffold-probe/references
+          grep -q 'ci-scaffold-probe' README.md
+          # Unfilled placeholders must FAIL, or a half-written skill ships looking valid.
+          if node scripts/validate-skills.mjs ci-scaffold-probe > /dev/null 2>&1; then
+            echo "::error::a scaffold with unfilled placeholders passed validation"; exit 1
+          fi
+          git checkout README.md && rm -rf skills/ci-scaffold-probe
 
       # The installer is the only executable in the package; a syntax error there breaks
       # every `npx @linchpinagency/skills` run.
