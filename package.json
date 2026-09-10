@@ -19,7 +19,9 @@
   },
   "scripts": {
     "list": "node bin/install.mjs --list",
+    "new-skill": "node scripts/new-skill.mjs",
     "validate": "node scripts/validate-skills.mjs",
+    "version-gate": "node scripts/version-gate.mjs",
     "test": "npm run validate",
     "prepublishOnly": "npm run validate"
   },

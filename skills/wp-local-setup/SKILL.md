@@ -1,7 +1,7 @@
 ---
 name: wp-local-setup
 description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one. Not for choosing or building the theme itself — use `wp-theme-baseline`; not for creating the GitHub repo or its deploy secrets — use `github-repo-setup`.
-version: 1.3.0
+version: 1.4.0
 allowed-tools: Read Grep Glob Bash(git status*) Bash(studio site status*)
 ---
 
@@ -36,6 +36,21 @@ setting up local development for an existing one (wire it into Studio).
   environments, secrets/variables) → [`github-repo-setup`](../github-repo-setup/SKILL.md).
 - **Seeding local content/database** → out of scope; follow that project's own docs.
 - **One site's specific blocks/conventions** → that project's `AGENTS.md`/`CLAUDE.md`.
+
+## Owns
+
+Canonical for: scaffolding a new **wp-content-shaped** project repo (the Composer baseline
+against wpackagist.org and packagist.linchpin.com, `.gitignore`, the project theme), and
+wiring an existing repo into a Studio site by symlinking it in as `wp-content` while
+preserving Studio's SQLite runtime pieces.
+
+Defers: **operating** a site once it exists — WP-CLI, `wp eval`, screenshots, the ABSPATH
+rule → [`wp-studio-cli`](../wp-studio-cli/SKILL.md); choosing and standing up the theme
+itself → [`wp-theme-baseline`](../wp-theme-baseline/SKILL.md); creating the GitHub repo and
+its deploy wiring → [`github-repo-setup`](../github-repo-setup/SKILL.md).
+
+The split with `wp-studio-cli` is the one worth remembering: **this skill creates and wires;
+that one drives.**
 
 ## Part 1 — Scaffold a new project repo
 

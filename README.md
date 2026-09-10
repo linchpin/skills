@@ -88,8 +88,9 @@ The fastest way to understand the library is to run one loop end to end:
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 | Get the newest version of these skills | "update the skills" | `skill-updates` |
+| Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 
-The full list is in [Available skills](#available-skills) — 25 of them, each with a
+The full list is in [Available skills](#available-skills) — 27 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -375,6 +376,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, security advisories, `@wordpress/*` package sets. |
 | `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
+| `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
 | `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands, and carry the task key in the commit scope. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |
@@ -398,12 +400,23 @@ load that skill and follow it. It owns the placement test, the tier model (A: `S
 only → B: `+ references/` → C: `+ scripts/`), required frontmatter, the section skeleton,
 and the four house rules. It isn't restated here on purpose: one owner per concern.
 
-The short version:
+**Start with the scaffolder** — it creates the directory from the house template, wires up
+the tier you asked for, and adds a draft catalog row (the row the validator would otherwise
+fail you for forgetting):
+
+```bash
+npm run new-skill -- wp-thing --tier b
+```
+
+It leaves placeholders on purpose, and the validator **rejects** them — a half-written skill
+should never look valid. Fill in the `description` first; it's the whole retrieval surface.
+
+The shape it produces:
 
 ```
 skills/
   <name>/
-    SKILL.md            # required — frontmatter: name, description, version
+    SKILL.md            # required — frontmatter: name, description, version, allowed-tools
     references/*.md     # Tier B — detail promoted out of SKILL.md
     scripts/*.mjs       # Tier C — only when determinism is genuinely needed
 ```
@@ -412,14 +425,20 @@ skills/
   Prefix by domain — `wp-`, `react-`, `cf-`, `seo-`, `design-` — and leave cross-cutting
   workflow skills (`task-tracking`, `quality-gates`) un-prefixed.
 - Every `SKILL.md` needs `## When to use`, `## Guardrails`, and `## Done`.
-- Add a row to the **Available skills** table above.
+- `allowed-tools` grants the **read-only** commands the skill actually runs. Never bare
+  `Bash` — the validator treats it as an error.
 
-Then validate — CI runs the same command on every PR:
+Then validate — CI runs both of these on every PR:
 
 ```bash
 npm run validate                          # every skill
 node scripts/validate-skills.mjs <name>   # just the one you touched
+npm run version-gate                      # every skill you changed has a version bump
 ```
+
+**Bump the `version` of any skill you change.** It's the only signal a consuming project
+gets: the installer compares versions to decide what to offer as an update, so an edit
+shipped on an unbumped version lands as "unchanged" and nobody re-reads it. CI enforces it.
 
 > **Keep it portable.** Every skill here must be true on *any* Linchpin project of its kind
 > — don't bake in one site's blocks, palette, or file paths. Project-specific conventions
@@ -446,7 +465,8 @@ Releases follow the house convention — **release-please**, same as every other
 2. Merge that PR when you want to cut a release. It bumps `package.json`, writes
    `CHANGELOG.md`, tags `vX.Y.Z`, and publishes a GitHub Release.
 3. That release flips `release_created`, which triggers the `publish` job:
-   `npm run validate`, then `npm publish --provenance --access public`.
+   `npm run validate`, then `npm publish --access public`. No `--provenance` flag is
+   needed — Trusted Publishing generates provenance automatically.
 
 **Never hand-edit `package.json`'s version or `CHANGELOG.md`** — release-please owns both
 (see [`commit-and-release`](skills/commit-and-release/SKILL.md)).
@@ -501,6 +521,14 @@ in `package.json`).
     [`docspress-publish`](skills/docspress-publish/SKILL.md) wraps rather than duplicates.
     Fetched to the user's machine, never redistributed by this package, so the two licences
     do not mix in anything we ship.
+- **Adapted work shipped in this repo:**
+  [`engineering-discipline`](skills/engineering-discipline/SKILL.md) adapts
+  [Andrej Karpathy's observations on common LLM coding mistakes](https://x.com/karpathy/status/2015883857489522876)
+  by way of the **MIT**-licensed
+  [`karpathy-guidelines`](https://github.com/multica-ai/andrej-karpathy-skills) skill. MIT is
+  GPL-compatible, so the adaptation ships here under this repo's licence with attribution
+  preserved in the skill's own `## Credits` section — which is the obligation MIT actually
+  imposes. The four principles are theirs; the wiring into our gates and house rules is ours.
 
 ## Status
 
