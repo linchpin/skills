@@ -1,7 +1,8 @@
 ---
 name: wp-local-setup
 description: Stand up the Linchpin baseline WordPress local environment — scaffold a new wp-content-shaped project repo (Composer-managed plugins from wpackagist.org + packagist.linchpin.com, release-please deploys) and/or wire a project repo into a WordPress Studio site by symlinking the repo in as the site's wp-content while preserving Studio's SQLite runtime pieces. Use when starting a new Linchpin WordPress project or setting up local development for an existing one. Not for choosing or building the theme itself — use `wp-theme-baseline`; not for creating the GitHub repo or its deploy secrets — use `github-repo-setup`.
-version: 1.2.0
+version: 1.3.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(studio site status*)
 ---
 
 # WordPress local setup (Linchpin baseline)

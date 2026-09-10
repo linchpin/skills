@@ -118,9 +118,23 @@ npx @linchpinagency/skills --global --agent all   # Claude Code, Copilot, Codex,
 ```
 
 Skills are read by the **harness**, so Copilot running a Claude model still needs them in
-Copilot's own folder. Everything here is plain markdown with no Claude-specific syntax, with
-one deliberate exception: `safety-hooks` uses Claude Code hooks to *enforce* confirmation on
-destructive commands, and degrades to documentation elsewhere.
+Copilot's own folder. Everything here is plain markdown with no Claude-specific syntax.
+
+Two deliberate exceptions, both additive — nothing is *removed* from what the other agents
+read:
+
+- **`safety-hooks`** uses Claude Code hooks to *enforce* confirmation on destructive
+  commands, and degrades to documentation elsewhere. Its `compatibility:` field says so.
+- **`when_to_use:`** is a Claude Code field that appends extra trigger phrasings to a skill's
+  `description`. Every skill's `description` still stands on its own and carries its own
+  triggers — the validator enforces that — so the other three agents lose nothing; Claude
+  Code just gets a wider net.
+
+`allowed-tools:` is in the Agent Skills spec, so it works everywhere. It **pre-approves** a
+skill's own read-only commands so a procedure doesn't stop for a permission prompt halfway
+through; it never restricts anything, and it never weakens hooks — a `PreToolUse` hook still
+fires on a pre-approved call and can still block it. Commands that *write* are deliberately
+left to prompt.
 
 ### When a skill is wrong
 

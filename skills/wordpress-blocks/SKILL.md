@@ -1,7 +1,8 @@
 ---
 name: wordpress-blocks
 description: Author and edit WordPress content as valid Gutenberg block markup from a chat interface (Mantle). Use whenever a request means adding or changing page/post/content — a section, hero, pricing table, FAQ, CTA, columns, etc. Encodes the pattern-first procedure (reuse the site's synced patterns / template parts / registered patterns BEFORE composing from core blocks), the block-markup grammar models get wrong, and the live tool contract the host plugin must expose. Always validate generated block markup before inserting — invalid comment delimiters silently break the editor.
-version: 0.1.0
+version: 0.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # WordPress Blocks (content authoring)

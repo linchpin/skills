@@ -1,7 +1,8 @@
 ---
 name: browser-automation
 description: Drive a browser for QA, screenshots, and dogfooding — Chrome DevTools MCP against real Chrome first, Playwright headless as the scripted fallback, with auth and cookie handling. Use when a task needs to load a page, click through a flow, capture screenshots, read console errors or network failures, or test a local site in a browser. Not for deciding what to test — use `web-qa`.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob
 ---
 
 # Browser automation

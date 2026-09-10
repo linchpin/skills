@@ -1,7 +1,9 @@
 ---
 name: support-triage
 description: Run a client support request end to end — clarify what was actually asked, reproduce it, judge urgency and whether it fits the support agreement, fix and verify it, then close the loop with the requester in their language. Use when handling a support ticket, when a client reports something broken, when triaging a support queue, or when a request might be out of scope. Baseline workflow, refined with the team over time.
-version: 0.1.0
+when_to_use: Also when a client has emailed or messaged about something broken, when a request arrives without a task, or when deciding whether something is urgent enough to interrupt planned work.
+version: 0.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # Support triage

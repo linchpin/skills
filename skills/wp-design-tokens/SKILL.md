@@ -1,7 +1,8 @@
 ---
 name: wp-design-tokens
 description: Make theme.json the single source of truth for a theme's color, type, spacing, and shadow — the slug vocabulary, the theme.json-vs-SCSS precedence rules that make an edit appear to do nothing, and where Linchpin's brand values actually live. Use when changing or adding a brand color, when setting up a palette, when headings won't scale down on mobile, when a button style variation isn't applying, or when fixing a contrast finding. Not for choosing or standing up a theme — use `wp-theme-baseline`.
-version: 0.1.0
+version: 0.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # Design tokens in theme.json

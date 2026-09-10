@@ -1,7 +1,8 @@
 ---
 name: wp-studio-cli
 description: Operate a local WordPress Studio site — preferring the wordpress-studio MCP (site_list, site_start, wp_cli, validate_blocks, take_screenshot, inspect_design) and falling back to the `studio` CLI when MCP isn't connected. Use whenever working against a Linchpin local dev install, running WP-CLI locally, reading admin credentials, validating block markup, or screenshotting a local site. Studio runs PHP-WASM, so file paths inside `wp eval` must use ABSPATH (resolves to /wordpress/), never host filesystem paths.
-version: 1.1.0
+version: 1.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # WordPress Studio

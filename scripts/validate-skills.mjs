@@ -36,6 +36,62 @@ const DESC_MIN = 80;
 const DESC_MAX = 1000;
 const DESC_WARN = 700;
 
+// Claude Code appends `when_to_use` to `description` and truncates the pair at this length.
+// Past it, content is dropped silently — the skill just quietly stops matching.
+const RETRIEVAL_MAX = 1536;
+
+// The only keys allowed in frontmatter, per skills/write-a-linchpin-skill/SKILL.md. Every
+// runtime silently ignores keys it doesn't recognize, so an unrecognized key is not a
+// warning — it's a no-op that reads like configuration and drifts unchallenged.
+const ALLOWED_KEYS = new Set([
+  'name', // spec, required
+  'description', // spec, required
+  'allowed-tools', // spec
+  'license', // spec
+  'compatibility', // spec
+  'metadata', // spec
+  'when_to_use', // Claude Code only; additive to description
+  'version', // ours: release tooling, not read by any harness
+]);
+
+// Real Claude Code fields we've deliberately not adopted, so the error can say "decided
+// against" rather than "unknown" — the two need different fixes.
+const NOT_ADOPTED = {
+  paths: 'limits auto-activation to matching files, which makes a skill go quiet when asked about a file that is not open',
+  context: 'runs the skill in a forked subagent — changes execution, not instructions',
+  agent: 'only meaningful alongside `context: fork`',
+  background: 'only meaningful alongside `context: fork`',
+  model: 'pins a model; skills here are model-agnostic by design',
+  effort: 'pins a reasoning effort; same reason as `model`',
+  hooks: 'registers hooks from a skill — `safety-hooks` owns hook installation',
+  'argument-hint': 'for slash-command autocomplete; these skills are model-invoked',
+  arguments: 'for slash-command autocomplete; these skills are model-invoked',
+  'disable-model-invocation': 'would stop the skill auto-loading, which is the whole point',
+  'user-invocable': 'every skill here should stay user-invocable',
+  'disallowed-tools': 'removes tools mid-skill; no skill here has needed it',
+  shell: 'pins the shell for injected commands; not used here',
+};
+
+// Keys that look like configuration and are read by nothing at all, anywhere.
+const READ_BY_NOTHING = {
+  triggers: 'no runtime reads this — trigger phrases belong in `description` (and `when_to_use`), or they are never matched against',
+  'preamble-tier': 'a gstack-internal key, not part of any skill format',
+  tags: 'not a skill-format key — use `metadata` if you need your own bookkeeping',
+  author: 'not a skill-format key — use `metadata`',
+};
+
+/**
+ * Tokenize an `allowed-tools` value into tool grants. Cannot split on whitespace: the
+ * spec's own examples put spaces inside the pattern (`Bash(git add *)`), so grants are
+ * matched as `Name` or `Name(...)` instead.
+ */
+function parseAllowedTools(value) {
+  return [...String(value).matchAll(/([A-Za-z_][\w-]*)\s*(\(([^)]*)\))?/g)].map((m) => ({
+    tool: m[1],
+    pattern: m[3] ?? null,
+  }));
+}
+
 // Undisclosed sprawl, not length, is what the tier model cares about: a long body is fine
 // when the reference-shaped parts (templates, command matrices, schemas) have been promoted
 // to `references/`. Gating on that presence makes the check unsatisfiable by compressing
@@ -113,6 +169,54 @@ function validateSkill(name, readme) {
 
     if (!fm.version) errors.push('frontmatter: `version` is required (semver)');
     else if (!SEMVER_RE.test(fm.version)) errors.push(`frontmatter: \`version: ${fm.version}\` is not semver`);
+
+    // `description` is checked above on its own, deliberately: it is the only retrieval
+    // field Copilot, Codex and Cursor read, so it has to satisfy the length and trigger
+    // rules by itself even when `when_to_use` is present. That makes the additive rule
+    // structural — moving triggers out of `description` fails those checks, not this one.
+    if (fm.when_to_use) {
+      const combined = (fm.description || '').length + fm.when_to_use.length;
+      if (combined > RETRIEVAL_MAX) {
+        errors.push(
+          `frontmatter: \`description\` + \`when_to_use\` is ${combined} chars — Claude Code ` +
+            `truncates the pair at ${RETRIEVAL_MAX}, silently dropping the overflow`
+        );
+      }
+    }
+
+    if (fm['allowed-tools']) {
+      const grants = parseAllowedTools(fm['allowed-tools']);
+      if (!grants.length) {
+        errors.push('frontmatter: `allowed-tools` is set but parsed to no grants — check the syntax');
+      }
+      for (const { tool, pattern } of grants) {
+        // A bare `Bash` pre-approves every shell command the skill's turn can reach. Since
+        // under-granting only costs a prompt, there is never a reason to take that trade.
+        if (tool === 'Bash' && pattern === null) {
+          errors.push(
+            'frontmatter: `allowed-tools` grants bare `Bash` — pre-approves every shell ' +
+              'command. Scope it: `Bash(composer run lint*)`, one entry per read-only command.'
+          );
+        }
+      }
+    }
+
+    for (const key of Object.keys(fm)) {
+      if (ALLOWED_KEYS.has(key)) continue;
+      if (READ_BY_NOTHING[key]) {
+        errors.push(`frontmatter: \`${key}\` — ${READ_BY_NOTHING[key]}`);
+      } else if (NOT_ADOPTED[key]) {
+        errors.push(
+          `frontmatter: \`${key}\` is a real Claude Code field but deliberately not used in ` +
+            `this library — ${NOT_ADOPTED[key]}. See write-a-linchpin-skill if that should change.`
+        );
+      } else {
+        errors.push(
+          `frontmatter: unknown key \`${key}\` — every runtime silently ignores keys it does ` +
+            `not recognize, so this does nothing. Allowed: ${[...ALLOWED_KEYS].join(', ')}.`
+        );
+      }
+    }
   }
 
   // --- Structure -------------------------------------------------------------------

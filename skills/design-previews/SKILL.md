@@ -1,7 +1,8 @@
 ---
 name: design-previews
 description: Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile, and get the client's pick before any theme or block work starts. Use when kicking off a design, when someone asks for design options or mockups, when a brief is vague and needs something to react to, or before building a homepage or landing page. Not for auditing an existing design — use `wp-audit`. Not for choosing a browser tool — use `browser-automation`.
-version: 1.1.0
+version: 1.2.0
+allowed-tools: Read Grep Glob
 ---
 
 # Design previews
