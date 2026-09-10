@@ -36,6 +36,62 @@ const DESC_MIN = 80;
 const DESC_MAX = 1000;
 const DESC_WARN = 700;
 
+// Claude Code appends `when_to_use` to `description` and truncates the pair at this length.
+// Past it, content is dropped silently — the skill just quietly stops matching.
+const RETRIEVAL_MAX = 1536;
+
+// The only keys allowed in frontmatter, per skills/write-a-linchpin-skill/SKILL.md. Every
+// runtime silently ignores keys it doesn't recognize, so an unrecognized key is not a
+// warning — it's a no-op that reads like configuration and drifts unchallenged.
+const ALLOWED_KEYS = new Set([
+  'name', // spec, required
+  'description', // spec, required
+  'allowed-tools', // spec
+  'license', // spec
+  'compatibility', // spec
+  'metadata', // spec
+  'when_to_use', // Claude Code only; additive to description
+  'version', // ours: release tooling, not read by any harness
+]);
+
+// Real Claude Code fields we've deliberately not adopted, so the error can say "decided
+// against" rather than "unknown" — the two need different fixes.
+const NOT_ADOPTED = {
+  paths: 'limits auto-activation to matching files, which makes a skill go quiet when asked about a file that is not open',
+  context: 'runs the skill in a forked subagent — changes execution, not instructions',
+  agent: 'only meaningful alongside `context: fork`',
+  background: 'only meaningful alongside `context: fork`',
+  model: 'pins a model; skills here are model-agnostic by design',
+  effort: 'pins a reasoning effort; same reason as `model`',
+  hooks: 'registers hooks from a skill — `safety-hooks` owns hook installation',
+  'argument-hint': 'for slash-command autocomplete; these skills are model-invoked',
+  arguments: 'for slash-command autocomplete; these skills are model-invoked',
+  'disable-model-invocation': 'would stop the skill auto-loading, which is the whole point',
+  'user-invocable': 'every skill here should stay user-invocable',
+  'disallowed-tools': 'removes tools mid-skill; no skill here has needed it',
+  shell: 'pins the shell for injected commands; not used here',
+};
+
+// Keys that look like configuration and are read by nothing at all, anywhere.
+const READ_BY_NOTHING = {
+  triggers: 'no runtime reads this — trigger phrases belong in `description` (and `when_to_use`), or they are never matched against',
+  'preamble-tier': 'a gstack-internal key, not part of any skill format',
+  tags: 'not a skill-format key — use `metadata` if you need your own bookkeeping',
+  author: 'not a skill-format key — use `metadata`',
+};
+
+/**
+ * Tokenize an `allowed-tools` value into tool grants. Cannot split on whitespace: the
+ * spec's own examples put spaces inside the pattern (`Bash(git add *)`), so grants are
+ * matched as `Name` or `Name(...)` instead.
+ */
+function parseAllowedTools(value) {
+  return [...String(value).matchAll(/([A-Za-z_][\w-]*)\s*(\(([^)]*)\))?/g)].map((m) => ({
+    tool: m[1],
+    pattern: m[3] ?? null,
+  }));
+}
+
 // Undisclosed sprawl, not length, is what the tier model cares about: a long body is fine
 // when the reference-shaped parts (templates, command matrices, schemas) have been promoted
 // to `references/`. Gating on that presence makes the check unsatisfiable by compressing
@@ -111,8 +167,66 @@ function validateSkill(name, readme) {
       if (!TRIGGER_RE.test(fm.description)) errors.push('frontmatter: `description` must state when to reach for the skill ("Use when …")');
     }
 
+    // A scaffold whose placeholders are still in place otherwise reads as valid: the
+    // template's `description` contains a literal "Use when <trigger>", which satisfies both
+    // the length and trigger checks. Nothing else in the library puts angle brackets in
+    // frontmatter, so treating them as unfilled is unambiguous.
+    for (const [key, value] of Object.entries(fm)) {
+      if (/<[^>]+>/.test(value)) {
+        errors.push(`frontmatter: \`${key}\` still contains a template placeholder — fill it in`);
+      }
+    }
+
     if (!fm.version) errors.push('frontmatter: `version` is required (semver)');
     else if (!SEMVER_RE.test(fm.version)) errors.push(`frontmatter: \`version: ${fm.version}\` is not semver`);
+
+    // `description` is checked above on its own, deliberately: it is the only retrieval
+    // field Copilot, Codex and Cursor read, so it has to satisfy the length and trigger
+    // rules by itself even when `when_to_use` is present. That makes the additive rule
+    // structural — moving triggers out of `description` fails those checks, not this one.
+    if (fm.when_to_use) {
+      const combined = (fm.description || '').length + fm.when_to_use.length;
+      if (combined > RETRIEVAL_MAX) {
+        errors.push(
+          `frontmatter: \`description\` + \`when_to_use\` is ${combined} chars — Claude Code ` +
+            `truncates the pair at ${RETRIEVAL_MAX}, silently dropping the overflow`
+        );
+      }
+    }
+
+    if (fm['allowed-tools']) {
+      const grants = parseAllowedTools(fm['allowed-tools']);
+      if (!grants.length) {
+        errors.push('frontmatter: `allowed-tools` is set but parsed to no grants — check the syntax');
+      }
+      for (const { tool, pattern } of grants) {
+        // A bare `Bash` pre-approves every shell command the skill's turn can reach. Since
+        // under-granting only costs a prompt, there is never a reason to take that trade.
+        if (tool === 'Bash' && pattern === null) {
+          errors.push(
+            'frontmatter: `allowed-tools` grants bare `Bash` — pre-approves every shell ' +
+              'command. Scope it: `Bash(composer run lint*)`, one entry per read-only command.'
+          );
+        }
+      }
+    }
+
+    for (const key of Object.keys(fm)) {
+      if (ALLOWED_KEYS.has(key)) continue;
+      if (READ_BY_NOTHING[key]) {
+        errors.push(`frontmatter: \`${key}\` — ${READ_BY_NOTHING[key]}`);
+      } else if (NOT_ADOPTED[key]) {
+        errors.push(
+          `frontmatter: \`${key}\` is a real Claude Code field but deliberately not used in ` +
+            `this library — ${NOT_ADOPTED[key]}. See write-a-linchpin-skill if that should change.`
+        );
+      } else {
+        errors.push(
+          `frontmatter: unknown key \`${key}\` — every runtime silently ignores keys it does ` +
+            `not recognize, so this does nothing. Allowed: ${[...ALLOWED_KEYS].join(', ')}.`
+        );
+      }
+    }
   }
 
   // --- Structure -------------------------------------------------------------------
@@ -123,6 +237,17 @@ function validateSkill(name, readme) {
   );
   for (const section of REQUIRED_SECTIONS) {
     if (!headings.some((h) => section.test(h))) errors.push(`missing required section \`${section.label}\``);
+  }
+
+  // House rule 2 ("one owner per concern") is otherwise unenforced: a skill with no
+  // declared boundary is where duplication starts, because nothing says which of two
+  // overlapping skills is canonical. A warning, not an error — the rule is about the
+  // library's shape, and a genuinely self-contained skill can argue its way out.
+  if (!headings.some((h) => h === 'owns')) {
+    warnings.push(
+      'no `## Owns` — declare what this skill is canonical for and what it defers to a ' +
+        'sibling, or the next skill to touch the same ground will restate it'
+    );
   }
 
   const lineCount = body.split('\n').length;
@@ -181,6 +306,23 @@ function main() {
   const readme = fs.existsSync(README) ? fs.readFileSync(README, 'utf8') : '';
   const results = targets.map((name) => validateSkill(name, readme));
 
+  // The mirror image of the per-skill "not listed in the README" error: a catalog row for a
+  // skill that no longer exists. It points readers at a skill they cannot install and, on a
+  // rename, is how the old name outlives the new one. Scoped to the Linchpin subsection on
+  // purpose — the base-layer table lists upstream skills that have no directory here by
+  // design. Only reported on a full run, since a single-skill run sees a partial picture.
+  const staleRows = [];
+  if (!requested.length) {
+    const section = readme.match(/^###\s+Linchpin tooling[^\n]*\n([\s\S]*?)(?=^###\s)/m);
+    if (section) {
+      for (const line of section[1].split('\n')) {
+        if (!line.trimStart().startsWith('|')) continue;
+        const cell = line.match(/`([a-z0-9][a-z0-9-]*)`/);
+        if (cell && !all.includes(cell[1])) staleRows.push(cell[1]);
+      }
+    }
+  }
+
   let errorCount = 0;
   let warningCount = 0;
   for (const { name, errors, warnings } of results) {
@@ -193,6 +335,17 @@ function main() {
     console.log(`${errors.length ? '✗' : '⚠'} ${name}`);
     for (const e of errors) console.log(`    error:   ${e}`);
     for (const w of warnings) console.log(`    warning: ${w}`);
+  }
+
+  if (staleRows.length) {
+    errorCount += staleRows.length;
+    console.log('✗ README.md');
+    for (const name of staleRows) {
+      console.log(
+        `    error:   catalog row for \`${name}\`, which has no skills/${name}/ — ` +
+          `remove the row, or add the skill to retired.json if it was renamed`
+      );
+    }
   }
 
   const summary = `\n${targets.length} skill(s) checked — ${errorCount} error(s), ${warningCount} warning(s).`;

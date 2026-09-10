@@ -1,6 +1,6 @@
 {
   "name": "@linchpinagency/skills",
-  "version": "0.1.10",
+  "version": "0.1.14",
   "description": "Linchpin's library of reusable AI agent skills for WordPress projects.",
   "type": "module",
   "bin": {
@@ -10,6 +10,8 @@
     "bin",
     "skills",
     "upstream.json",
+    "retired.json",
+    "CHANGELOG.md",
     "README.md"
   ],
   "engines": {
@@ -17,7 +19,9 @@
   },
   "scripts": {
     "list": "node bin/install.mjs --list",
+    "new-skill": "node scripts/new-skill.mjs",
     "validate": "node scripts/validate-skills.mjs",
+    "version-gate": "node scripts/version-gate.mjs",
     "test": "npm run validate",
     "prepublishOnly": "npm run validate"
   },

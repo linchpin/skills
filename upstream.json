@@ -1,5 +1,5 @@
 {
-  "_comment": "Base-layer skills vendored from upstream at install time, installed alongside the portable Linchpin skills in ./skills. Edit `skills` below to curate which generic skills ship. Pin `ref` to a commit SHA (upstream has no releases); bump it deliberately and re-test. Upstream is GPL-2.0-or-later; redistribution is fine with attribution (see README).",
+  "_comment": "Base-layer skills vendored from upstream at install time, installed alongside the portable Linchpin skills in ./skills. Edit `skills` below to curate which generic skills ship. `path` is where skills live inside the source repo (default `skills`) — upstreams disagree, so set it when a repo keeps them elsewhere. Pin `ref` to a commit SHA (neither upstream publishes releases); bump it deliberately and re-test. Licenses differ per source and are recorded below; redistribution is fine with attribution (see README).",
   "sources": [
     {
       "name": "WordPress/agent-skills",
@@ -14,6 +14,17 @@
         "wp-wpcli-and-ops",
         "wp-plugin-development",
         "wp-rest-api"
+      ]
+    },
+    {
+      "_comment": "Our fork of Automattic/docspress, not upstream: the fork's generator reads the per-repo .docspress/brief.md contract that skills/docspress-publish relies on, so the two are not interchangeable. That wrapper owns the docs.linchpin.com target and defers content generation here. `path` is .agents/skills because upstream maintains that copy and lets .claude/skills fall behind.",
+      "name": "linchpin/docspress",
+      "repo": "linchpin/docspress",
+      "ref": "0f251db8cd9e4e31a5d51e1cbc7aacaa46d4780e",
+      "path": ".agents/skills",
+      "license": "GPL-3.0-or-later",
+      "skills": [
+        "generate-docs-from-source"
       ]
     }
   ]

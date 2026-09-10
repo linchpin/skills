@@ -1,7 +1,8 @@
 ---
 name: write-a-linchpin-skill
 description: Author or review a skill in the Linchpin skills library (github.com/linchpin/skills) so it matches the house standard — right-sized tier, required frontmatter, the fixed section skeleton, and the four house rules. Use when adding a new skill, reviewing a skill PR, migrating an existing skill to the standard, or deciding whether something belongs in this library at all versus a project's own CLAUDE.md.
-version: 1.0.0
+version: 1.1.0
+allowed-tools: Read Grep Glob Bash(node scripts/validate-skills.mjs*) Bash(npm run validate)
 ---
 
 # Write a Linchpin skill
@@ -70,19 +71,70 @@ skill rather than just the number.
 
 ## Step 3 — Write `SKILL.md`
 
-### Frontmatter (all required)
+### Frontmatter
 
 ```yaml
 ---
-name: wp-quality-gates          # kebab-case; MUST equal the directory name
-description: <capability>. Use when <trigger>, <trigger>, <trigger>.
-version: 1.0.0                  # semver; bump when behavior changes
+name: wp-quality-gates          # required; kebab-case; MUST equal the directory name
+description: <capability>. Use when <trigger>, <trigger>, <trigger>.   # required
+when_to_use: <extra phrasings that wouldn't fit in description>        # optional
+version: 1.0.0                  # required here; semver, bump when behavior changes
+allowed-tools: Read Grep Glob Bash(composer run lint)                  # optional
 ---
 ```
 
-Optional and portable: nothing else is needed. Avoid agent-specific keys (`allowed-tools`,
-`context: fork`) unless a skill genuinely can't work without them — they're ignored or
-mishandled by other agents.
+Only these five, plus `license` and `compatibility` where they genuinely apply. The
+validator rejects anything else, because **every runtime silently drops frontmatter keys it
+doesn't recognize** — an unrecognized key isn't a warning, it's a no-op that reads like
+configuration. `triggers:` is the trap worth naming: it appears in other libraries, no
+runtime reads it, and putting trigger phrases there instead of in `description` means they
+are never matched against.
+
+| Key | Read by | Notes |
+| --- | --- | --- |
+| `name`, `description` | every agent | The only two the Agent Skills spec requires. |
+| `allowed-tools` | every agent (in the spec) | A **pre-approval**, not a restriction — see below. |
+| `license`, `compatibility` | every agent (in the spec) | Use when a skill is derived from licensed work, or genuinely can't work everywhere. |
+| `when_to_use` | **Claude Code only** | Appended to `description`; 1,536 chars for the two combined. |
+| `version` | nobody | Ours, not the harness's. The spec's home for it is `metadata.version`; top-level is a tolerated convenience, and our release tooling reads it there. |
+
+**`when_to_use` is additive, never a relocation.** `description` must still stand alone and
+pass every check by itself — it is the only field Copilot, Codex, and Cursor read. Moving
+trigger phrases out of it to tidy it up makes the skill *less* findable on three of the four
+agents we support. Use `when_to_use` for the overflow: the extra phrasings a user might say
+that wouldn't fit. The validator enforces this, so it can't decay by accident.
+
+### `allowed-tools` — grant the reads, never the writes
+
+`allowed-tools` **pre-approves** tools so a skill's own commands don't stop for a permission
+prompt mid-procedure. It does **not** restrict anything: every tool stays callable, so a
+missing entry costs one prompt and nothing else.
+
+That asymmetry is the whole policy. **Under-granting is free; over-granting silently
+pre-approves.** So:
+
+- **Grant the read-only commands** a skill actually runs — the inspection it does constantly.
+  `Bash(git status*)`, `Bash(composer run phpcs*)`, `Bash(gh pr view*)`.
+- **Never grant a command that writes**, even when the skill runs it: `composer run phpcbf`
+  rewrites files, `git branch -m` renames, `gh repo create` creates, `npm audit fix` is not
+  `npm audit`. Those *should* stop and ask. Pin them with an exact pattern when the wildcard
+  would catch the mutating sibling — `Bash(npm audit)` grants the audit, not `audit fix`.
+- **Never bare `Bash`.** It pre-approves every shell command the turn can reach. The
+  validator treats it as an error.
+- **Only grant commands the skill names.** A grant for something the file never runs is a
+  standing pre-approval nobody reviewed.
+- **Don't chase MCP tool names.** Server prefixes differ per install — the same machine can
+  expose `mcp__clickup__*` and `mcp__claude_ai_ClickUp__*` — so a grant that looks right is
+  install-specific. Let them prompt.
+
+`Read Grep Glob` don't prompt in the first place, so listing them buys nothing mechanically.
+They're worth stating anyway on a judgment-only skill: it's the frontmatter saying *this
+skill only reads*, which is exactly the claim a reviewer wants to check.
+
+**Grants do not weaken hooks.** A `PreToolUse` hook still fires on a pre-approved call and
+can still block it — verified against Claude Code 2.1.267, with a control proving the grant
+was live. So [`safety-hooks`](../safety-hooks/SKILL.md) keeps its teeth regardless of what
+any skill grants.
 
 **The `description` is the whole retrieval surface.** An agent sees only this before
 deciding whether to open the skill; a thin description means the skill silently never
@@ -163,7 +215,11 @@ Checklist:
 3. `version` bumped if you changed an existing skill's behavior.
 4. Committed per `commit-and-release`, with the task key from `task-tracking` in the scope.
 
-Publishing is a separate, deliberate step (`npm version` + `npm publish`) — see `README.md`.
+**Publishing is automated — never run `npm version` or `npm publish`.** release-please keeps
+a rolling release PR from the conventional commits on `main`; merging it bumps
+`package.json`, writes `CHANGELOG.md`, tags, and triggers the publish job. The version you
+bump by hand is the **skill's** `version` in frontmatter, never the package's. See
+[`commit-and-release`](../commit-and-release/SKILL.md).
 
 ## Failure modes
 

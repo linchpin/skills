@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.1.14](https://github.com/linchpin/skills/compare/v0.1.13...v0.1.14) (2026-09-09)
+
+
+### Features ✨
+
+* **LINCHPIN-5549:** Add github-repo-setup for standing up deploy-ready repos ([#35](https://github.com/linchpin/skills/issues/35)) ([edb4d59](https://github.com/linchpin/skills/commit/edb4d59c46765bf2fd0cb55eb5e6ea31ae6c92c1))
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-5549:** Clone the new repo outside the current checkout ([#37](https://github.com/linchpin/skills/issues/37)) ([c18e3f1](https://github.com/linchpin/skills/commit/c18e3f18af45273f0ce45c88fe6723d25c9e0890))
+
+## [0.1.13](https://github.com/linchpin/skills/compare/v0.1.12...v0.1.13) (2026-09-07)
+
+
+### Features ✨
+
+* **NO-TASK:** Add docspress-publish and vendor the generator from our fork ([#33](https://github.com/linchpin/skills/issues/33)) ([9e3fd30](https://github.com/linchpin/skills/commit/9e3fd3079dde831d9628c3c183c2c2602eaff862))
+
+## [0.1.12](https://github.com/linchpin/skills/compare/v0.1.11...v0.1.12) (2026-09-05)
+
+
+### Features ✨
+
+* **LINCHPIN-5510:** Document the library and publish to docs.linchpin.com ([#32](https://github.com/linchpin/skills/issues/32)) ([1328731](https://github.com/linchpin/skills/commit/1328731f871c2c0c4552d12f08232071fd3c8442))
+
+
+### Documentation 📚
+
+* **NO-TASK:** Add Plugin Check to the gates and say why CI cannot be trusted for it ([#30](https://github.com/linchpin/skills/issues/30)) ([5915fe6](https://github.com/linchpin/skills/commit/5915fe620ab63dba90271432df8527f6c2419e9d))
+
+## [0.1.11](https://github.com/linchpin/skills/compare/v0.1.10...v0.1.11) (2026-08-31)
+
+
+### Features ✨
+
+* **NO-TASK:** Add agent-capabilities skill and stop duplicate skill installs ([#26](https://github.com/linchpin/skills/issues/26)) ([999fd53](https://github.com/linchpin/skills/commit/999fd53aef2fe63dc3a5cd5b3d3a81294d064408))
+
+
+### Documentation 📚
+
+* **NO-TASK:** Document the 100 character header limit and the PR title lint ([#28](https://github.com/linchpin/skills/issues/28)) ([4391d44](https://github.com/linchpin/skills/commit/4391d44f08006dc6fd0d15bccdefdc2927c8c025))
+* **NO-TASK:** Explain why a clean phpcs run can still fail the lint job ([#29](https://github.com/linchpin/skills/issues/29)) ([c98623b](https://github.com/linchpin/skills/commit/c98623bcca03ffeee7b20daa8fa2146f119a6950))
+
 ## [0.1.10](https://github.com/linchpin/skills/compare/v0.1.9...v0.1.10) (2026-08-05)
 
 

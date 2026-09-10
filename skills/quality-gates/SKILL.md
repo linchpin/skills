@@ -1,7 +1,9 @@
 ---
 name: quality-gates
-description: Run a Linchpin project's own lint, coding-standards, static-analysis, and test gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
-version: 1.0.0
+description: Run a Linchpin project's own lint, coding-standards, static-analysis, test and Plugin Check gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, when a plugin has to pass Plugin Check before it ships, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
+when_to_use: Also when someone asks "is this ready to commit", "did lint pass", when PHPCS or ESLint is failing in CI, when a pre-commit hook is blocking a commit, or when a plugin has to pass Plugin Check before it ships.
+version: 1.2.0
+allowed-tools: Read Grep Glob Bash(composer run lint) Bash(composer run phpcs) Bash(composer run phpstan) Bash(composer run phpunit) Bash(composer run plugin-check) Bash(composer run fixer:test) Bash(composer lint) Bash(composer phpcs) Bash(npm run lint:check) Bash(npm run lint:css) Bash(npm run lint:js) Bash(npm run test:unit) Bash(npm run test:e2e) Bash(git diff*) Bash(git status*) Bash(git merge-base*)
 ---
 
 # Quality gates
@@ -11,7 +13,10 @@ scripts, `package.json` scripts, `phpcs.xml.dist`, `lint-staged.config.js`. Your
 **find those declarations and run them**, not to invent commands. Getting this right is
 what makes the difference between a clean PR and a red CI run.
 
-The gates are the same ones CI runs, so passing here means passing there.
+The gates are the same ones CI runs, so passing here almost always means passing there.
+Almost: see [Green locally, red in CI](#green-locally-red-in-ci) for the one way the
+shared lint workflow disagrees with a clean local run, which is not a difference in what
+is checked but in what counts as a failure.
 
 ## When to use
 
@@ -19,6 +24,7 @@ The gates are the same ones CI runs, so passing here means passing there.
 - The user asks whether a change is ready to ship.
 - CI lint / PHPCS / PHPStan failed and you need to reproduce and fix it locally.
 - A husky pre-commit hook is blocking a commit.
+- A plugin is heading for WordPress.org, packagist.linchpin.com, or a release.
 - A repo is missing the house lint scripts and should get them.
 
 **Not this skill:** the commit message, branch, or release — [`commit-and-release`](../commit-and-release/SKILL.md).
@@ -44,6 +50,7 @@ the same conventions but expose different gates.
 | `package.json` → `scripts` | JS/CSS gates (`lint:js`, `lint:css`, `format`, `lint:check`) | Fall back to `eslint`/`prettier` only if configured |
 | `lint-staged.config.js` + `.husky/` | Pre-commit is already wired — **mirror those exact commands** | Run the scripts directly |
 | Nested `package.json` (e.g. `themes/*`, `plugins/*`, `src/`) | Gates run **in that workspace**, not the root | Root only |
+| A plugin header (`Plugin Name:`) plus `readme.txt`, or `.github/workflows/plugin-check.yml` | It is a distributed plugin → **Plugin Check applies** | Skip it; Plugin Check is meaningless for a theme or a site repo |
 | `.linchpin.json` | Project metadata and local environments | Not every repo has one |
 
 Full command matrix: [`references/toolchain.md`](references/toolchain.md).
@@ -65,9 +72,64 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
 5. **Fix, don't silence.** Auto-fixers first (`composer run phpcbf`, `composer run fixer`,
    `npm run format`), then re-run the gate; hand-fix what remains. → Gate passes with the
    fix in the code, not in the config.
-6. **Report gaps, then hand off.** State which gates ran, which were skipped and why. If the
+6. **Plugin Check gate** — distributed plugins only. `composer run plugin-check` where the
+   repo has it, otherwise the commands in
+   [`references/toolchain.md`](references/toolchain.md#plugin-check). It builds the
+   distributable and boots WordPress, so it is slower than the rest: run it before opening
+   the PR rather than on every commit. → Zero findings, **warnings included**, or each one
+   fixed or excluded with a stated reason.
+7. **Report gaps, then hand off.** State which gates ran, which were skipped and why. If the
    repo lacks a house script, propose it (see `references/toolchain.md`) and add it **only
    with approval**. → Then go to [`commit-and-release`](../commit-and-release/SKILL.md).
+
+## Green locally, red in CI
+
+The shared lint workflow (`linchpin/actions`) runs the same phpcs you do, and then does
+two things to the result that your terminal does not.
+
+**It sniffs only the files the PR changed.** `git diff --diff-filter=ACMRT <base>...HEAD`,
+which means **you inherit the debt of every file you touch**. A file carrying violations
+nobody has cleaned up becomes your problem the moment you edit one line of it.
+
+**It pipes the report through `cs2pr`, and `cs2pr` fails on warnings.** This is the part
+that surprises people:
+
+```bash
+phpcs -q --runtime-set ignore_warnings_on_exit 1 --report=checkstyle "${files[@]}" | cs2pr
+```
+
+`ignore_warnings_on_exit` does exactly what it says — **phpcs itself exits 0** on a
+warnings-only run. But the checkstyle report still lists every warning as
+`<error severity="warning">`, `cs2pr` turns each into an annotation and exits non-zero
+when there is one, and the step runs under `set -e` with the pipeline's exit code being
+the last command's. So `composer lint` is green, `phpcs` on its own is green, and the job
+is red.
+
+Put together: **one unfixed warning in a file makes every future PR that touches it red on
+arrival.** Seen twice on linchpin.com — `PSR1.Files.SideEffects` on the standard
+`defined( 'ABSPATH' ) || exit;` guard (which cost a PR merged red), and
+`WordPress.WP.Capabilities.Unknown` on two custom capabilities.
+
+Check the same thing CI checks — the count of annotations, warnings included, over the
+files the PR changed:
+
+```bash
+git diff --name-only --diff-filter=ACMRT "$(git merge-base HEAD origin/main)"...HEAD -- '*.php' \
+  | tr '\n' '\0' | xargs -0 vendor/bin/phpcs -q --report=checkstyle \
+  | grep -c 'severity='
+```
+
+Zero means the job will pass. Any other number is what CI will annotate, whether phpcs
+called them errors or not. (Piped through `xargs -0` rather than an unquoted `$files`
+because zsh does not word-split, so the obvious version passes phpcs one long filename
+and reports a file that does not exist.)
+
+Fixing it is the same rule as everywhere else in this skill — **fix the warning, do not
+silence the sniff.** Most are legitimately configuration rather than code: a custom
+capability belongs in `custom_capabilities` in `phpcs.xml.dist`, a text domain in
+`text_domain`. Register the real value and say in a comment where it comes from; a typo
+registered there hides exactly the bug the sniff exists to catch. Setting the sniff to
+`<severity>0</severity>` is the last resort, not the first.
 
 ## Guardrails
 
@@ -81,6 +143,14 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
   dependency change ([`dependency-updates`](../dependency-updates/SKILL.md)), not a fix.
 - **Never** commit `vendor/`, `node_modules/`, or build output unless the repo already
   tracks it — check `.gitignore` and `.distignore` first.
+- **Never** read a green "Plugin Check" tick on a PR as a passing Plugin Check.
+  `wordpress/plugin-check-action` fails the job on *errors* only, so a plugin carrying
+  warnings — the ones WordPress.org review actually raises — shows a passing check. The
+  local run is the one that tells the truth, because it treats any finding as a failure.
+- **Never** assume `composer phpcs` covers Plugin Check. Plugin Check ships its own
+  `PluginCheck.*` sniffs inside the plugin-check plugin; they are not part of the Linchpin
+  standard, so `phpcs.xml.dist` cannot reference them and PHPCS runs green while Plugin
+  Check reports findings. Two gates, not one gate twice.
 - If a tool can't run (not installed, no config, requires Docker that isn't up), **say so
   explicitly**. A silently skipped gate reads as a passing gate.
 
@@ -90,5 +160,8 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
 - [ ] PHP gate passed (or is correctly not applicable — no `phpcs.xml.dist`, no PHP changed).
 - [ ] JS/CSS gate passed in the owning workspace (or correctly not applicable).
 - [ ] Tests run for touched, covered code.
+- [ ] The changed-file annotation count is zero — warnings included, not just errors.
+- [ ] For a distributed plugin: Plugin Check run **locally** with zero findings, warnings
+      included — not merely a green badge on the PR.
 - [ ] No suppressions, config widenings, or `--no-verify` were used to get green.
 - [ ] Skipped gates and missing house scripts are named in the report.

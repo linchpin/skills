@@ -1,7 +1,9 @@
 ---
 name: task-tracking
 description: Associate every unit of work with a task in Linchpin's task platform (currently ClickUp, via the ClickUp MCP) with the least friction, update it when the work lands, and leave a handoff when stopping mid-flight. Use whenever starting work, creating a TODO, scoping something that will span multiple sessions or PRs, preparing to commit, finishing a change, or pausing work someone else may pick up — and whenever anyone says "create an issue", "create a task", "file a ticket", or "log a bug", all of which mean a ClickUp task unless they name GitHub. If no task exists, confirm NO-TASK and keep working; the commit scope carries the task key (e.g. LINCHPIN-5113) or NO-TASK.
-version: 1.4.0
+when_to_use: Also when someone says "create an issue", "file a ticket", "log a bug", "make a task", asks for the task or issue number, or is stopping mid-flight and the state needs handing over.
+version: 1.5.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(git branch --show-current*) Bash(git log*)
 ---
 
 # Task tracking (ClickUp)

@@ -35,6 +35,29 @@ jobs:
             exit 1
           fi
 
+  # A skill's frontmatter `version` is the only signal a consuming project has that it
+  # changed: bin/install.mjs compares versions to decide what to offer as an update, so a
+  # behaviour change on an unbumped version lands as "unchanged" and nobody re-reads it.
+  # Needs full history to diff against the base.
+  version-gate:
+    name: Skill versions
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Every changed skill has a version bump
+        run: node scripts/version-gate.mjs --base "origin/${{ github.base_ref }}"
+
   validate:
     name: Skill standard
     runs-on: ubuntu-latest
@@ -50,6 +73,23 @@ jobs:
       - name: Validate skill packages
         run: node scripts/validate-skills.mjs
 
+      # The scaffolder has to keep producing something the validator accepts once its
+      # placeholders are filled — and it reads the template rather than carrying its own
+      # copy, so a change to the template that breaks it would otherwise surface only when
+      # someone next added a skill.
+      - name: Smoke-test the skill scaffolder
+        run: |
+          set -euo pipefail
+          node scripts/new-skill.mjs ci-scaffold-probe --tier b
+          test -f skills/ci-scaffold-probe/SKILL.md
+          test -d skills/ci-scaffold-probe/references
+          grep -q 'ci-scaffold-probe' README.md
+          # Unfilled placeholders must FAIL, or a half-written skill ships looking valid.
+          if node scripts/validate-skills.mjs ci-scaffold-probe > /dev/null 2>&1; then
+            echo "::error::a scaffold with unfilled placeholders passed validation"; exit 1
+          fi
+          git checkout README.md && rm -rf skills/ci-scaffold-probe
+
       # The installer is the only executable in the package; a syntax error there breaks
       # every `npx @linchpinagency/skills` run.
       - name: Smoke-test the installer
@@ -62,3 +102,79 @@ jobs:
           test -d .codex/skills/task-tracking
           test -d .cursor/skills/task-tracking
           test -d .agents/skills/task-tracking
+
+      # Pruning deletes directories, so its guard rails are the ones worth pinning down: it
+      # must skip partial installs entirely, and must never touch a directory it did not
+      # stamp. Both are silent failures if they regress — you would only notice when an
+      # install lost skills nobody asked it to remove.
+      - name: Installer — dry-run, prune, and hook
+        run: |
+          set -euo pipefail
+          W="$GITHUB_WORKSPACE"
+          export HOME=/tmp/prune-home            # isolate: no global install to collide with
+          mkdir -p "$HOME" /tmp/prune-test
+          cd /tmp/prune-test
+
+          node "$W/bin/install.mjs" --skip-upstream --dry-run
+          test ! -e .claude   # a dry run writes nothing at all
+
+          node "$W/bin/install.mjs" --skip-upstream --yes
+          D=.claude/skills
+
+          # A skill this package no longer ships, recorded in the stamp as ours, plus one we
+          # have no record of installing.
+          mkdir -p "$D/gone-away" "$D/never-ours"
+          echo '# gone' > "$D/gone-away/SKILL.md"
+          echo '# theirs' > "$D/never-ours/SKILL.md"
+          node -e 'const f=".claude/skills/.linchpin-skills/version.json",fs=require("fs");
+            const s=JSON.parse(fs.readFileSync(f)); s.skills.push("gone-away");
+            fs.writeFileSync(f,JSON.stringify(s,null,2));'
+
+          node "$W/bin/install.mjs" --skip-upstream --yes task-tracking
+          test -d "$D/gone-away"    # a partial install must never prune
+
+          node "$W/bin/install.mjs" --skip-upstream --dry-run | grep -q 'remove'
+          test -d "$D/gone-away"    # ...and a dry run must only talk about it
+
+          node "$W/bin/install.mjs" --skip-upstream --yes
+          test ! -d "$D/gone-away"  # dropped from the package -> removed
+          test -d "$D/never-ours"   # not ours to remove
+
+          # The hook must merge into existing settings without clobbering them, and adding it
+          # twice must not stack duplicates.
+          mkdir -p .claude
+          echo '{"hooks":{"SessionStart":[{"matcher":"*","hooks":[{"type":"command","command":"echo keep-me"}]}]}}' > .claude/settings.json
+          node "$W/bin/install.mjs" --skip-upstream --force --yes --with-hook
+          node "$W/bin/install.mjs" --skip-upstream --force --yes --with-hook
+          # Count matching ENTRIES, not substring hits: one hook command legitimately names
+          # update-check.mjs twice (the project path, then the $HOME fallback).
+          node -e 'const s=JSON.parse(require("fs").readFileSync(".claude/settings.json"));
+            const l=s.hooks.SessionStart;
+            const ours=l.filter((e)=>JSON.stringify(e).includes("update-check.mjs"));
+            if (l.length!==2) throw new Error("expected 2 SessionStart entries, got "+l.length);
+            if (!JSON.stringify(l).includes("keep-me")) throw new Error("clobbered the pre-existing hook");
+            if (ours.length!==1) throw new Error("hook was duplicated: "+ours.length+" copies");'
+
+      # Reports into SessionStart context, so it must never throw and never block a session.
+      - name: Update checker — always exits 0
+        run: |
+          set -euo pipefail
+          node bin/update-check.mjs --help > /dev/null
+          node bin/update-check.mjs --hook | grep -q SessionStart
+
+          # CI is set in Actions and is itself an opt-out, so every assertion below states
+          # what it expects of CI rather than inheriting it — otherwise these pass locally
+          # and mean something different here.
+          export LINCHPIN_SKILLS_REGISTRY=http://127.0.0.1:9/nope
+
+          # Opted out because CI is set: no output, clean exit.
+          CI=1 node bin/update-check.mjs | tee /tmp/ci-out
+          test ! -s /tmp/ci-out
+          CI=1 node bin/update-check.mjs --json | grep -q '"reason":"CI"'
+
+          # Not CI, but the registry is unreachable: still silent, still a clean exit.
+          env -u CI node bin/update-check.mjs | tee /tmp/off-out
+          test ! -s /tmp/off-out
+          env -u CI node bin/update-check.mjs --json | grep -q registry-unreachable
+
+          env -u CI node bin/update-check.mjs --scan > /dev/null

@@ -12,7 +12,7 @@ GitHub Copilot, and other compatible coding agents.
 ![Zero dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen)
 
 <!-- x-release-please-start-version -->
-### Latest release: 0.1.10
+### Latest release: 0.1.14
 <!-- x-release-please-end -->
 
 | Release | Skill standard | Install |
@@ -66,9 +66,10 @@ Then start a new session in your project and ask for something real — "what ki
 is this?" should pull in `project-context` and get you a summary of the repo shape, local
 environment, and host.
 
-**Re-run the same command to update.** There's no upgrade command; the installer overwrites
-in place and always pulls the latest published version. Do it every few weeks, or when
-someone announces a new skill.
+**Re-run the same command to update.** There's no upgrade command — the installer diffs each
+skill's version against what you have, shows what would change, and asks before applying it.
+A run with nothing to change exits immediately, so re-running costs nothing. Do it every few
+weeks, or when someone announces a new skill.
 
 Full flag reference: [Install options](#install-options).
 
@@ -86,8 +87,10 @@ The fastest way to understand the library is to run one loop end to end:
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
+| Get the newest version of these skills | "update the skills" | `skill-updates` |
+| Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 
-The full list is in [Available skills](#available-skills) — 20 of them, each with a
+The full list is in [Available skills](#available-skills) — 27 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -116,9 +119,23 @@ npx @linchpinagency/skills --global --agent all   # Claude Code, Copilot, Codex,
 ```
 
 Skills are read by the **harness**, so Copilot running a Claude model still needs them in
-Copilot's own folder. Everything here is plain markdown with no Claude-specific syntax, with
-one deliberate exception: `safety-hooks` uses Claude Code hooks to *enforce* confirmation on
-destructive commands, and degrades to documentation elsewhere.
+Copilot's own folder. Everything here is plain markdown with no Claude-specific syntax.
+
+Two deliberate exceptions, both additive — nothing is *removed* from what the other agents
+read:
+
+- **`safety-hooks`** uses Claude Code hooks to *enforce* confirmation on destructive
+  commands, and degrades to documentation elsewhere. Its `compatibility:` field says so.
+- **`when_to_use:`** is a Claude Code field that appends extra trigger phrasings to a skill's
+  `description`. Every skill's `description` still stands on its own and carries its own
+  triggers — the validator enforces that — so the other three agents lose nothing; Claude
+  Code just gets a wider net.
+
+`allowed-tools:` is in the Agent Skills spec, so it works everywhere. It **pre-approves** a
+skill's own read-only commands so a procedure doesn't stop for a permission prompt halfway
+through; it never restricts anything, and it never weakens hooks — a `PreToolUse` hook still
+fires on a pre-approved call and can still block it. Commands that *write* are deliberately
+left to prompt.
 
 ### When a skill is wrong
 
@@ -136,7 +153,7 @@ middle one**:
 
 | Tier | Where it lives | What it owns |
 | --- | --- | --- |
-| **Base layer** (upstream) | [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills), vendored + pinned via [`upstream.json`](upstream.json) | Generic "how WordPress works" — block.json, theme.json mechanics, the Interactivity API, performance, WP-CLI ops. |
+| **Base layer** (upstream) | [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) and [`linchpin/docspress`](https://github.com/linchpin/docspress) (our fork of [`Automattic/docspress`](https://github.com/Automattic/docspress)), vendored + pinned via [`upstream.json`](upstream.json) | Generic "how WordPress works" — block.json, theme.json mechanics, the Interactivity API, performance, WP-CLI ops — plus generating docs from a source tree. |
 | **Linchpin tooling** (**this repo**) | `skills/` | **Portable, cross-project** ways the agency works — operating Studio/Pressable, tying work to ClickUp. Things true on *every* Linchpin project. |
 | **Project layer** (per-repo) | that project's own `AGENTS.md` / `CLAUDE.md` | One project's specific blocks, theme conventions, file paths, and quirks. |
 
@@ -146,10 +163,15 @@ middle one**:
 > shared library. The test for "does it belong in this repo?" is: *would it be true on a
 > different client's WordPress project?* If not, it's project layer.
 
-The base layer is pinned to a commit SHA in [`upstream.json`](upstream.json) (upstream has
-no releases yet) and fetched at install time. Bump the `ref` there deliberately and re-test;
-don't float it, or agent behavior changes silently. New **generic** WordPress knowledge
-should be contributed **upstream**, not added here.
+Each base-layer source is pinned to a commit SHA in [`upstream.json`](upstream.json)
+(neither upstream publishes releases) and fetched at install time. Bump a `ref` there
+deliberately and re-test; don't float it, or agent behavior changes silently. New
+**generic** WordPress knowledge should be contributed **upstream**, not added here.
+
+A source may set `path` to say where skills live inside its repo — `WordPress/agent-skills`
+uses `skills/`, DocsPress keeps a copy in both `.agents/skills/` and `.claude/skills/` and
+we vendor `.agents/` because upstream lets the other one fall behind. It defaults to
+`skills`, and a value that would escape the fetched tarball is refused.
 
 ## Install options
 
@@ -177,6 +199,9 @@ npx @linchpinagency/skills --global
 
 # Install the Linchpin skills only, without the upstream base layer
 npx @linchpinagency/skills --skip-upstream
+
+# Audit every scope for duplicate installs; install nothing
+npx @linchpinagency/skills --check
 ```
 
 > Pin a version when you need reproducibility — `npx @linchpinagency/skills@0.1.1` — or omit
@@ -188,35 +213,95 @@ npx @linchpinagency/skills --skip-upstream
 > network access and a system `tar`; if either is missing it warns and still installs the
 > Linchpin skills. Pass `--skip-upstream` to install the Linchpin skills alone.
 
-**Updating:** re-run the same command. The installer overwrites each skill in place, so a
-fresh run always pulls the latest published version.
+**Updating:** re-run the same command — that *is* the update path. Rather than overwriting
+silently, the installer compares each skill's own `version` against what is installed,
+prints the diff, and asks before touching anything:
+
+```
+@linchpinagency/skills v0.2.0 — Claude Code
+
+  task-tracking        v1.3.0 -> v1.4.0   update
+  agent-capabilities            -> v1.0.0   new
+  quality-gates        v1.0.0             local edits will be lost
+  (20 unchanged)
+
+3 change(s): 1 update, 1 new, 1 modified
+
+Apply? [y/N]
+```
+
+A run with nothing to change says so and exits without prompting, so re-running is cheap
+and safe. `--dry-run` shows the diff and writes nothing; `--yes` skips the prompt;
+`--force` reinstalls everything regardless.
+
+> A **non-interactive** run — piped stdin, CI, a script — proceeds without prompting, so
+> existing automation keeps working. Use `--dry-run` when you want a preview rather than an
+> install.
+
+Three statuses are worth knowing:
+
+- **local edits will be lost** — the installed copy was hand-edited. Skills are owned by
+  this package; change them here and re-install rather than editing an install in place.
+- **DOWNGRADE** — the package you invoked is *older* than what is installed. Usually a
+  pinned `npx @linchpinagency/skills@0.1.1` you meant to drop.
+- **new** — the skill did not exist in your installed version.
 
 ### Keeping skills current
 
 Installed skills are a snapshot — nothing about a copy in `.claude/skills/` knows a newer
-release exists. So every install writes a stamp beside the skills, in
+release exists, and a stale copy doesn't look wrong. It just quietly gives last month's
+answer. So every install writes a stamp beside the skills, in
 `<skills-dir>/.linchpin-skills/`: `version.json` (the version, the date, the agent, the exact
-command that produced the install, and the upstream ref that was vendored) plus a
-self-contained copy of the update checker.
+command that produced the install, what it installed, and what it pruned), a self-contained
+copy of the update checker, and `CHANGELOG.md` so "what changed?" is answerable later.
+
+**The one thing worth doing per project**, so nobody has to remember any of this:
 
 ```bash
-# Are these skills behind? One line if yes, nothing if no.
-node .claude/skills/.linchpin-skills/update-check.mjs
-
-# Print the Claude Code SessionStart hook that runs it for you
-node .claude/skills/.linchpin-skills/update-check.mjs --hook
+npx @linchpinagency/skills --with-hook
 ```
 
-With the hook installed, a stale install announces itself at the start of a session —
-`SessionStart` stdout becomes context, so the agent sees it too and can offer to run the
-update command the stamp recorded. Hooks are a Claude Code feature; under Copilot, Codex, or
-Cursor the same check still runs, just when you ask it to.
+That installs, then merges a `SessionStart` hook into `.claude/settings.json` — idempotently,
+leaving any hooks and permissions already there alone. At project scope that file is
+committable, which is the point: one person adds it and everyone who clones the repo gets
+told when their skills go stale. `SessionStart` stdout becomes session context, so the agent
+sees the notice too, and asking it to **"update the skills"** runs the
+[`skill-updates`](skills/skill-updates/SKILL.md) skill: find every install, apply the command
+each one recorded, verify, and summarize what changed.
+
+Hooks are a Claude Code feature. Under Copilot, Codex, or Cursor the same check works, just
+when you ask for it.
+
+```bash
+# Is this install behind? One line if yes, nothing if no.
+node .claude/skills/.linchpin-skills/update-check.mjs
+
+# Every install this machine has, across agents and scopes, with each one's update command
+node .claude/skills/.linchpin-skills/update-check.mjs --scan
+
+# Preferences, so an agent never has to hand-edit config
+node .claude/skills/.linchpin-skills/update-check.mjs --enable-auto   # apply without asking
+node .claude/skills/.linchpin-skills/update-check.mjs --snooze        # 24h, then 48h, then a week
+node .claude/skills/.linchpin-skills/update-check.mjs --disable       # stop checking
+```
+
+`--scan` exists because **most machines have more than one install** — a global copy plus a
+project copy, or Copilot's two directories. Updating only the one that printed the notice is
+how a stale skill survives an "update".
 
 The check is deliberately unobtrusive: it queries the npm registry at most once a day (a
 known-newer version keeps surfacing from cache in between), stays silent when it can't reach
-the network, and always exits 0 — a session never fails to start because of it. It reports;
-it never upgrades anything. Set `LINCHPIN_SKILLS_UPDATE_CHECK=0` to switch it off, and it
-skips itself whenever `CI` is set.
+the network, honors a snooze, and always exits 0 — a session never fails to start because of
+it. It reports; it never installs anything. `LINCHPIN_SKILLS_UPDATE_CHECK=0` switches it off,
+and it skips itself whenever `CI` is set. Preferences live in
+`${XDG_CONFIG_HOME:-~/.config}/linchpin-skills/config.json`.
+
+**Retired skills get removed.** A full re-run also deletes skills the package no longer ships
+— dropped from it, listed in [`retired.json`](retired.json), or curated out of
+`upstream.json` — so a deleted skill stops loading instead of lingering forever. It only ever
+touches directories the installer has stamped, and never during a partial run that names
+specific skills (there, everything you didn't name would look like a removal). `--dry-run`
+shows the whole plan, removals included, and writes nothing.
 
 ### Where skills land
 
@@ -230,6 +315,34 @@ skips itself whenever `CI` is set.
 
 A project that wants skills in more than one agent's directory should run
 `--agent all` rather than copying directories around by hand.
+
+### One scope per skill
+
+Agents load **every** skills directory they find and **do not dedupe by name**. A skill
+installed both globally and in a project is listed twice, and its `description` is loaded
+twice in every session before any work starts.
+
+So the installer refuses to create the second copy:
+
+```
+Refusing to install: 22 of these skills are already installed at another scope.
+```
+
+It reports which directory, what would be duplicated, and the command to remove just the
+overlapping skills — never the whole directory, which usually holds skills from other
+sources too. `--force` overrides it for the rare case where you want both.
+
+```bash
+npx @linchpinagency/skills --check                  # audit; exits 1 if duplicates exist
+npx @linchpinagency/skills --check --agent codex    # a different agent's directories
+```
+
+`--check` also catches the accident that is easiest to miss: an install in a *parent* of the
+repo (running the installer from `~/GitHub` rather than inside a checkout), which shadows
+nothing and duplicates everything below it.
+
+Choosing a scope, the MCP-server equivalent of the same problem, and how to record the
+decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.md).
 
 > Skills are loaded by the **agent/harness**, not the model — so "Copilot running Claude"
 > still needs the skill installed in Copilot's own directory. The installer handles that.
@@ -250,7 +363,10 @@ A project that wants skills in more than one agent's directory should run
 | `wp-block-conventions` | WordPress | Build custom blocks the Linchpin way — apiVersion 3 under `linchpin/`, dynamic `render.php` + Interactivity API `view.js`, parent/child block context, and the `wp-scripts` build/registration chain shared by `linchpin-blocks` and project functionality plugins. |
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |
+| `docspress-publish` | Workflow | Publish a repo's Markdown docs to `docs.linchpin.com` via DocsPress — the shared page tree, the pinned fork whose `managed-path` stops one repo trashing another's pages, the per-repo token, and the dry-run → draft → publish ladder. Wraps upstream `generate-docs-from-source`, which writes the content. |
+| `github-repo-setup` | Workflow | Create a repo under the `linchpin` org and wire it for deployments — name-collision check, populated from a source repo the user is always asked to name, all changes on `issue/<task-key>`, then `<stage>-<slug>` environments and the `linchpin/actions` **v3** secrets and variables at the right scope, with the scaffold→project rename pass. |
 | `project-context` | Workflow | Orient before acting — repo shape, local environment, host, ClickUp space, and release model, read from the project's own config rather than assumed. Referenced by other skills' Preflight. |
+| `agent-capabilities` | Workflow | Right-size what a project loads — audit skill installs for cross-scope duplicates (`--check`), decide which MCP servers the repo actually needs, and scope them so every session stops paying for all of them. |
 | `quality-gates` | Workflow | Run a project's own lint, PHPCS, PHPStan, and test gates before committing — detected from `composer.json`, `package.json`, `phpcs.xml.dist`, and `lint-staged`, never assumed. |
 | `web-qa` | Workflow | QA like a real user and fix what you find — front end, wp-admin, and block editor, with severity, evidence, one atomic commit per fix, and a report-only mode. |
 | `investigate` | Workflow | Root-cause a bug before changing anything — reproduce, read the real error, isolate the layer, explain the mechanism, with WordPress first checks. |
@@ -259,6 +375,8 @@ A project that wants skills in more than one agent's directory should run
 | `engagement-types` | Project mgmt | Tell support, site maintenance, projects, product/plugin work, and pre-sales apart — each lives somewhere different in ClickUp and is planned and closed differently. |
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, security advisories, `@wordpress/*` package sets. |
+| `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
+| `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
 | `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands, and carry the task key in the commit scope. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |
@@ -267,10 +385,13 @@ _(More WordPress, React, Cloudflare Workers, marketing, and design skills to com
 
 ### Base layer (vendored from upstream, pinned)
 
-Fetched at install time from [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills)
-at the SHA pinned in [`upstream.json`](upstream.json). Curate the set there. Currently:
-`wp-block-development`, `wp-block-themes`, `wp-interactivity-api`, `wp-performance`,
-`wp-wpcli-and-ops`, `wp-plugin-development`, `wp-rest-api`.
+Fetched at install time at the SHAs pinned in [`upstream.json`](upstream.json). Curate the
+set there.
+
+| Source | Licence | Skills |
+| --- | --- | --- |
+| [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) | GPL-2.0-or-later | `wp-block-development`, `wp-block-themes`, `wp-interactivity-api`, `wp-performance`, `wp-wpcli-and-ops`, `wp-plugin-development`, `wp-rest-api` |
+| [`linchpin/docspress`](https://github.com/linchpin/docspress) — our fork of [`Automattic/docspress`](https://github.com/Automattic/docspress) | GPL-3.0-or-later | `generate-docs-from-source` — wrapped by `docspress-publish`, which owns the `docs.linchpin.com` target. The fork adds the per-repo `.docspress/brief.md` contract that wrapper depends on |
 
 ## Adding a skill
 
@@ -279,12 +400,23 @@ load that skill and follow it. It owns the placement test, the tier model (A: `S
 only → B: `+ references/` → C: `+ scripts/`), required frontmatter, the section skeleton,
 and the four house rules. It isn't restated here on purpose: one owner per concern.
 
-The short version:
+**Start with the scaffolder** — it creates the directory from the house template, wires up
+the tier you asked for, and adds a draft catalog row (the row the validator would otherwise
+fail you for forgetting):
+
+```bash
+npm run new-skill -- wp-thing --tier b
+```
+
+It leaves placeholders on purpose, and the validator **rejects** them — a half-written skill
+should never look valid. Fill in the `description` first; it's the whole retrieval surface.
+
+The shape it produces:
 
 ```
 skills/
   <name>/
-    SKILL.md            # required — frontmatter: name, description, version
+    SKILL.md            # required — frontmatter: name, description, version, allowed-tools
     references/*.md     # Tier B — detail promoted out of SKILL.md
     scripts/*.mjs       # Tier C — only when determinism is genuinely needed
 ```
@@ -293,14 +425,20 @@ skills/
   Prefix by domain — `wp-`, `react-`, `cf-`, `seo-`, `design-` — and leave cross-cutting
   workflow skills (`task-tracking`, `quality-gates`) un-prefixed.
 - Every `SKILL.md` needs `## When to use`, `## Guardrails`, and `## Done`.
-- Add a row to the **Available skills** table above.
+- `allowed-tools` grants the **read-only** commands the skill actually runs. Never bare
+  `Bash` — the validator treats it as an error.
 
-Then validate — CI runs the same command on every PR:
+Then validate — CI runs both of these on every PR:
 
 ```bash
 npm run validate                          # every skill
 node scripts/validate-skills.mjs <name>   # just the one you touched
+npm run version-gate                      # every skill you changed has a version bump
 ```
+
+**Bump the `version` of any skill you change.** It's the only signal a consuming project
+gets: the installer compares versions to decide what to offer as an update, so an edit
+shipped on an unbumped version lands as "unchanged" and nobody re-reads it. CI enforces it.
 
 > **Keep it portable.** Every skill here must be true on *any* Linchpin project of its kind
 > — don't bake in one site's blocks, palette, or file paths. Project-specific conventions
@@ -327,7 +465,8 @@ Releases follow the house convention — **release-please**, same as every other
 2. Merge that PR when you want to cut a release. It bumps `package.json`, writes
    `CHANGELOG.md`, tags `vX.Y.Z`, and publishes a GitHub Release.
 3. That release flips `release_created`, which triggers the `publish` job:
-   `npm run validate`, then `npm publish --provenance --access public`.
+   `npm run validate`, then `npm publish --access public`. No `--provenance` flag is
+   needed — Trusted Publishing generates provenance automatically.
 
 **Never hand-edit `package.json`'s version or `CHANGELOG.md`** — release-please owns both
 (see [`commit-and-release`](skills/commit-and-release/SKILL.md)).
@@ -367,12 +506,29 @@ in `package.json`).
   builds on, and our own `@linchpinagency/worktree-utils`. Derivative distributions stay
   open, which is the point.
 - **Base layer:** the upstream skills are **not stored in this repo** — the installer
-  fetches them from [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) at
-  the pinned SHA, onto the user's machine, at install time. They are
-  **GPL-2.0-or-later**, © WordPress Contributors. Credit to that project for the generic
-  WordPress expertise our overlay builds on. (Upstream is v1 and AI-authored then
-  human-reviewed — treat it as a strong baseline, which is exactly why house rules win on
-  conflict.)
+  fetches them at the pinned SHA, onto the user's machine, at install time.
+  - [`WordPress/agent-skills`](https://github.com/WordPress/agent-skills) —
+    **GPL-2.0-or-later**, © WordPress Contributors. Credit to that project for the generic
+    WordPress expertise our overlay builds on. (Upstream is v1 and AI-authored then
+    human-reviewed — treat it as a strong baseline, which is exactly why house rules win on
+    conflict.)
+  - [`linchpin/docspress`](https://github.com/linchpin/docspress) —
+    **GPL-3.0-or-later**, © Fatih Kadir Akin, **modified by Linchpin**. Our fork of
+    [`Automattic/docspress`](https://github.com/Automattic/docspress); the modifications
+    (a per-repo `.docspress/brief.md` contract and catalog-shaped repository support) are
+    marked as such in that repository's history, as GPL-3 requires. Provides
+    `generate-docs-from-source`, which
+    [`docspress-publish`](skills/docspress-publish/SKILL.md) wraps rather than duplicates.
+    Fetched to the user's machine, never redistributed by this package, so the two licences
+    do not mix in anything we ship.
+- **Adapted work shipped in this repo:**
+  [`engineering-discipline`](skills/engineering-discipline/SKILL.md) adapts
+  [Andrej Karpathy's observations on common LLM coding mistakes](https://x.com/karpathy/status/2015883857489522876)
+  by way of the **MIT**-licensed
+  [`karpathy-guidelines`](https://github.com/multica-ai/andrej-karpathy-skills) skill. MIT is
+  GPL-compatible, so the adaptation ships here under this repo's licence with attribution
+  preserved in the skill's own `## Credits` section — which is the obligation MIT actually
+  imposes. The four principles are theirs; the wiring into our gates and house rules is ours.
 
 ## Status
 

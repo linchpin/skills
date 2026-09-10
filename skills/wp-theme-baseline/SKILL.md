@@ -1,7 +1,8 @@
 ---
 name: wp-theme-baseline
 description: Choose and stand up the baseline for a new Linchpin property theme — a child theme of a parent that owns behavior, a fresh block theme, or (last resort) a fork — then make it the property's own. Use when starting the theme for a new Linchpin site, when deciding whether something should be a child theme, when a third-party theme needs a Linchpin-branded version, or when working out where a block theme's page layouts actually live. Not for the repo or the local site — use `wp-local-setup`.
-version: 0.1.0
+version: 0.2.0
+allowed-tools: Read Grep Glob Bash(git status*)
 ---
 
 # Choosing a theme baseline
