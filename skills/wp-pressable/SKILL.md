@@ -2,7 +2,7 @@
 name: wp-pressable
 description: Operate a Pressable-hosted WordPress site (production or staging) from an agent — connect via the Pressable MCP or SSH+WP-CLI, run read-first diagnostics, and safely fix the classic "renders locally but not on production" Full-Site-Editing bug where database template/part overrides shadow the deployed theme files. Use for any WordPress project hosted on Pressable when you need to inspect or change the live server (not just the repo).
 when_to_use: Also when a deploy fails or is stuck, when someone asks to clear the cache on staging or production, when SFTP or database access is needed, or when a site is slow or erroring on Pressable specifically.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -35,6 +35,20 @@ via the Pressable MCP or SSH+WP-CLI.
 - **Task tracking / commits** → that's `task-tracking`.
 
 This skill operates the **server and its database** — nothing else.
+
+## Owns
+
+Eleven skills defer to this one, so what it will and won't answer matters.
+
+Canonical for: reaching a Pressable site at all (the MCP-vs-SSH choice below), the
+**"it shows locally but not on production"** diagnosis — DB template overrides shadowing
+theme files — and what deploy and rollback mean on Pressable.
+
+Defers: a local Studio site → [`wp-studio-cli`](../wp-studio-cli/SKILL.md); performance and
+accessibility audits → [`wp-audit`](../wp-audit/SKILL.md); the general method for finding a
+root cause → [`investigate`](../investigate/SKILL.md); driving a real browser against the site
+→ [`browser-automation`](../browser-automation/SKILL.md); the commit, PR, and release that
+produce a deploy → [`commit-and-release`](../commit-and-release/SKILL.md).
 
 ## Two ways in
 

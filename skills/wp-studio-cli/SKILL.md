@@ -1,7 +1,7 @@
 ---
 name: wp-studio-cli
 description: Operate a local WordPress Studio site — preferring the wordpress-studio MCP (site_list, site_start, wp_cli, validate_blocks, take_screenshot, inspect_design) and falling back to the `studio` CLI when MCP isn't connected. Use whenever working against a Linchpin local dev install, running WP-CLI locally, reading admin credentials, validating block markup, or screenshotting a local site. Studio runs PHP-WASM, so file paths inside `wp eval` must use ABSPATH (resolves to /wordpress/), never host filesystem paths.
-version: 1.2.0
+version: 1.3.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -32,6 +32,17 @@ project's tooling ([`quality-gates`](../quality-gates/SKILL.md) detects which).
 than driving a browser — enough for markup and layout checks. When you need a *real* browser
 against the Studio URL (actual session state, extensions, console and network behaviour), get
 one via [`browser-automation`](../browser-automation/SKILL.md).
+
+## Owns
+
+Canonical for: choosing between the Studio MCP and the `studio` CLI for a site that already
+exists, the **ABSPATH rule** for `wp eval` under PHP-WASM, and the local WP-CLI recipes below.
+
+Defers: creating the site or symlinking a repo into it →
+[`wp-local-setup`](../wp-local-setup/SKILL.md); anything on a live server →
+[`wp-pressable`](../wp-pressable/SKILL.md); a real browser against the Studio URL →
+[`browser-automation`](../browser-automation/SKILL.md); performance and accessibility audits →
+[`wp-audit`](../wp-audit/SKILL.md).
 
 ## Preflight — pick the interface
 
