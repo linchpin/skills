@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0](https://github.com/linchpin/skills/compare/v0.1.14...v1.0.0) (2026-09-10)
+
+
+### Features ✨
+
+* **LINCHPIN-5557:** Add skill-updates and make the installer prune retired skills ([#38](https://github.com/linchpin/skills/issues/38)) ([4389fec](https://github.com/linchpin/skills/commit/4389fecf57314ad90d8a8d72bfb686e323328736))
+* **LINCHPIN-5558:** Adopt allowed-tools and when_to_use, and audit all 26 skills ([#39](https://github.com/linchpin/skills/issues/39)) ([9cbeef9](https://github.com/linchpin/skills/commit/9cbeef9d30bd2fce54f0625411c950ac8c965066))
+* **LINCHPIN-5559:** Add authoring tooling and the engineering-discipline skill ([#40](https://github.com/linchpin/skills/issues/40)) ([9c31c30](https://github.com/linchpin/skills/commit/9c31c30860aa840d7376e35343580ded299985a1))
+
+
+### Miscellaneous 🧹
+
+* **NO-TASK:** Cut 1.0.0 ([b965212](https://github.com/linchpin/skills/commit/b965212b995fab64067b7131f9c99db84960a5b6))
+
 ## [0.1.14](https://github.com/linchpin/skills/compare/v0.1.13...v0.1.14) (2026-09-09)
 
 
