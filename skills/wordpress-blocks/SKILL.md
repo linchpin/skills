@@ -1,7 +1,7 @@
 ---
 name: wordpress-blocks
 description: Author and edit WordPress content as valid Gutenberg block markup from a chat interface (Mantle). Use whenever a request means adding or changing page/post/content — a section, hero, pricing table, FAQ, CTA, columns, etc. Encodes the pattern-first procedure (reuse the site's synced patterns / template parts / registered patterns BEFORE composing from core blocks), the block-markup grammar models get wrong, and the live tool contract the host plugin must expose. Always validate generated block markup before inserting — invalid comment delimiters silently break the editor.
-version: 0.2.0
+version: 0.3.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -29,6 +29,18 @@ registering patterns in a theme) — use the upstream WordPress skills
 [`wp-block-development`](https://github.com/WordPress/agent-skills) and
 [`wp-block-themes`](https://github.com/WordPress/agent-skills). One site's specific block
 and pattern conventions belong in that project's own `CLAUDE.md`/`AGENTS.md`.
+
+## Owns
+
+Canonical for: authoring and editing page/post content as Gutenberg block markup, the
+**pattern-first procedure** (reuse the site's own patterns and template parts before
+composing from core blocks), the block-markup grammar rules in `references/`, and validating
+markup before it is inserted.
+
+Defers: *building* blocks, plugins, or themes → the upstream WordPress skills named above and
+[`wp-block-conventions`](../wp-block-conventions/SKILL.md); the color, type, and spacing
+vocabulary a block should use → [`wp-design-tokens`](../wp-design-tokens/SKILL.md); running
+WP-CLI against a local site → [`wp-studio-cli`](../wp-studio-cli/SKILL.md).
 
 ## The core principle: reuse before you build
 
