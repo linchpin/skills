@@ -1,7 +1,7 @@
 ---
 name: docspress-publish
 description: Publish a repo's Markdown docs to docs.linchpin.com with DocsPress — the shared page tree, the pinned linchpin/docspress fork that scopes deletion per repo, the WP_ACCESS_TOKEN secret, and the dry-run to draft to publish promotion ladder. Use when a project needs documentation published, when asked to "set up docspress" or "get these docs on the docs site", when a sync-docs workflow fails or deletes another repo's pages, or when docs exist in the repo but nowhere else. Not for writing the docs themselves — that's `generate-docs-from-source`, vendored from the same fork.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob Bash(git remote get-url*) Bash(gh secret list*)
 ---
 
@@ -35,7 +35,7 @@ trash them.
 ## Owns
 
 Canonical for: the `docs.linchpin.com` target configuration, the pinned fork and why it is
-not upstream, `managed-path` ownership scoping, the `WP_ACCESS_TOKEN` secret, the per-repo
+not upstream, `managed-path` ownership scoping, how `WP_ACCESS_TOKEN` is scoped, the per-repo
 `.docspress/brief.md` contract, and the promotion ladder.
 
 Defers: documentation content and block selection → `generate-docs-from-source`, vendored
@@ -51,7 +51,7 @@ Read before acting. Never assume a repo's shape.
 | `git remote get-url origin` | The repo slug — this becomes the page-tree segment | Ask; do not guess from the directory name |
 | `docs/` contents | Whether content exists, and whether anything there should *not* be published | Nothing to sync yet — generate first |
 | `.github/workflows/sync-docs.yml` | Already wired; you are debugging, not installing | Install it from `references/sync-docs-workflow.md` |
-| `gh secret list --repo <owner>/<repo>` | Whether `WP_ACCESS_TOKEN` exists | The first run cannot authenticate — see step 5 |
+| `gh secret list --repo <owner>/<repo>` | Only whether a **repo-level** override exists | Nothing — `WP_ACCESS_TOKEN` is an org secret and will not appear here. See step 5 |
 | `.docspress/brief.md` | What this repo's docs must contain and the checks they must pass | Write one before generating — step 3 |
 | `generate-docs-from-source` in the skill list | The generator is installed (it ships vendored) | Fetch it (step 1) before writing any page |
 
@@ -176,18 +176,28 @@ actually runs, not just declared in `action.yml`.
 
 → **Checkable:** `managed-path` names this repo's segment and nothing broader.
 
-## Step 5 — Provision the token
+## Step 5 — The token
 
-`WP_ACCESS_TOKEN` is a **per-repository** secret and is the usual reason a first run fails.
+`WP_ACCESS_TOKEN` is an **organisation secret**, available to every repo in `linchpin`.
+There is normally nothing to provision, and nothing to check.
+
+**Do not report it as a blocker on a `gh secret list` miss.** That command lists only
+*repository* secrets, so an org secret never appears in it. Reading absence there as "the
+token is missing" produces a confident false blocker on every repo:
 
 ```bash
-gh secret list --repo <owner>/<repo> | grep WP_ACCESS_TOKEN
+# Lists repo-level secrets ONLY — an empty result proves nothing about the org secret.
+gh secret list --repo <owner>/<repo>
 ```
 
-If it is absent, ask for it — never mint, copy between repos, or paste a token into a file.
-Adding it is the repo owner's call.
+Enumerating org secrets needs the `admin:org` scope, which an agent normally will not have,
+so treat "cannot verify" as the expected state rather than a problem.
 
-→ **Checkable:** the secret is listed, or its absence is reported to the user as a blocker.
+The real signal is the first dry run: a token that is missing or unauthorised fails there
+with a 401 or 403 from WordPress, and that is a workflow-run result, not something to
+predict beforehand.
+
+→ **Checkable:** nothing to do unless a run has actually failed on auth.
 
 ## Step 6 — Verify locally, before any run
 
@@ -242,8 +252,11 @@ names the valid values for one attribute — rather than the skill table or an e
   trash another project's pages.
 - **Never widen `managed-path` to `root-slug`.** That hands this repo ownership of every
   sibling project's pages.
-- **Never pin a floating tag** for either action. This job is exposed to a WordPress token;
-  pin immutable commit SHAs and say what they resolve to in a comment.
+- **Never SHA-pin `linchpin/docspress`.** It is our own fork, in our own organisation,
+  behind branch protection, so a SHA pin defends against nothing while guaranteeing the
+  workflow misses its fixes. Use `@v1` — it moves forward as fixes land, and a breaking
+  change becomes `v2`. `actions/checkout` **is** third party and stays SHA-pinned, because
+  this job is exposed to a WordPress token.
 - **Never add, mint, or move `WP_ACCESS_TOKEN` yourself** — report its absence and let the
   repo owner provision it.
 - **Never enable `mode: reconcile`** without explicit sign-off and the loop guard; merging
@@ -257,10 +270,9 @@ names the valid values for one attribute — rather than the skill table or an e
       reported as met.
 - [ ] Docs live under `docs/<repo-slug>/`; nothing publishable sits at the root of `docs/`.
 - [ ] Every page has a frontmatter `title:` and no H1 in the body.
-- [ ] `.github/workflows/sync-docs.yml` exists, both actions pinned to SHAs, inputs
-      validated against the pinned `action.yml`.
+- [ ] `.github/workflows/sync-docs.yml` exists, `actions/checkout` SHA-pinned and
+      `linchpin/docspress@v1`, inputs validated against that revision's `action.yml`.
 - [ ] `managed-path` is `<root-slug>/<repo-slug>` and matches the directory on disk.
 - [ ] Local verification passes: blocks parse, links resolve, converter round-trips clean.
-- [ ] `WP_ACCESS_TOKEN` confirmed present, or its absence reported as a blocker.
 - [ ] Workflow is still `workflow_dispatch`-only with `dry-run: true` and `status: draft`.
 - [ ] First dry run reviewed — delete count accounted for.
