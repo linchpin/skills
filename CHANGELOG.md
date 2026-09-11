@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/linchpin/skills/compare/v1.0.0...v1.0.1) (2026-09-11)
+
+
+### Bug Fixes 🐛
+
+* **NO-TASK:** Correct how docspress-publish treats the token and the fork pin ([#43](https://github.com/linchpin/skills/issues/43)) ([8c1bd8b](https://github.com/linchpin/skills/commit/8c1bd8b32b931013ecfd56a887b57597c1a02b5a))
+
 ## [1.0.0](https://github.com/linchpin/skills/compare/v0.1.14...v1.0.0) (2026-09-10)
 
 
