@@ -23,8 +23,11 @@ name: Sync docs to WordPress
 #   3. Set status: publish once the content and hierarchy look right.
 #   4. Only then add the push trigger commented out at the bottom.
 #
-# Both actions are pinned to immutable commit SHAs. Do not replace them with
-# floating tags — this job is exposed to a WordPress token.
+# actions/checkout is pinned to an immutable commit SHA: it is third party, and
+# this job is exposed to a WordPress token. linchpin/docspress is not pinned —
+# it is our own fork, in our own organisation, behind branch protection, so a
+# SHA pin defends against nothing here while guaranteeing we miss its fixes.
+# See its README for the v1 contract.
 
 on:
   workflow_dispatch:
@@ -57,10 +60,8 @@ jobs:
       # actions/checkout v7
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      # linchpin/docspress feature/managed-path-scope, forked from
-      # Automattic/docspress tag wordpress-0.10.1. Carries `managed-path`,
-      # which upstream does not have.
-      - uses: linchpin/docspress@3260df1c7deceb4da867bdba7967be4b807e4025
+      # v1 moves forward as fixes land; a breaking change becomes v2.
+      - uses: linchpin/docspress@v1
         with:
           mode: publish
 
@@ -144,21 +145,19 @@ Reference: `Automattic/docspress` `.github/workflows/sync-docs.yml` at tag
 
 ## Verifying the pins
 
-Resolve a tag to the SHA you are about to pin:
+Resolve a tag to the SHA you are about to pin, for `actions/checkout`:
 
 ```bash
 gh api repos/actions/checkout/git/ref/tags/v7 --jq '.object.sha'
 ```
 
-Confirm the DocsPress pin actually carries `managed-path` in the built bundle, not just in
-`action.yml`:
+`linchpin/docspress` is deliberately **not** SHA-pinned — see the header comment in the
+template. Confirm `@v1` still carries the inputs the workflow passes:
 
 ```bash
-gh api repos/linchpin/docspress/commits/3260df1c7deceb4da867bdba7967be4b807e4025 \
-  --jq '.files[].filename'
+gh api repos/linchpin/docspress/contents/action.yml -H 'Accept: application/vnd.github.raw' \
+  --method GET -f ref=v1 | grep -E '^  [a-z0-9-]+:'
 ```
 
-`dist/index.js` in the output means the input is compiled into the code the action runs.
-
-Validate every `with:` key against the pinned revision's inputs before the first run — an
-unknown input is silently ignored, which for `managed-path` means unscoped deletion.
+Validate every `with:` key against that list before the first run — an unknown input is
+silently ignored, which for `managed-path` means unscoped deletion.
