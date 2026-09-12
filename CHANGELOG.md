@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/linchpin/skills/compare/v1.0.1...v1.1.0) (2026-09-12)
+
+
+### Features ✨
+
+* **LINCHPIN-5582:** Add wp-plugin-standards and wp-plugin-modernization ([#45](https://github.com/linchpin/skills/issues/45)) ([8021484](https://github.com/linchpin/skills/commit/80214840a739208f9887b63b44316c87c8cfdf87))
+
 ## [1.0.1](https://github.com/linchpin/skills/compare/v1.0.0...v1.0.1) (2026-09-11)
 
 
