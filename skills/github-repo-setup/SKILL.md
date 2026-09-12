@@ -1,7 +1,7 @@
 ---
 name: github-repo-setup
 description: Create a GitHub repo under the linchpin org and wire it for deployments — populated from a source repo you always ask the user to name, with the environments plus the repository and environment secrets and variables that linchpin/actions v3 reads. Use when starting a new client site or product repo, when asked to "create the repo", "set it up for deploys", or "add the deploy secrets/variables" — including when the repo already exists and only needs wiring — when the repo name is already taken, when a deploy fails because HOST or ENVIRONMENT is empty, or when workflows point at `@main` and no longer resolve. Not for the repo contents or local Studio wiring — use `wp-local-setup`.
-version: 2.6.0
+version: 2.7.0
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh secret list*) Bash(gh variable list*) Bash(gh search code*)
 ---
 
@@ -40,6 +40,10 @@ an empty environment, because `vars.ENVIRONMENT` was.
 - **Operating the live server** after a deploy → [`wp-pressable`](../wp-pressable/SKILL.md).
 - **Commit/PR grammar and release-please** → [`commit-and-release`](../commit-and-release/SKILL.md).
 - **The `WP_ACCESS_TOKEN` docs secret** → [`docspress-publish`](../docspress-publish/SKILL.md).
+- **What a plugin repo must contain, and which `linchpin/actions` reusables it calls** →
+  [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md). This skill's `@v3` default is the
+  **site** fleet's line; a plugin repo starts on `@v4`, because `php-checks.yml`,
+  `plugin-check.yml` and `wp-version-checker.yml` do not exist on v3.
 - **Which reusable workflows exist and what each input does** → the `linchpin/actions`
   README, which is canonical. This skill owns *provisioning*, not the pipeline.
 

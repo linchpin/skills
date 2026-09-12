@@ -2,7 +2,7 @@
 name: quality-gates
 description: Run a Linchpin project's own lint, coding-standards, static-analysis, test and Plugin Check gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, when a plugin has to pass Plugin Check before it ships, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
 when_to_use: Also when someone asks "is this ready to commit", "did lint pass", when PHPCS or ESLint is failing in CI, when a pre-commit hook is blocking a commit, or when a plugin has to pass Plugin Check before it ships.
-version: 1.2.0
+version: 1.3.0
 allowed-tools: Read Grep Glob Bash(composer run lint) Bash(composer run phpcs) Bash(composer run phpstan) Bash(composer run phpunit) Bash(composer run plugin-check) Bash(composer run fixer:test) Bash(composer lint) Bash(composer phpcs) Bash(npm run lint:check) Bash(npm run lint:css) Bash(npm run lint:js) Bash(npm run test:unit) Bash(npm run test:e2e) Bash(git diff*) Bash(git status*) Bash(git merge-base*)
 ---
 
@@ -29,11 +29,20 @@ is checked but in what counts as a failure.
 
 **Not this skill:** the commit message, branch, or release — [`commit-and-release`](../commit-and-release/SKILL.md).
 Upgrading packages — [`dependency-updates`](../dependency-updates/SKILL.md).
+Whether the repo is *wired* for these gates at all — the composer scripts
+`php-checks.yml@v4` requires, the `plugin-check.yml@v4` caller and its build script,
+`phpcs.xml.dist` versus `phpcs.xml` — [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md).
+That skill says the gate must exist; this one runs it.
 
 ## Owns
 
 Canonical for: which gates exist, how to detect them, the order they run in, and how to fix
 failures without suppressing them. Skills that end in a commit defer here for verification.
+
+Defers: whether a repo *declares* the right gates and wires them to the shared
+`linchpin/actions` workflows → [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md). If
+the answer changes when you run a command it is this skill; if it changes when you edit a
+committed file, it is that one.
 
 ## Preflight — detect, never assume
 

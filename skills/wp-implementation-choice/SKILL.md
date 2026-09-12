@@ -1,7 +1,7 @@
 ---
 name: wp-implementation-choice
 description: Decide which WordPress abstraction a request should become — theme/template work, a custom block, a functionality plugin, existing core blocks and patterns, or an off-the-shelf plugin — before any code is written. Use when a WordPress request could be built more than one way, when someone proposes a custom plugin or block, when scoping a new feature, or when reviewing an approach that feels heavier than the problem. Not for how to build the thing once chosen.
-version: 1.2.0
+version: 1.3.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -19,7 +19,11 @@ hand to the next developer.
 - Someone proposes building something custom and you're not sure it's warranted.
 - Scoping new work, or reviewing an approach that feels heavy for the problem.
 
-**Not this skill:** how to build each thing once chosen — see the routing table below.
+**Not this skill:** how to build each thing once chosen — see the routing table below. The
+choice between modernizing an existing plugin in place and replacing it is here; the
+*staging* of that modernization is
+[`wp-plugin-modernization`](../wp-plugin-modernization/SKILL.md), and the repo shape it aims
+at is [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md).
 
 ## Owns
 

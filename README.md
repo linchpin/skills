@@ -90,7 +90,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Get the newest version of these skills | "update the skills" | `skill-updates` |
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 
-The full list is in [Available skills](#available-skills) — 27 of them, each with a
+The full list is in [Available skills](#available-skills) — 29 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -362,6 +362,8 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `wordpress-blocks` | WordPress | Author and edit page/post content as valid Gutenberg block markup from a chat interface — pattern-first (reuse the site's synced/registered patterns before composing core blocks), with the grammar rules and the validate-before-insert contract. |
 | `wp-block-conventions` | WordPress | Build custom blocks the Linchpin way — apiVersion 3 under `linchpin/`, dynamic `render.php` + Interactivity API `view.js`, parent/child block context, and the `wp-scripts` build/registration chain shared by `linchpin-blocks` and project functionality plugins. |
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
+| `wp-plugin-standards` | WordPress | The canonical shape of a Linchpin-owned plugin repo — required files, plugin-header fields, the composer scripts the v4 callers depend on, and which `linchpin/actions@v4` reusable workflows it should call — plus the conformance audit that reports the deltas without fixing or sequencing them. |
+| `wp-plugin-modernization` | WordPress | Bring a legacy or inherited plugin onto that standard in stages without breaking a shipped product — safety net before behavior, CI conformance before code, a repo-committed migration plan that records every decision, and one tracker list per stage. |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |
 | `docspress-publish` | Workflow | Publish a repo's Markdown docs to `docs.linchpin.com` via DocsPress — the shared page tree, the pinned fork whose `managed-path` stops one repo trashing another's pages, the per-repo token, and the dry-run → draft → publish ladder. Wraps upstream `generate-docs-from-source`, which writes the content. |
 | `github-repo-setup` | Workflow | Create a repo under the `linchpin` org and wire it for deployments — name-collision check, populated from a source repo the user is always asked to name, all changes on `issue/<task-key>`, then `<stage>-<slug>` environments and the `linchpin/actions` **v3** secrets and variables at the right scope, with the scaffold→project rename pass. |
