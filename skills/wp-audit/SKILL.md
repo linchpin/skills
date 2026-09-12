@@ -1,7 +1,7 @@
 ---
 name: wp-audit
 description: Audit a WordPress site for performance, accessibility, and visible frontend quality, then report prioritized fixes and re-measure after changes. Use when asked to review, optimize, QA, or "check why the site is slow", when Core Web Vitals or Lighthouse scores come up, when a client asks about accessibility or WCAG, or before handing a build back to a client. Measures locally via the Studio MCP; production numbers require the live site. Not for fixing lint or tests — use `quality-gates`.
-version: 1.2.0
+version: 1.3.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -23,7 +23,10 @@ Start with the smallest audit that answers the question actually asked.
 **Not this skill:** lint, PHPCS, PHPStan, or tests — [`quality-gates`](../quality-gates/SKILL.md).
 Performance *techniques* (caching, asset strategy) — the upstream `wp-performance` skill.
 Operating the local site — [`wp-studio-cli`](../wp-studio-cli/SKILL.md). Operating a live
-server — [`wp-pressable`](../wp-pressable/SKILL.md).
+server — [`wp-pressable`](../wp-pressable/SKILL.md). Auditing a plugin **repo** against the
+house standard — files, headers, workflows —
+[`wp-plugin-standards`](../wp-plugin-standards/SKILL.md); this skill audits a running
+**site**.
 
 ## Owns
 
