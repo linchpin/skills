@@ -85,8 +85,10 @@ September 2026, a plain refresh took the root workspace from 21 advisories to 14
 
 **A lockfile-only PR can never do more than this.** That is why Dependabot's *security
 updates* are switched off on repos Renovate owns: they edit `package-lock.json`, the one file
-`lockFileMaintenance` already rewrites, so they land stale and sit open. Nine of the ten open
-on `mantle` proposed a version `main` already had. Dependabot **alerts stay on** — Renovate's
+`lockFileMaintenance` already rewrites, so they land stale and sit open. Of the ten open on
+`mantle`, eight were already moot: seven proposed a version `main` had, and one targeted a
+package no longer in the tree. The two that were real were both reachable by a plain
+refresh. Dependabot **alerts stay on** — Renovate's
 `vulnerabilityAlerts` and `osvVulnerabilityAlerts` read the same GitHub advisory feed, so no
 coverage is lost. Disable only the PR opener:
 
