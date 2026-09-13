@@ -1,8 +1,8 @@
 ---
 name: dependency-updates
-description: Update npm and Composer dependencies on a Linchpin project the way Renovate expects — handling the work Renovate can't automerge (majors, breaking changes, conflicted or failing bot PRs, security advisories, @wordpress package bumps). Use when a Renovate PR is failing, conflicted, or needs review, when asked to upgrade or bump packages, when a security advisory lands, or when a lockfile is out of sync. Not for fixing lint failures — use `quality-gates`.
+description: Update npm and Composer dependencies on a Linchpin project the way Renovate expects — handling the work Renovate can't automerge (majors, breaking changes, conflicted or failing bot PRs, security advisories in transitive dependencies, @wordpress package bumps). Use when a Renovate PR is failing, conflicted, or needs review, when asked to upgrade or bump packages, when a security advisory lands, when npm audit or Dependabot flags a sub-dependency nothing in package.json names, when deciding whether to add an override or resolution, or when a lockfile is out of sync. Not for fixing lint failures — use `quality-gates`.
 when_to_use: Also when a Renovate PR is red or conflicted, when someone says "bump the packages" or "deps are out of date", when a security advisory lands, or when a lockfile is out of sync with its manifest.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob Bash(npm audit) Bash(composer audit*) Bash(npm outdated*) Bash(composer outdated*) Bash(git status*) Bash(git diff*)
 ---
 
@@ -39,6 +39,8 @@ procedure, and lockfile hygiene.
 | `renovate.json` → `ignoreDeps` | Packages deliberately pinned; upgrading one needs a reason |
 | `renovate.json` → `rangeStrategy` | Whether manifest ranges get bumped (`bump`) or only the lockfile |
 | `renovate.json` → `lockFileMaintenance` | The bot refreshes lockfiles on its own schedule |
+| `package.json` → `overrides` / `resolutions` | Transitive packages already forced past a parent's range — each is a standing liability to re-check |
+| Open Dependabot PRs touching **only** a lockfile | Duplicates of work `lockFileMaintenance` already does — see below before merging any |
 | Open PRs labelled `type: dependencies` | Work already in flight — extend it, don't duplicate it |
 | `composer.json` / `package.json` `engines`, `require.php` | Floors you must not raise without approval |
 | `.nvmrc`, CI matrix | The Node/PHP versions the update must keep working |
@@ -70,6 +72,87 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
    change is `build(<TASK-KEY>): …` when it changes what ships, `chore(<TASK-KEY>): …` for
    dev tooling. Note breaking changes explicitly in the PR body.
 
+## Transitive advisories — refresh first, override second
+
+Most advisories on a Linchpin repo are **transitive**: the vulnerable package sits three
+levels down and nothing in `package.json` names it. There are only two ways to move one, and
+trying them out of order is what produces the endless bot PRs.
+
+**1. Let the lock file refresh reach it.** This works whenever the parent's range already
+allows the patched version — the majority of cases. Renovate's `lockFileMaintenance` does it
+on a schedule; `npm update --package-lock-only` does it locally. Measured on `mantle` in
+September 2026, a plain refresh took the root workspace from 21 advisories to 14.
+
+**A lockfile-only PR can never do more than this.** That is why Dependabot's *security
+updates* are switched off on repos Renovate owns: they edit `package-lock.json`, the one file
+`lockFileMaintenance` already rewrites, so they land stale and sit open. Of the ten open on
+`mantle`, eight were already moot: seven proposed a version `main` had, and one targeted a
+package no longer in the tree. The two that were real were both reachable by a plain
+refresh. Dependabot **alerts stay on** — Renovate's
+`vulnerabilityAlerts` and `osvVulnerabilityAlerts` read the same GitHub advisory feed, so no
+coverage is lost. Disable only the PR opener:
+
+```bash
+gh api -X DELETE repos/linchpin/<repo>/automated-security-fixes   # alerts unaffected
+```
+
+**2. Override the one package that is stuck.** Only when a parent's range *pins* the
+vulnerable version can no refresh reach it. Then add a **scoped** entry to `package.json`:
+
+```json
+"overrides": {
+	"express": { "qs": "^6.16.0" }
+}
+```
+
+What keeps it surgical rather than blunt:
+
+- **Name the parent.** A bare `"qs": "^6.16.0"` rewrites every copy of `qs` in the tree,
+  including ones that were never vulnerable. The nested form touches only the stuck one.
+- **Aim at whichever package is actually stuck — sometimes that is the parent itself.**
+  `markdownlint-cli` pinned both an old `minimatch` and an old `markdown-it`; overriding
+  `markdownlint-cli` to `^0.49.1` cleared three advisories in one entry and landed on a
+  combination upstream actually ships. Reaching inside it fixed the same advisory but emitted
+  a lock file `npm ci` rejected.
+- **Use a range, not a pin** — `^6.16.0`, never `6.16.0`. A hard pin blocks Renovate's own
+  updates later and is a documented cause of stuck security PRs.
+- **Minimum version that clears the advisory**, not latest. The entry then documents itself.
+- **One entry per advisory, in every workspace the repo has** — a second `package.json`
+  (`blocks/`) needs its own copy.
+
+Renovate extracts nested overrides **recursively** and tracks each as a real dependency, so
+an entry stays current on its own and **never needs reapplying after a build**. Give them a
+`packageRules` group that does **not** automerge — bumping an override can break the parent
+that pinned it, so each one earns a changelog read.
+
+**Verify, because both failure modes are silent:**
+
+```bash
+npm ci      # a bad override desyncs the lock file (EUSAGE) — otherwise CI finds it, not you
+npm audit   # confirms the override actually took
+```
+
+npm does **not** re-resolve an already-locked nested entry on `npm install`, so a newly added
+override can quietly do nothing. On `mantle`'s `blocks/` workspace four of five took and one
+silently didn't. Regenerating the lock file is the fix.
+
+**An override is a liability, not a fix.** Each one is a promise to re-check the parent. When
+the parent ships the fix itself, **delete the entry** rather than bumping it — `npm audit`
+staying clean after removal is the proof.
+
+### Composer has no `overrides`
+
+The root `composer.json` already wins over any transitive constraint, so the equivalent is a
+root `conflict` entry banning the vulnerable range:
+
+```json
+"conflict": { "vendor/pkg": "<1.2.3" }
+```
+
+Prefer this to adding the package to `require`: it claims no direct dependency, and it is a
+floor rather than a pin, so the solver takes any newer version and there is nothing for
+Renovate to bump. It is the mechanism `roave/security-advisories` is built entirely from.
+
 ## Special cases
 
 - **Failing Renovate PR** — reproduce locally on the bot's branch first. Most failures are a
@@ -78,7 +161,11 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
   it a chance before rebasing by hand; if you do rebase, regenerate the lockfile rather than
   resolving it line by line.
 - **Security advisory** — patch the specific package, verify the advisory is actually closed
-  (`npm audit`, `composer audit`), and ship it on its own branch ahead of other work.
+  (`npm audit`, `composer audit`), and ship it on its own branch ahead of other work. If the
+  vulnerable package is transitive, follow the section above before touching anything.
+- **A Dependabot PR that only edits a lockfile** — check whether the target version is already
+  in `main` (`npm ls <pkg>`) before doing anything with it. On a Renovate repo it usually is,
+  and the PR should be closed rather than merged.
 - **PHP or WordPress minimum bumps** — these are product decisions with support
   implications. Confirm with the user; never raise a floor as a side effect.
 
@@ -92,6 +179,13 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
 - **Never** raise `engines`, `require.php`, or the WordPress minimum without approval.
 - **Never** bundle unrelated upgrades into one PR; a rollback then has to take back changes
   nobody wanted to revert.
+- **Never** add a bare top-level `override`/`resolution` for a transitive advisory — it
+  rewrites every copy in the tree. Name the parent that is stuck.
+- **Never** pin an override to an exact version; a range keeps Renovate able to move it.
+- **Never** disable Dependabot *alerts* — only the security-update PR opener. The alerts are
+  the feed Renovate reads.
+- **Never** leave an override in place once the parent ships the fix; delete it and prove it
+  with `npm audit`.
 - Don't duplicate an update Renovate would automerge — check open bot PRs first.
 
 ## Done
@@ -102,3 +196,6 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
 - [ ] Clean install (`npm ci` / `composer install`) followed by green quality gates and build.
 - [ ] Version floors (Node, PHP, WordPress) unchanged, or changed with explicit approval.
 - [ ] One concern per PR, with breaking changes called out in the body.
+- [ ] Any transitive advisory was tried against a lockfile refresh **before** an override.
+- [ ] Every override names the stuck parent, uses a range, and is verified with `npm ci` +
+      `npm audit` in each workspace.
