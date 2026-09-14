@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/linchpin/skills/compare/v1.1.0...v1.2.0) (2026-09-13)
+
+
+### Features ✨
+
+* **NO-TASK:** Make surgical overrides the policy for transitive advisories ([#47](https://github.com/linchpin/skills/issues/47)) ([e339c41](https://github.com/linchpin/skills/commit/e339c41117b72aa0d77255e8d8a14652e4f9b78b))
+
 ## [1.1.0](https://github.com/linchpin/skills/compare/v1.0.1...v1.1.0) (2026-09-12)
 
 
