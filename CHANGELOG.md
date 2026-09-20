@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/linchpin/skills/compare/v1.2.0...v1.3.0) (2026-09-20)
+
+
+### Features ✨
+
+* **LINCHPIN-5636:** Point plugin skills at plugin-scaffold ([#49](https://github.com/linchpin/skills/issues/49)) ([838be67](https://github.com/linchpin/skills/commit/838be67afce2e2d9e22d5323550850d7d765eea0))
+* **NO-TASK:** Ship the WordPress base-layer skills projects are vendoring by hand ([#51](https://github.com/linchpin/skills/issues/51)) ([3d7d489](https://github.com/linchpin/skills/commit/3d7d489dc150571585cf6867c08254d8bd518350))
+
 ## [1.2.0](https://github.com/linchpin/skills/compare/v1.1.0...v1.2.0) (2026-09-13)
 
 
