@@ -117,6 +117,7 @@ now auto-fixes nowhere, so C-6 and M-5 are one finding, not two.
 | M-5 | `.husky/pre-commit` **and** lint-staged | both | Standard | [`quality-gates`](../../quality-gates/SKILL.md) |
 | M-6 | `renovate.json` on the org preset `github>linchpin/renovatebot-config` | `jq -r '.extends[]'` | Standard | [`dependency-updates`](../../dependency-updates/SKILL.md) |
 | M-7 | `docs/` **and** a `sync-docs.yml` | both | Standard | [`docspress-publish`](../../docspress-publish/SKILL.md) |
+| M-8 | README wrapper: Latest Release markers, badge table for the callers that exist, license, house banner as the last image (`assets.linchpin.com/github/linchpin-github-repo-banner.jpg`) | `README.md` | Drift | this skill — [`linchpin/plugin-scaffold`](https://github.com/linchpin/plugin-scaffold) is the passing shape |
 
 **M-6 has two failure shapes, not one.** `config:base` is deprecated and should be reported
 as wrong-shape. But a bare `config:recommended` is *also* non-conforming — the org preset adds
@@ -127,6 +128,11 @@ Report both, at different severities: deprecated is Standard, bare-but-current i
 repo and nowhere else. The `sync-docs.yml` is what makes it reach docs.linchpin.com — and it
 is a locally-committed workflow calling `linchpin/docspress`, **not** a `linchpin/actions`
 reusable. Do not report it under Group 4.
+
+**M-8 is Drift, not Blocking.** hive, psst, discovery, and mantle omit the banner or the
+badge table today. A missing banner on an existing plugin is reported and left; a new plugin
+from `linchpin plugin scaffold` already has the wrapper. Do not fail an audit on this row
+alone.
 
 ## Channel exemptions
 
