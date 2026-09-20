@@ -2,7 +2,7 @@
 name: wp-plugin-standards
 description: The canonical shape of a Linchpin-owned WordPress plugin repo — the files and plugin-header fields it must carry, the composer scripts its CI depends on, and which `linchpin/actions@v4` reusable workflows it should call — plus the audit that reports where a repo falls short. Use when setting up a new plugin repo, when asked "is this plugin set up right" or "what is this repo missing", when a repo hand-rolls a workflow linchpin/actions already provides, when CI fails because `php-lint` or `check-branch-cs` is not defined, or when a plugin repo is still pinned to @v3. Not for running the gates — use `quality-gates`.
 when_to_use: Also when someone says a plugin repo is inconsistent with mantle, asks which workflows a plugin needs, asks whether it needs readme.txt, .distignore, or a build script, or asks what changes when a plugin ships to WordPress.org versus packagist.linchpin.com.
-version: 1.0.0
+version: 1.1.0
 allowed-tools: Read Grep Glob Bash(git ls-files*) Bash(gh search code*) Bash(gh api repos/*)
 ---
 
@@ -12,6 +12,10 @@ A plugin repo is conformant when its CI **is** the shared pipeline rather than a
 of it. That distinction is invisible in every listing — a repo with its own
 `plugin-check.yml` and a repo calling `plugin-check.yml@v4` have the same filename — which
 is why shallow adoption survives for years. This skill makes the difference legible.
+
+The passing reference implementation is
+[`linchpin/plugin-scaffold`](https://github.com/linchpin/plugin-scaffold). Greenfield plugins
+are created with `linchpin plugin scaffold`, which copies a pinned ref of that repo.
 
 It reports. It never fixes, and it never sequences.
 
@@ -28,9 +32,10 @@ It reports. It never fixes, and it never sequences.
 the entire Plugin Check story. This skill asks only whether the repo *declares* the gate and
 wires it to the reusable workflow; it never runs one. Auditing a running **site** for
 performance or accessibility — [`wp-audit`](../wp-audit/SKILL.md). Creating the repo and its
-deploy wiring — [`github-repo-setup`](../github-repo-setup/SKILL.md). Writing the plugin's
-code — upstream `wp-plugin-development`. Closing the gaps in stages on a shipped plugin —
-[`wp-plugin-modernization`](../wp-plugin-modernization/SKILL.md).
+deploy wiring — [`github-repo-setup`](../github-repo-setup/SKILL.md). Generating a new plugin
+tree from the standard — `linchpin plugin scaffold` in `@linchpinagency/cli`. Writing the
+plugin's code — upstream `wp-plugin-development`. Closing the gaps in stages on a shipped
+plugin — [`wp-plugin-modernization`](../wp-plugin-modernization/SKILL.md).
 
 ## Owns
 
@@ -101,8 +106,10 @@ one channel and correct on another.
    calls a v3 reusable / **reimplements a reusable locally** / legitimately local
    (release-please, `sync-docs.yml`, a repo-specific job). Use
    `gh search code --owner linchpin "php-checks.yml@v4"` when you need a current reference
-   implementation rather than a remembered one. → One labelled row per workflow file, with
-   every local file whose name collides with a v4 reusable flagged at the top of the report.
+   implementation rather than a remembered one. The passing whole-repo reference is
+   [`linchpin/plugin-scaffold`](https://github.com/linchpin/plugin-scaffold). → One labelled
+   row per workflow file, with every local file whose name collides with a v4 reusable
+   flagged at the top of the report.
 6. **Check every pin.** `linchpin/actions` at `@v4`; third-party actions tagged or
    SHA-pinned, never `@master`/`@main`. → A list of every stale or floating `uses:`, with file
    and line.

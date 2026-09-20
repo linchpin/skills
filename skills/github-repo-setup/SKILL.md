@@ -1,7 +1,7 @@
 ---
 name: github-repo-setup
 description: Create a GitHub repo under the linchpin org and wire it for deployments — populated from a source repo you always ask the user to name, with the environments plus the repository and environment secrets and variables that linchpin/actions v3 reads. Use when starting a new client site or product repo, when asked to "create the repo", "set it up for deploys", or "add the deploy secrets/variables" — including when the repo already exists and only needs wiring — when the repo name is already taken, when a deploy fails because HOST or ENVIRONMENT is empty, or when workflows point at `@main` and no longer resolve. Not for the repo contents or local Studio wiring — use `wp-local-setup`.
-version: 2.7.0
+version: 2.8.0
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh secret list*) Bash(gh variable list*) Bash(gh search code*)
 ---
 
@@ -43,7 +43,9 @@ an empty environment, because `vars.ENVIRONMENT` was.
 - **What a plugin repo must contain, and which `linchpin/actions` reusables it calls** →
   [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md). This skill's `@v3` default is the
   **site** fleet's line; a plugin repo starts on `@v4`, because `php-checks.yml`,
-  `plugin-check.yml` and `wp-version-checker.yml` do not exist on v3.
+  `plugin-check.yml` and `wp-version-checker.yml` do not exist on v3. The file tree for a
+  **new plugin** comes from [`linchpin/plugin-scaffold`](https://github.com/linchpin/plugin-scaffold)
+  via `linchpin plugin scaffold`, not from `deploy-scaffold`.
 - **Which reusable workflows exist and what each input does** → the `linchpin/actions`
   README, which is canonical. This skill owns *provisioning*, not the pipeline.
 
@@ -151,10 +153,12 @@ is a deliberate, stated choice.
 
 **Always ask. Never pick a source on your own.** The old default,
 `linchpin/deploy-scaffold`, is stale enough that using it unasked costs more than it saves
-(see below), and no other single repo is right for every project.
+(see below), and no other single repo is right for every project. For a **new plugin**
+repo, offer [`linchpin/plugin-scaffold`](https://github.com/linchpin/plugin-scaffold)
+(prefer `linchpin plugin scaffold <slug>` locally). Do not offer it for a site repo.
 
-Offer real candidates rather than an open question. The best source is usually a sibling
-repo already deploying on v3 with the same host, so go find some:
+Offer real candidates rather than an open question. The best source for a **site** is
+usually a sibling repo already deploying on v3 with the same host, so go find some:
 
 ```bash
 # Repos whose workflows already call the v3 pipeline
@@ -167,6 +171,7 @@ Then present the options with their trade-offs and let the user choose:
 | Source | What you get | Cost |
 | --- | --- | --- |
 | A sibling repo already on v3, same host | Working v3 callers, a proven `composer.json`, a theme/plugin layout that matches how we build now | A full rename pass (step 7), and you must not carry its git history |
+| `linchpin/plugin-scaffold` | **New plugin repos only.** The house plugin tree that already satisfies [`wp-plugin-standards`](../wp-plugin-standards/SKILL.md). Prefer `linchpin plugin scaffold <slug>` locally, then `gh repo create`. `--template linchpin/plugin-scaffold` still needs the rename pass | Not a site repo. Do not offer this for a client `wp-content` project |
 | `linchpin/deploy-scaffold` | The tooling baseline — `composer.json`, `phpcs`, `phplint`, `commitlint`, `release-please`, `renovate`, `.distignore`, `index.php` | It is a **generator**, not a project: `--template` also copies `plopfile.js`, `prompts/`, `scaffold/`, `actions/`, `wiki/`, all of which you delete in step 7. Its root has **no deploy workflows**, and what its generator emits is pre-v3, pinned to a `@main` that no longer resolves, with **no Pressable option at all** |
 | Nothing | An empty repo you populate yourself | You write the tooling baseline too |
 
