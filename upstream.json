@@ -13,7 +13,12 @@
         "wp-performance",
         "wp-wpcli-and-ops",
         "wp-plugin-development",
-        "wp-rest-api"
+        "wp-rest-api",
+        "wordpress-router",
+        "wp-abilities-api",
+        "wp-phpstan",
+        "wp-playground",
+        "wp-project-triage"
       ]
     },
     {
