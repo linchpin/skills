@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/linchpin/skills/compare/v1.3.0...v1.3.1) (2026-09-23)
+
+
+### Documentation 📚
+
+* **LINCHPIN-5657:** Document every skill and how it works ([#52](https://github.com/linchpin/skills/issues/52)) ([de5dd54](https://github.com/linchpin/skills/commit/de5dd545225bb06d8c33696b24b921f74c5c00de))
+
 ## [1.3.0](https://github.com/linchpin/skills/compare/v1.2.0...v1.3.0) (2026-09-20)
 
 
