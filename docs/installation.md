@@ -1,6 +1,6 @@
 ---
 title: Installation
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 The installer is a zero-dependency Node script published as `@linchpinagency/skills`. It requires Node 18 or newer and needs no global install of its own.
@@ -16,6 +16,14 @@ By default this targets Claude Code and writes to `.claude/skills` in the curren
 ## Install globally
 
 <!-- wp:docspress/terminal-session {"title":"Install for every project on this machine","shell":"bash","prompt":"$","command":"npx @linchpinagency/skills --global","output":""} /-->
+
+Global is the usual choice, and the only one that works in tools like Conductor that give each workspace its own checkout.
+
+## Check what you have
+
+<!-- wp:docspress/code-tabs {"tabs":[{"label":"List","language":"bash","filename":"Terminal","code":"npx @linchpinagency/skills --list"},{"label":"One skill","language":"bash","filename":"Terminal","code":"npx @linchpinagency/skills wp-studio-cli"},{"label":"Linchpin only","language":"bash","filename":"Terminal","code":"npx @linchpinagency/skills --skip-upstream"}],"showLineNumbers":false,"caption":"List what is available, install a single skill, or skip the base layer."} /-->
+
+Then start a new session and ask "what kind of project is this?". It should load [`project-context`](skills/project-context.md).
 
 ## Choose an agent
 

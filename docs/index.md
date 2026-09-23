@@ -3,26 +3,39 @@ title: Linchpin Skills
 sidebar_position: 1
 ---
 
-A shared library of AI agent skills for the kinds of projects Linchpin builds — WordPress, React, and Cloudflare Workers. Skills are agent-agnostic instruction sets in the [Agent Skills](https://agentskills.io) format, so the same file works in Claude Code, GitHub Copilot, Codex, and Cursor.
+A shared library of AI agent skills for the kinds of projects Linchpin builds: WordPress, React and Cloudflare Workers. The same files work in Claude Code, GitHub Copilot, Codex and Cursor.
 
 ## What a skill is
 
-A skill is a Markdown file your coding agent loads **when your request matches its description**. It is how an agent behaves like a Linchpin developer rather than a generic one: it knows we run WordPress Studio, that PHPCS applies only where `phpcs.xml.dist` exists, that release-please owns `CHANGELOG.md`, and that every commit carries a ClickUp key.
+A skill is a Markdown file of instructions that your coding agent loads **when your request matches its description**. It is how an agent works like a Linchpin developer rather than a generic one. It knows we run WordPress Studio, that PHPCS applies only where `phpcs.xml.dist` exists, that release-please owns `CHANGELOG.md`, and that every commit carries a ClickUp key. You rarely invoke one by name. Ask for what you want and the matching skill loads. [How skills work](how-skills-work.md) covers the rest.
 
-The `description` in a skill's frontmatter is the only thing an agent reads before deciding whether to load the rest. That is why the validator enforces a floor and a ceiling on it, and why it must say *when* to reach for the skill.
+<!-- wp:docspress/audience-paths {"eyebrow":"Start here","title":"What do you need?","description":"","paths":[{"title":"Install the skills","description":"One command, once per machine, and every project picks them up.","url":"/skills/installation/","cta":"Install","icon":"code","accent":"blue","newTab":false},{"title":"Find the right skill","description":"Every skill, what it does, when to use it, and where it stops.","url":"/skills/skills/","cta":"Browse skills","icon":"api","accent":"gold","newTab":false},{"title":"Write a new skill","description":"The house standard, the scaffolder, and what the validator checks.","url":"/skills/contributing/","cta":"Contribute","icon":"code","accent":"green","newTab":false}],"columns":3,"tone":"theme","textAlign":"left","compact":false,"showNumbers":false} /-->
 
-<!-- wp:docspress/file-tree {"root":"skills/","tree":"commit-and-release/\n  SKILL.md\ntask-tracking/\n  SKILL.md\n  references/\n    clickup-json.md\n    clickup-mcp-tools.md\n    handoff.md","caption":"Each skill is a directory with a SKILL.md; reference-shaped material moves to references/."} /-->
+## Install
 
-## Two layers
+<!-- wp:docspress/terminal-session {"title":"Install for every project on this machine","shell":"bash","prompt":"$","command":"npx @linchpinagency/skills --global","output":""} /-->
 
-The package installs two sets of skills side by side.
+Re-run the same command to update. [Installation](installation.md) covers project scope, other agents, and previewing changes.
 
-The **Linchpin layer** is everything in this repository's `skills/` directory — the house conventions: commits and releases, task tracking, quality gates, Pressable and Studio operations, engagement types.
+## Your first day
 
-The **base layer** is vendored at install time from `WordPress/agent-skills`, pinned to a commit in `upstream.json`. It covers general WordPress practice — block development, block themes, the Interactivity API, performance, WP-CLI, plugin development, the REST API. Upstream has no releases, so the pin is a SHA that gets bumped deliberately. Skip it with `--skip-upstream`.
+The fastest way to learn the library is to run one loop end to end.
 
-## Where to go next
+| You want to… | Ask for it naturally | Skill that fires |
+| --- | --- | --- |
+| Understand a repo you just cloned | "what am I working with here?" | [`project-context`](skills/project-context.md) |
+| Find out why something's broken | "the hero image 404s on mobile" | [`investigate`](skills/investigate.md) |
+| Test a site like a user, and fix what's found | "QA the checkout flow" | [`web-qa`](skills/web-qa.md) |
+| File work for later | "create an issue for the broken footer link" | [`task-tracking`](skills/task-tracking.md) |
+| Check it's ready to commit | "is this ready to commit?" | [`quality-gates`](skills/quality-gates.md) |
+| Commit and open the PR properly | "commit this and open a PR" | [`commit-and-release`](skills/commit-and-release.md) and [`task-tracking`](skills/task-tracking.md) |
+| Handle a client support ticket | "the client says their contact form isn't sending" | [`support-triage`](skills/support-triage.md) |
+| Add guardrails before touching prod | "careful mode — I'm on production" | [`safety-hooks`](skills/safety-hooks.md) |
+| Get the newest version of these skills | "update the skills" | [`skill-updates`](skills/skill-updates.md) |
+| Keep a change small and actually verified | "don't over-engineer this" | [`engineering-discipline`](skills/engineering-discipline.md) |
 
-- [Installation](installation.md) — installing, choosing an agent, project versus global scope
-- [Writing a skill](writing-a-skill.md) — the house standard and how to get a new skill accepted
-- [Reference](reference/index.md) — every CLI flag and every validation rule
+The [skills index](skills/index.md) lists every skill. The installer also adds a pinned set of generic WordPress skills that we don't maintain; see [Base layer](upstream.md).
+
+## Propose a skill
+
+Skills encode how we work, so they go stale when that changes. If a skill tells the agent something outdated, open a pull request on [`linchpin/skills`](https://github.com/linchpin/skills), or an issue if you'd rather someone else write it. [Contributing a skill](contributing.md) has the standard.
