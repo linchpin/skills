@@ -1,0 +1,350 @@
+{
+  "repo": "example/site",
+  "fetchedAt": "2026-09-15T12:00:00.000Z",
+  "settings": {
+    "defaultBranch": "main",
+    "allowMergeCommit": false,
+    "allowRebaseMerge": true,
+    "allowSquashMerge": true,
+    "allowAutoMerge": true
+  },
+  "protection": {
+    "strict": true,
+    "requiredChecks": [
+      "Lint",
+      "Build",
+      "E2E"
+    ],
+    "approvals": 1,
+    "lastPushApproval": true
+  },
+  "securityUpdates": {
+    "enabled": true,
+    "paused": false
+  },
+  "renovateConfig": {
+    "path": "renovate.json",
+    "config": {
+      "extends": [
+        "config:recommended",
+        "github>linchpin/renovatebot-config"
+      ],
+      "baseBranchPatterns": [
+        "main"
+      ],
+      "rebaseWhen": "conflicted"
+    }
+  },
+  "workflows": {
+    "maintenance": ".github/workflows/maintenance.yml",
+    "maintenanceCallsShared": true,
+    "autoApprove": false,
+    "autoMerge": false,
+    "autoApproveTriggersWindow": false
+  },
+  "windows": [
+    {
+      "name": "maintenance/2026-09",
+      "behindBy": 40,
+      "aheadCommits": [
+        {
+          "oid": "a1",
+          "message": "chore(NO-TASK): Open the 2026-09 maintenance window"
+        }
+      ],
+      "closedPr": 90
+    }
+  ],
+  "prs": [
+    {
+      "number": 101,
+      "title": "build(npm): Update dependency left-pad to v1.3.1",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/npm-shared-overrides",
+      "labels": [
+        "npm",
+        "automerge-safe"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "UNSTABLE",
+      "createdAt": "2026-09-05T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "FAILURE"
+        },
+        {
+          "name": "Build",
+          "state": "FAILURE"
+        }
+      ],
+      "files": [
+        "plugins/example/package.json",
+        "plugins/example/package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [left-pad](https://example.test) | [`1.3.0` → `1.3.1`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 12
+    },
+    {
+      "number": 102,
+      "title": "build(deps): Update npm root non-major",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/npm-root-non-major",
+      "labels": [
+        "npm",
+        "automerge-safe"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "UNSTABLE",
+      "createdAt": "2026-09-10T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "FAILURE"
+        },
+        {
+          "name": "Build",
+          "state": "FAILURE"
+        }
+      ],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [left-pad](https://example.test) | [`1.3.0` → `1.3.1`](https://example.test) |\n| [prettier](https://example.test) | [`^3.1.0` → `^3.2.0`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 8
+    },
+    {
+      "number": 103,
+      "title": "build(deps): Update dependency webpack to v6",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/webpack-6.x",
+      "labels": [
+        "requires-manual-review"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "UNSTABLE",
+      "createdAt": "2026-09-01T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "FAILURE"
+        },
+        {
+          "name": "Build",
+          "state": "SUCCESS"
+        }
+      ],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [webpack](https://example.test) | [`^5.90.0` → `^6.0.0`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]",
+        "a-developer"
+      ],
+      "behindBy": 20
+    },
+    {
+      "number": 104,
+      "title": "update(wp-plugin): Update Plugins from wordpress.org",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/maintenance-wordpress-org-plugins-composer-minor",
+      "labels": [
+        "composer"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-14T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "SUCCESS"
+        },
+        {
+          "name": "Build",
+          "state": "SUCCESS"
+        },
+        {
+          "name": "E2E",
+          "state": "FAILURE"
+        }
+      ],
+      "files": [
+        "composer.json",
+        "composer.lock"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [wp-plugin/akismet](https://example.test) | [`5.2` → `5.3`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 109,
+      "title": "build(deps): Update dependency phpunit/phpunit to ^12.5.36",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/maintenance-composer-minor",
+      "labels": [
+        "automerge-safe"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "UNSTABLE",
+      "createdAt": "2026-09-13T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "SUCCESS"
+        },
+        {
+          "name": "Build",
+          "state": "SUCCESS"
+        },
+        {
+          "name": "E2E",
+          "state": "FAILURE"
+        }
+      ],
+      "files": [
+        "composer.json",
+        "composer.lock"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [phpunit/phpunit](https://example.test) | [`^12.5.35` → `^12.5.36`](https://example.test) |",
+      "autoMerge": true,
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 105,
+      "title": "chore(deps): lock file maintenance",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/lock-file-maintenance",
+      "labels": [],
+      "isDraft": false,
+      "mergeable": "CONFLICTING",
+      "mergeStateStatus": "DIRTY",
+      "createdAt": "2026-08-01T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package-lock.json",
+        "composer.lock"
+      ],
+      "body": "",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 30
+    },
+    {
+      "number": 106,
+      "title": "build(npm): Update dependency qs to v6.14.2 [SECURITY]",
+      "author": "app/renovate",
+      "baseRefName": "main",
+      "headRefName": "renovate/npm-qs-vulnerability",
+      "labels": [
+        "security"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-14T00:00:00Z",
+      "checks": [
+        {
+          "name": "Lint",
+          "state": "SUCCESS"
+        }
+      ],
+      "files": [
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [qs](https://example.test) | [`6.14.1` → `6.14.2`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 107,
+      "title": "chore(main): release 1.2.0",
+      "author": "linchpin-bot",
+      "baseRefName": "main",
+      "headRefName": "release-please--branches--main",
+      "labels": [
+        "autorelease: pending"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-14T00:00:00Z",
+      "checks": [],
+      "files": [
+        "CHANGELOG.md"
+      ],
+      "body": "",
+      "commitAuthors": [],
+      "behindBy": null
+    },
+    {
+      "number": 108,
+      "title": "fix(NO-TASK): Something a person wrote",
+      "author": "a-developer",
+      "baseRefName": "main",
+      "headRefName": "no-task/something",
+      "labels": [],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-14T00:00:00Z",
+      "checks": [],
+      "files": [
+        "themes/example/style.css"
+      ],
+      "body": "",
+      "commitAuthors": [],
+      "behindBy": null
+    }
+  ],
+  "windowRules": {
+    "branch": "maintenance/2026-09",
+    "approvals": 0
+  },
+  "alerts": {
+    "count": 5,
+    "truncated": false,
+    "bySeverity": {
+      "high": 3,
+      "moderate": 2
+    },
+    "runtimeHighOrCritical": 1
+  },
+  "renovateBranches": [
+    "renovate/npm-shared-overrides",
+    "renovate/npm-root-non-major",
+    "renovate/webpack-6.x",
+    "renovate/maintenance-wordpress-org-plugins-composer-minor",
+    "renovate/lock-file-maintenance",
+    "renovate/npm-qs-vulnerability",
+    "renovate/maintenance-composer-minor",
+    "renovate/maintenance/2026-07-major-wordpress-monorepo"
+  ]
+}

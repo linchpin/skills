@@ -86,6 +86,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Check it's ready to commit | "is this ready to commit?" | `quality-gates` |
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
+| Do a site's monthly dependency maintenance | "run this month's maintenance — the bot PRs won't merge" | `maintenance-window` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 | Get the newest version of these skills | "update the skills" | `skill-updates` |
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
@@ -378,6 +379,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `engagement-types` | Project mgmt | Tell support, site maintenance, projects, product/plugin work, and pre-sales apart — each lives somewhere different in ClickUp and is planned and closed differently. |
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, transitive security advisories and the scoped `overrides` that fix them, `@wordpress/*` package sets. |
+| `maintenance-window` | Workflow | Run the recurring maintenance pass that drains a repo's bot-PR backlog — a read-only inventory script, one `maintenance/YYYY-MM` window of non-majors merged by one review (never squashed), each major on its own PR, stranded security fixes first, shared failures fixed once, and a report on the maintenance task. |
 | `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
 | `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |

@@ -30,6 +30,7 @@ The fastest way to learn the library is to run one loop end to end.
 | Check it's ready to commit | "is this ready to commit?" | [`quality-gates`](skills/quality-gates.md) |
 | Commit and open the PR properly | "commit this and open a PR" | [`commit-and-release`](skills/commit-and-release.md) and [`task-tracking`](skills/task-tracking.md) |
 | Handle a client support ticket | "the client says their contact form isn't sending" | [`support-triage`](skills/support-triage.md) |
+| Do a site's monthly dependency maintenance | "run this month's maintenance — the bot PRs won't merge" | [`maintenance-window`](skills/maintenance-window.md) |
 | Add guardrails before touching prod | "careful mode — I'm on production" | [`safety-hooks`](skills/safety-hooks.md) |
 | Get the newest version of these skills | "update the skills" | [`skill-updates`](skills/skill-updates.md) |
 | Keep a change small and actually verified | "don't over-engineer this" | [`engineering-discipline`](skills/engineering-discipline.md) |

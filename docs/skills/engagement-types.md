@@ -64,6 +64,7 @@ Pre-approved, so the agent can run them without a prompt: reading, searching, an
 - [`task-tracking`](task-tracking.md) — resolves, creates, and updates the task once the engagement type places it.
 - [`support-triage`](support-triage.md) — runs a support request end to end.
 - [`wp-implementation-choice`](wp-implementation-choice.md) — chooses the technical approach once the engagement is known.
+- [`maintenance-window`](maintenance-window.md) — the recurring maintenance pass itself.
 - [`dependency-updates`](dependency-updates.md) — how maintenance updates land through the normal pipeline.
 - [`web-qa`](web-qa.md) — QA for maintenance updates before they land.
 - [`wp-block-conventions`](wp-block-conventions.md) — house conventions for shared product/plugin block code.
