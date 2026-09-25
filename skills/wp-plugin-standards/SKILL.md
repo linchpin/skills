@@ -2,7 +2,7 @@
 name: wp-plugin-standards
 description: The canonical shape of a Linchpin-owned WordPress plugin repo — the files and plugin-header fields it must carry, the composer scripts its CI depends on, and which `linchpin/actions@v4` reusable workflows it should call — plus the audit that reports where a repo falls short. Use when setting up a new plugin repo, when asked "is this plugin set up right" or "what is this repo missing", when a repo hand-rolls a workflow linchpin/actions already provides, when CI fails because `php-lint` or `check-branch-cs` is not defined, or when a plugin repo is still pinned to @v3. Not for running the gates — use `quality-gates`.
 when_to_use: Also when someone says a plugin repo is inconsistent with mantle, asks which workflows a plugin needs, asks whether it needs readme.txt, .distignore, or a build script, or asks what changes when a plugin ships to WordPress.org versus packagist.linchpin.com.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob Bash(git ls-files*) Bash(gh search code*) Bash(gh api repos/*)
 ---
 

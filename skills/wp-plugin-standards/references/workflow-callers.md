@@ -140,6 +140,7 @@ red row nobody can close.
 | WordPress.org SVN deploy | Hand-rolled `10up/action-wordpress-plugin-deploy` + `…-asset-update` |
 | Standalone-plugin build/zip | The caller's own `bash scripts/build.sh` |
 | JS lint / Jest / Playwright | A hand-rolled `js.yml` or `lint-js.yml` per repo |
+| WordPress integration tests (`WP_UnitTestCase`, needs a database) | A hand-rolled `tests.yml` on the runner image's MySQL. Shape in [`wp-plugin-testing`](../../wp-plugin-testing/references/ci-and-local.md) |
 | A consumer-facing release-please workflow | Each caller carries its own |
 | Packagist / npm publish | Per-repo |
 
