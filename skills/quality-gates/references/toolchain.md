@@ -16,6 +16,7 @@ bottom.
 | Auto-fix formatting | `composer run fixer` | same |
 | Static analysis | `composer run phpstan` | `phpstan.neon(.dist)` |
 | Unit tests | `composer run phpunit` | `phpunit.xml(.dist)` |
+| WordPress integration tests | `composer run test:integration` | `phpunit-integration.xml.dist`. Layout and harness: [`wp-plugin-testing`](../../wp-plugin-testing/SKILL.md) |
 | Lint + tests | `composer run test` | both |
 
 The house `scripts.lint` composes `php-lint` → `phpcs` → `fixer:test` → `phpstan`, in that

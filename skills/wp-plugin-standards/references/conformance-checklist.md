@@ -63,6 +63,11 @@ tests and looks green. Both are findings; they are different findings. A blanket
 `run_phpunit: false` converts a silent gap into a visible decision, which is the conformant
 state until someone scopes the test work.
 
+**That `vendor/bin/phpunit` has no database.** A `phpunit.xml.dist` whose bootstrap loads
+WordPress's test library (`WP_UnitTestCase`) fails there too. Report it as wrong-shape: the
+default config has to be the WordPress-free unit layer, with integration tests in their own
+config and job. See [`wp-plugin-testing`](../../wp-plugin-testing/SKILL.md).
+
 ## Group 3 — JS toolchain
 
 | # | Row | Detect | Severity |

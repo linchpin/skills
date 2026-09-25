@@ -2,7 +2,7 @@
 name: quality-gates
 description: Run a Linchpin project's own lint, coding-standards, static-analysis, test and Plugin Check gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, when a plugin has to pass Plugin Check before it ships, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
 when_to_use: Also when someone asks "is this ready to commit", "did lint pass", when PHPCS or ESLint is failing in CI, when a pre-commit hook is blocking a commit, or when a plugin has to pass Plugin Check before it ships.
-version: 1.3.0
+version: 1.4.0
 allowed-tools: Read Grep Glob Bash(composer run lint) Bash(composer run phpcs) Bash(composer run phpstan) Bash(composer run phpunit) Bash(composer run plugin-check) Bash(composer run fixer:test) Bash(composer lint) Bash(composer phpcs) Bash(npm run lint:check) Bash(npm run lint:css) Bash(npm run lint:js) Bash(npm run test:unit) Bash(npm run test:e2e) Bash(git diff*) Bash(git status*) Bash(git merge-base*)
 ---
 
@@ -75,7 +75,9 @@ Full command matrix: [`references/toolchain.md`](references/toolchain.md).
 3. **JS / CSS gate** (any `.js`/`.ts`/`.css`/`.scss` changed). Prefer `npm run lint:check`
    when defined; otherwise `npm run lint:js` and `npm run lint:css`. Run them in the
    workspace that owns the file. → Exit 0 or a concrete rule violation list.
-4. **Tests** when the change touches covered code: `composer run phpunit`, `npm run test:unit`.
+4. **Tests** when the change touches covered code: `composer run phpunit`, `npm run test:unit`,
+   and `composer run test:integration` where it exists (it needs the repo's build, and installs
+   WordPress on first run).
    E2E (`npm run test:e2e`) only when asked or when the change is UI-facing — it needs a
    running environment. → Green, or a named failing test.
 5. **Fix, don't silence.** Auto-fixers first (`composer run phpcbf`, `composer run fixer`,
