@@ -73,6 +73,16 @@ jobs:
       - name: Validate skill packages
         run: node scripts/validate-skills.mjs
 
+      # Tier C skills ship scripts an agent runs in a client repo, so their tests run here —
+      # the validator checks a script exists, not that it works. nullglob stops an empty
+      # match from handing node the literal pattern.
+      - name: Test skill scripts
+        run: |
+          shopt -s nullglob
+          tests=(skills/*/scripts/*.test.mjs)
+          if [ ${#tests[@]} -eq 0 ]; then echo "No skill script tests."; exit 0; fi
+          node --test "${tests[@]}"
+
       # The scaffolder has to keep producing something the validator accepts once its
       # placeholders are filled — and it reads the template rather than carrying its own
       # copy, so a change to the template that breaks it would otherwise surface only when

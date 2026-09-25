@@ -1,7 +1,7 @@
 ---
 name: engagement-types
 description: Work out what kind of Linchpin work a request is — a support request, recurring site maintenance, a scoped project, product/plugin development, or pre-sales — because each is planned, tracked, and finished differently, and each lives in a different ClickUp space and folder. Use when picking up unfamiliar work, when deciding where a task belongs, when a request may be out of scope for a retainer, or when planning work for a client with multiple sites. Baseline map, refined with the team over time.
-version: 0.2.0
+version: 0.2.1
 allowed-tools: Read Grep Glob
 ---
 
@@ -61,9 +61,10 @@ agreement or is really a small project, and say so early. Run it with
 [`support-triage`](../support-triage/SKILL.md).
 
 **Maintenance** — the work is predictable and the risk is regression on a live site. Updates
-land through the normal pipeline with QA, never by editing the server
-([`dependency-updates`](../dependency-updates/SKILL.md),
-[`web-qa`](../web-qa/SKILL.md)).
+land through the normal pipeline with QA, never by editing the server. The recurring pass
+itself is [`maintenance-window`](../maintenance-window/SKILL.md), which hands single updates
+to [`dependency-updates`](../dependency-updates/SKILL.md) and QA to
+[`web-qa`](../web-qa/SKILL.md).
 
 **Project** — the SOW is the boundary. Anything outside it is a change request, not a favor.
 Track phases so status is answerable without reading the whole task list.

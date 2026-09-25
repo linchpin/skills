@@ -1,0 +1,236 @@
+{
+  "repo": "example/client-site",
+  "fetchedAt": "2026-09-15T12:00:00.000Z",
+  "settings": {
+    "defaultBranch": "main",
+    "allowMergeCommit": true,
+    "allowRebaseMerge": true,
+    "allowSquashMerge": true,
+    "allowAutoMerge": false
+  },
+  "protection": null,
+  "securityUpdates": {
+    "enabled": true,
+    "paused": false
+  },
+  "renovateConfig": {
+    "path": "renovate.json",
+    "config": {
+      "extends": [
+        "config:recommended",
+        "github>linchpin/renovatebot-automerge-config"
+      ],
+      "rebaseWhen": "conflicted"
+    }
+  },
+  "workflows": {
+    "maintenance": ".github/workflows/maintenance.yml",
+    "maintenanceCallsShared": false,
+    "autoApprove": false,
+    "autoMerge": false,
+    "autoApproveTriggersWindow": false
+  },
+  "windows": [
+    {
+      "name": "maintenance/2026-07",
+      "behindBy": 10,
+      "aheadCommits": [
+        {
+          "oid": "b1",
+          "message": "update(wp-plugin): Update Plugins from wordpress.org (#40)"
+        },
+        {
+          "oid": "b2",
+          "message": "build(npm): Update dependency postcss to v8.5.23 [SECURITY] (#41)"
+        }
+      ]
+    },
+    {
+      "name": "maintenance/2026-08",
+      "behindBy": 6,
+      "aheadCommits": [
+        {
+          "oid": "c1",
+          "message": "build(npm): Update dependency postcss to v8.5.23 [SECURITY] (#51)"
+        }
+      ]
+    },
+    {
+      "name": "maintenance/2026-09",
+      "behindBy": 0,
+      "aheadCommits": [
+        {
+          "oid": "d1",
+          "message": "chore: open Maintenance/2026-09 maintenance window"
+        }
+      ]
+    },
+    {
+      "name": "maintenance/2026-09-2",
+      "behindBy": 0,
+      "aheadCommits": []
+    }
+  ],
+  "prs": [
+    {
+      "number": 60,
+      "title": "Maintenance/2026-09",
+      "author": "linchpin-bot",
+      "baseRefName": "main",
+      "headRefName": "maintenance/2026-09",
+      "labels": [
+        "maintenance"
+      ],
+      "isDraft": true,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "DRAFT",
+      "createdAt": "2026-09-01T00:00:00Z",
+      "checks": [],
+      "files": [],
+      "body": "",
+      "commitAuthors": [],
+      "behindBy": null
+    },
+    {
+      "number": 61,
+      "title": "chore(deps): update dependency @wordpress/scripts to v36 (maintenance/2026-07)",
+      "author": "app/renovate",
+      "baseRefName": "maintenance/2026-07",
+      "headRefName": "renovate/maintenance/2026-07-major-wordpress-monorepo",
+      "labels": [],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-07-03T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [@wordpress/scripts](https://example.test) | [`^35.0.0` → `^36.0.0`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 62,
+      "title": "chore(deps): update dependency @wordpress/scripts to v36 (maintenance/2026-08)",
+      "author": "app/renovate",
+      "baseRefName": "maintenance/2026-08",
+      "headRefName": "renovate/maintenance/2026-08-major-wordpress-monorepo",
+      "labels": [],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-08-03T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [@wordpress/scripts](https://example.test) | [`^35.0.0` → `^36.0.0`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 63,
+      "title": "chore(deps): update dependency @wordpress/scripts to v36 (maintenance/2026-09)",
+      "author": "app/renovate",
+      "baseRefName": "maintenance/2026-09",
+      "headRefName": "renovate/maintenance/2026-09-major-wordpress-monorepo",
+      "labels": [],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-03T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [@wordpress/scripts](https://example.test) | [`^35.0.0` → `^36.0.0`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 64,
+      "title": "update(wp-plugin): Update Plugins from wordpress.org (maintenance/2026-09)",
+      "author": "app/renovate",
+      "baseRefName": "maintenance/2026-09",
+      "headRefName": "renovate/maintenance/2026-09-maintenance-wordpress-org-plugins-composer-minor",
+      "labels": [
+        "composer"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-09-03T00:00:00Z",
+      "checks": [],
+      "files": [
+        "composer.json",
+        "composer.lock"
+      ],
+      "body": "| Package | Change |\n|---|---|\n| [wp-plugin/akismet](https://example.test) | [`5.2` → `5.3`](https://example.test) |",
+      "commitAuthors": [
+        "renovate[bot]"
+      ],
+      "behindBy": 0
+    },
+    {
+      "number": 65,
+      "title": "build(deps-dev): bump lodash from 4.17.21 to 4.18.1",
+      "author": "app/dependabot",
+      "baseRefName": "main",
+      "headRefName": "dependabot/npm_and_yarn/lodash-4.18.1",
+      "labels": [
+        "dependencies"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-04-07T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package-lock.json"
+      ],
+      "body": "",
+      "commitAuthors": [
+        "dependabot[bot]"
+      ],
+      "behindBy": 10
+    },
+    {
+      "number": 66,
+      "title": "build(deps): bump axios from 1.13.2 to 1.15.0",
+      "author": "app/dependabot",
+      "baseRefName": "main",
+      "headRefName": "dependabot/npm_and_yarn/axios-1.15.0",
+      "labels": [
+        "dependencies"
+      ],
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "createdAt": "2026-04-12T00:00:00Z",
+      "checks": [],
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "body": "",
+      "commitAuthors": [
+        "dependabot[bot]"
+      ],
+      "behindBy": 10
+    }
+  ],
+  "windowRules": {
+    "branch": "maintenance/2026-09",
+    "approvals": 1
+  }
+}

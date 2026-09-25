@@ -16,7 +16,7 @@ Things you might say that load it: "bump the packages", "deps are out of date". 
 
 ## Where it stops
 
-> **Not this skill:** lint/test failures unrelated to a version change — [`quality-gates`](quality-gates.md). Committing and releasing the result — [`commit-and-release`](commit-and-release.md).
+> **Not this skill:** lint/test failures unrelated to a version change — [`quality-gates`](quality-gates.md). Committing and releasing the result — [`commit-and-release`](commit-and-release.md). Working through the whole bot-PR backlog, or a `maintenance/YYYY-MM` window — the recurring pass is [`maintenance-window`](maintenance-window.md), which hands each single update back here.
 
 ## How it works
 
@@ -44,7 +44,7 @@ If `renovate.json` would already automerge the change, it closes the change and 
 
 ## What it owns
 
-Canonical for: deciding whether an update is Renovate's job or yours, the manual upgrade procedure, and lockfile hygiene.
+Canonical for: deciding whether an update is Renovate's job or yours, the manual upgrade procedure, lockfile hygiene, and holding an update Renovate must not raise yet. The recurring pass over the whole backlog belongs to [`maintenance-window`](maintenance-window.md).
 
 ## Guardrails
 
@@ -73,7 +73,8 @@ Canonical for: deciding whether an update is Renovate's job or yours, the manual
 
 ## Files
 
-- [`SKILL.md`](https://github.com/linchpin/skills/blob/main/skills/dependency-updates/SKILL.md) is the whole skill. It has no `references/` or `scripts/`.
+- [`SKILL.md`](https://github.com/linchpin/skills/blob/main/skills/dependency-updates/SKILL.md) is the skill's main instructions.
+- [`references/transitive-advisories.md`](https://github.com/linchpin/skills/blob/main/skills/dependency-updates/references/transitive-advisories.md) — the refresh-first, override-second recipe for transitive advisories: the Dependabot switch, scoped `overrides`, Composer's `conflict` form, and how to verify them.
 
 Pre-approved, so the agent can run them without a prompt: reading and searching files, `npm audit`, `composer audit`, `npm outdated`, `composer outdated`, `git status`, and `git diff`. Anything that writes still asks.
 
@@ -82,3 +83,4 @@ Pre-approved, so the agent can run them without a prompt: reading and searching 
 - [`quality-gates`](quality-gates.md) — owns lint/test failures unrelated to a version change.
 - [`commit-and-release`](commit-and-release.md) — owns committing and releasing the result once it's verified.
 - [`task-tracking`](task-tracking.md) — owns the branch cut this skill's work happens on.
+- [`maintenance-window`](maintenance-window.md) — owns the recurring pass over the whole backlog, and hands single updates here.
