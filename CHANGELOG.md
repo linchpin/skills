@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/linchpin/skills/compare/v1.4.0...v1.5.0) (2026-09-26)
+
+
+### Features ✨
+
+* **LINCHPIN-5712:** Add the wp-plugin-admin-ui skill for plugin admin screens ([#57](https://github.com/linchpin/skills/issues/57)) ([b9d07cd](https://github.com/linchpin/skills/commit/b9d07cd806561056091f6b7f398351aaf3ac1e8e))
+
 ## [1.4.0](https://github.com/linchpin/skills/compare/v1.3.1...v1.4.0) (2026-09-25)
 
 
