@@ -16,7 +16,7 @@ Things you might say that load it: "is this plugin set up right", "what's this r
 
 ## Where it stops
 
-> **Not this skill:** running a gate, reading its output, or deciding a finding's fate — [`quality-gates`](quality-gates.md) owns which gates exist, how to run them, and the entire Plugin Check story. This skill asks only whether the repo *declares* the gate and wires it to the reusable workflow; it never runs one. Auditing a running **site** for performance or accessibility — [`wp-audit`](wp-audit.md). Creating the repo and its deploy wiring — [`github-repo-setup`](github-repo-setup.md). Generating a new plugin tree from the standard — `linchpin plugin scaffold` in `@linchpinagency/cli`. Writing the plugin's code — upstream [`wp-plugin-development`](../upstream.md). Closing the gaps in stages on a shipped plugin — [`wp-plugin-modernization`](wp-plugin-modernization.md).
+> **Not this skill:** running a gate, reading its output, or deciding a finding's fate — [`quality-gates`](quality-gates.md) owns which gates exist, how to run them, and the entire Plugin Check story. This skill asks only whether the repo *declares* the gate and wires it to the reusable workflow; it never runs one. Auditing a running **site** for performance or accessibility — [`wp-audit`](wp-audit.md). Creating the repo and its deploy wiring — [`github-repo-setup`](github-repo-setup.md). Generating a new plugin tree from the standard — `linchpin plugin scaffold` in `@linchpinagency/cli`. Writing the plugin's code — upstream [`wp-plugin-development`](../upstream.md). Closing the gaps in stages on a shipped plugin — [`wp-plugin-modernization`](wp-plugin-modernization.md). Building its admin screen — [`wp-plugin-admin-ui`](wp-plugin-admin-ui.md).
 
 ## How it works
 
@@ -82,6 +82,7 @@ Canonical for: what a Linchpin-owned WordPress plugin repository must contain �
 - [`wp-audit`](wp-audit.md) — owns auditing a running site for performance or accessibility.
 - [`github-repo-setup`](github-repo-setup.md) — owns creating the repo and its environments, secrets, and deploy wiring.
 - [`wp-plugin-modernization`](wp-plugin-modernization.md) — owns sequencing this audit's findings, in stages, on a shipped plugin.
+- [`wp-plugin-admin-ui`](wp-plugin-admin-ui.md) — owns the shape of a plugin's admin screen; this skill's checklist only asks that it follows it.
 - [`wp-plugin-development`](../upstream.md) (upstream) — owns how to write the plugin itself: hooks, activation, Settings API, security, packaging.
 - [`commit-and-release`](commit-and-release.md) — owns commit, PR, and release grammar, and the CHANGELOG/version files this skill never touches.
 - [`dependency-updates`](dependency-updates.md) — owns Renovate and dependency policy.

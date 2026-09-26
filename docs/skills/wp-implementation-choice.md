@@ -59,5 +59,6 @@ Pre-approved, so the agent can run them without a prompt: reading and searching 
 - [`wp-block-themes`](../upstream.md) — owns layout, templates, parts, and visual redesign work.
 - [`wp-block-conventions`](wp-block-conventions.md) — owns building an editor-insertable custom block once that's the right call.
 - [`wp-plugin-development`](../upstream.md) — owns reusable backend behavior: admin UI, settings, REST endpoints, cron, integrations, post types.
+- [`wp-plugin-admin-ui`](wp-plugin-admin-ui.md) — owns how a plugin's admin screen is built: a React app on `@linchpinagency/ui`, not the Settings API.
 - [`wp-rest-api`](../upstream.md) — owns exposing data to a frontend or third party as a REST endpoint.
 - [`wp-audit`](wp-audit.md) — owns performance, accessibility, or QA review of what's already there.
