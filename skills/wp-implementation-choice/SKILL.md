@@ -1,7 +1,7 @@
 ---
 name: wp-implementation-choice
 description: Decide which WordPress abstraction a request should become — theme/template work, a custom block, a functionality plugin, existing core blocks and patterns, or an off-the-shelf plugin — before any code is written. Use when a WordPress request could be built more than one way, when someone proposes a custom plugin or block, when scoping a new feature, or when reviewing an approach that feels heavier than the problem. Not for how to build the thing once chosen.
-version: 1.3.0
+version: 1.3.1
 allowed-tools: Read Grep Glob
 ---
 
@@ -59,7 +59,7 @@ Answer these before designing anything custom; each "yes" removes work:
 | Layout, templates, parts, a visual redesign | **Theme work** | Upstream `wp-block-themes` |
 | Page/post content composed from existing blocks | **Content**, not code | [`wordpress-blocks`](../wordpress-blocks/SKILL.md) |
 | An editor-insertable content component that core can't express | **Custom block** | [`wp-block-conventions`](../wp-block-conventions/SKILL.md) |
-| Reusable behavior that must survive a theme change — admin UI, settings, REST endpoints, cron, integrations, post types | **Functionality plugin** | Upstream `wp-plugin-development` |
+| Reusable behavior that must survive a theme change — admin UI, settings, REST endpoints, cron, integrations, post types | **Functionality plugin** | Upstream `wp-plugin-development`; its admin screen → [`wp-plugin-admin-ui`](../wp-plugin-admin-ui/SKILL.md) |
 | Data exposed to a frontend or third party | **REST endpoint** in the plugin | Upstream `wp-rest-api` |
 | Performance, accessibility, or QA review of what's there | **An audit**, not a build | [`wp-audit`](../wp-audit/SKILL.md) |
 

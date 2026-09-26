@@ -90,8 +90,9 @@ The fastest way to understand the library is to run one loop end to end:
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 | Get the newest version of these skills | "update the skills" | `skill-updates` |
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
+| Give a plugin an admin screen that matches the others | "add a settings page to this plugin" | `wp-plugin-admin-ui` |
 
-The full list is in [Available skills](#available-skills) — 30 of them, each with a
+The full list is in [Available skills](#available-skills) — 32 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -364,6 +365,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `wp-block-conventions` | WordPress | Build custom blocks the Linchpin way — apiVersion 3 under `linchpin/`, dynamic `render.php` + Interactivity API `view.js`, parent/child block context, and the `wp-scripts` build/registration chain shared by `linchpin-blocks` and project functionality plugins. |
 | `wp-implementation-choice` | WordPress | Decide what a request should become — theme work, content, a custom block, a functionality plugin, or an existing plugin — before any code is written. |
 | `wp-plugin-standards` | WordPress | The canonical shape of a Linchpin-owned plugin repo — required files, plugin-header fields, the composer scripts the v4 callers depend on, and which `linchpin/actions@v4` reusable workflows it should call — plus the conformance audit that reports the deltas without fixing or sequencing them. |
+| `wp-plugin-admin-ui` | WordPress | Build or review a plugin's admin screen the Linchpin way — a React app on `@linchpinagency/ui` in psst's shape: an `Admin_Page` that mounts one div, `REST_Base` routes under `{slug}/v1/admin/*`, views of settings cards, DataViews and snackbar notices, and the build that ships it. Never a PHP or Settings API screen. |
 | `wp-plugin-modernization` | WordPress | Bring a legacy or inherited plugin onto that standard in stages without breaking a shipped product — safety net before behavior, CI conformance before code, a repo-committed migration plan that records every decision, and one tracker list per stage. |
 | `wp-plugin-testing` | WordPress | Split a plugin's PHP tests into a WordPress-free unit layer (the one `php-checks.yml@v4` runs) and a `WP_UnitTestCase` integration layer that runs locally on SQLite and in CI on the runner's MySQL — no service container, and a guard against `die` passing the run |
 | `design-previews` | Design | Generate three genuinely different visual directions as self-contained HTML previews, screenshot them at desktop and mobile via the Chrome DevTools MCP (or Playwright), and get a pick before theme or block work starts. |

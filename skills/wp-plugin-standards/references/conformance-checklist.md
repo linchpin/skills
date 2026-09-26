@@ -75,6 +75,7 @@ config and job. See [`wp-plugin-testing`](../../wp-plugin-testing/SKILL.md).
 | J-1 | `package-lock.json` committed when the plugin builds assets | `test -f package-lock.json` | Blocking — without it CI skips Node setup entirely |
 | J-2 | `.nvmrc`, and no hardcoded `node-version:` in any workflow | `test -f .nvmrc`; `grep -rc "node-version: *'\?[0-9]" .github/workflows` | Standard |
 | J-3 | `lint:js` / `lint:css` / `build` npm scripts | `jq -r '.scripts \| keys[]' package.json` | Standard |
+| J-4 | An admin screen, when the plugin has one, is a React app on `@linchpinagency/ui` — never PHP-rendered or a Settings API form. [`wp-plugin-admin-ui`](../../wp-plugin-admin-ui/SKILL.md) owns its shape | `jq -e '.devDependencies["@linchpinagency/ui"]' package.json`; `grep -rlE "settings_fields\|do_settings_sections" includes` finds nothing | Standard |
 
 J-2 is worth stating plainly because the drift is measurable: four repos, four pinned Node
 versions, none of them read from a file.
