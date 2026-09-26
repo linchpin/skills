@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/linchpin/skills/compare/v1.3.1...v1.4.0) (2026-09-25)
+
+
+### Features ✨
+
+* **LB-153:** Add the wp-plugin-testing skill for fast, local PHP test layers ([#54](https://github.com/linchpin/skills/issues/54)) ([8d6a8db](https://github.com/linchpin/skills/commit/8d6a8dbb6476658e5e87d33a2f5893535c1783b2))
+* **LINCHPIN-5686:** Add the maintenance-window skill for draining the dependency backlog ([#56](https://github.com/linchpin/skills/issues/56)) ([d043889](https://github.com/linchpin/skills/commit/d0438897d80983c70bbbb2ef3afa38f20829f2fc))
+
 ## [1.3.1](https://github.com/linchpin/skills/compare/v1.3.0...v1.3.1) (2026-09-23)
 
 

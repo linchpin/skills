@@ -12,7 +12,7 @@ GitHub Copilot, and other compatible coding agents.
 ![Zero dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen)
 
 <!-- x-release-please-start-version -->
-### Latest release: 1.3.1
+### Latest release: 1.4.0
 <!-- x-release-please-end -->
 
 | Release | Skill standard | Install |
