@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       # v1 moves forward as fixes land; a breaking change becomes v2.
-      - uses: linchpin/docspress@v1
+      - uses: linchpin/docspress@v2
         with:
           mode: publish
 
