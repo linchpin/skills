@@ -80,6 +80,50 @@ function readStamp() {
   return null;
 }
 
+// --- Banner ---------------------------------------------------------------------
+// The mark, shown above the nudge so a human notices it. BANNER_PLAIN below is the same
+// art with the escapes stripped — edit that first, then re-apply colour to match: the
+// ring (the circle, drawn in '#') is 38;5;37, the pin ('@' and '%', plus any punctuation
+// antialiasing them) is 38;5;251, and every row ends with a reset so colour cannot bleed
+// into whatever the UI prints next.
+//
+// Both are 256-colour cube values on purpose: a terminal profile may remap colours 0-15
+// but not 16-231, so these render as written whatever theme is loaded. Palette-relative
+// codes do not survive that — plain cyan (36) picks up a remapped cyan, and
+// default-foreground (39) inherits whatever the profile sets its text colour to.
+const BANNER = [
+  '         \u001b[38;5;37m.-=+=-.\u001b[0m         ',
+  '     \u001b[38;5;37m:*##########*\u001b[0m       ',
+  '   \u001b[38;5;37m:###+.\u001b[0m       \u001b[38;5;37m.\u001b[0m \u001b[38;5;251m#@@-\u001b[0m   ',
+  '  \u001b[38;5;37m+##=\u001b[0m    \u001b[38;5;251m:++-\u001b[0m  \u001b[38;5;251m*@@@=\u001b[0m \u001b[38;5;37m:\u001b[0m  ',
+  ' \u001b[38;5;37m=##-\u001b[0m   \u001b[38;5;251m@@@@*\u001b[0m \u001b[38;5;251m=@@@+\u001b[0m \u001b[38;5;37m:##=\u001b[0m ',
+  ' \u001b[38;5;37m*#+\u001b[0m   \u001b[38;5;251m@@@\u001b[0m  \u001b[38;5;251m-@@@+\u001b[0m    \u001b[38;5;37m+#*\u001b[0m ',
+  ' \u001b[38;5;37m##:\u001b[0m  \u001b[38;5;251m:@@:\u001b[0m  \u001b[38;5;251m@@*\u001b[0m \u001b[38;5;251m*@:\u001b[0m  \u001b[38;5;37m-##.\u001b[0m',
+  ' \u001b[38;5;37m*#=\u001b[0m   \u001b[38;5;251m@@#\u001b[0m     \u001b[38;5;251m%@@\u001b[0m   \u001b[38;5;37m+#*\u001b[0m ',
+  ' \u001b[38;5;37m+##.\u001b[0m \u001b[38;5;251m:@@@@@@@@@@.\u001b[0m  \u001b[38;5;37m:##+\u001b[0m ',
+  '  \u001b[38;5;37m-\u001b[0m \u001b[38;5;251m:@@@%:=***=\u001b[0m    \u001b[38;5;37m-##+\u001b[0m  ',
+  '   \u001b[38;5;251m+@@@.\u001b[0m         \u001b[38;5;37m-###-\u001b[0m   ',
+  '       \u001b[38;5;37m*##########*-\u001b[0m     ',
+  '         \u001b[38;5;37m*+=-=+*\u001b[0m         ',
+].join('\n');
+
+// The same mark with no escapes, for NO_COLOR.
+const BANNER_PLAIN = [
+  '         .-=+=-.         ',
+  '     :*##########*       ',
+  '   :###+.       . #@@-   ',
+  '  +##=    :++-  *@@@= :  ',
+  ' =##-   @@@@* =@@@+ :##= ',
+  ' *#+   @@@  -@@@+    +#* ',
+  ' ##:  :@@:  @@* *@:  -##.',
+  ' *#=   @@#     %@@   +#* ',
+  ' +##. :@@@@@@@@@@.  :##+ ',
+  '  - :@@@%:=***=    -##+  ',
+  '   +@@@.         -###-   ',
+  '       *##########*-     ',
+  '         *+=-=+*         ',
+].join('\n');
+
 // --- Preferences ---------------------------------------------------------------------
 // Config, deliberately not cache: "never ask me again" has to survive a cache wipe, and
 // `~/.cache` is a directory people delete on purpose.
@@ -404,9 +448,30 @@ async function main() {
   if (result.status !== 'update-available') return;
 
   const when = result.installedAt ? ` (installed ${String(result.installedAt).slice(0, 10)})` : '';
-  console.log(
+  const message =
     `Linchpin skills ${result.installed} → ${result.latest} available${when}. ` +
-      `Say "update the skills" to review and apply, or run: ${result.command}`
+    `Say "update the skills" to review and apply, or run: ${result.command}`;
+
+  // On a terminal a person ran this by hand: give them the line and nothing else.
+  if (process.stdout.isTTY) return console.log(message);
+
+  // Otherwise stdout is being captured, which in practice means the SessionStart hook.
+  // Bare stdout there becomes *session context* — the agent reads it, the person at the
+  // keyboard never sees it, which made the whole nudge invisible to its actual audience.
+  // The hook envelope reaches both: systemMessage renders in the UI, additionalContext
+  // still reaches the agent so "update the skills" works in the same breath.
+  //
+  // Keyed on isTTY rather than a new flag so every install already carrying the hook
+  // starts rendering visibly on update — installHook() is idempotent on the checker's
+  // filename and would never rewrite an existing command to add one.
+  //
+  // The banner goes to systemMessage ONLY. It is there to catch a human eye; thirteen
+  // lines of ASCII in the model's context is cost without information.
+  console.log(
+    JSON.stringify({
+      systemMessage: `\n${process.env.NO_COLOR ? BANNER_PLAIN : BANNER}\n\n${message}`,
+      hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: message },
+    })
   );
 }
 
