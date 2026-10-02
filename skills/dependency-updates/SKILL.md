@@ -2,7 +2,7 @@
 name: dependency-updates
 description: Update npm and Composer dependencies on a Linchpin project the way Renovate expects — handling the work Renovate can't automerge (majors, breaking changes, conflicted or failing bot PRs, security advisories in transitive dependencies, @wordpress package bumps). Use when a Renovate PR is failing, conflicted, or needs review, when asked to upgrade or bump packages, when a security advisory lands, when npm audit or Dependabot flags a sub-dependency nothing in package.json names, when deciding whether to add an override or resolution, or when a lockfile is out of sync. Not for fixing lint failures — use `quality-gates`. Not for draining the whole backlog — use `maintenance-window`.
 when_to_use: Also when a Renovate PR is red or conflicted, when someone says "bump the packages" or "deps are out of date", when a security advisory lands, or when a lockfile is out of sync with its manifest.
-version: 1.3.0
+version: 1.3.1
 allowed-tools: Read Grep Glob Bash(npm audit) Bash(composer audit*) Bash(npm outdated*) Bash(composer outdated*) Bash(git status*) Bash(git diff*)
 ---
 
@@ -27,7 +27,8 @@ and urgency.**
 Committing and releasing the result — [`commit-and-release`](../commit-and-release/SKILL.md).
 Working through the whole bot-PR backlog, or a `maintenance/YYYY-MM` window — the recurring
 pass is [`maintenance-window`](../maintenance-window/SKILL.md), which hands each single update
-back here.
+back here. Whether a package should be declared at all — unused, provided by the toolchain, or
+not worth owning — is [`wp-plugin-dependency-audit`](../wp-plugin-dependency-audit/SKILL.md).
 
 ## Owns
 
