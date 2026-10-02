@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0](https://github.com/linchpin/skills/compare/v1.5.0...v1.6.0) (2026-10-02)
+
+
+### Features ✨
+
+* **LINCHPIN-5769:** Add the wp-plugin-dependency-audit skill ([#60](https://github.com/linchpin/skills/issues/60)) ([422ace7](https://github.com/linchpin/skills/commit/422ace76efaaa952ffb606f1e3d5cccff53bad8b))
+
+
+### Bug Fixes 🐛
+
+* **NO-TASK:** Show the update nudge to the user instead of just the agent, ascii for the terminal peeps ([#62](https://github.com/linchpin/skills/issues/62)) ([79ee1c5](https://github.com/linchpin/skills/commit/79ee1c537d76101958ac6247a96260b8292e2913))
+
+
+### Miscellaneous 🧹
+
+* **deps:** update linchpin/docspress action to v2 ([#59](https://github.com/linchpin/skills/issues/59)) ([c72f660](https://github.com/linchpin/skills/commit/c72f660b6a2981b4d4c3ca70f95f7a66bae58b7c))
+
 ## [1.5.0](https://github.com/linchpin/skills/compare/v1.4.0...v1.5.0) (2026-09-26)
 
 
