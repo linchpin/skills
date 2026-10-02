@@ -47,7 +47,7 @@ const SKIP_DIRS = new Set([
 const KEEP_DOT_DIRS = new Set(['.github', '.husky']);
 // Tool config that names packages as strings rather than importing them.
 const CONFIG_FILE = /^(?:\.[\w-]+rc(?:\.(?:[cm]?js|json|ya?ml))?|[\w.-]+\.config\.(?:[cm]?js|ts|json)|\.babelrc|tsconfig[\w.-]*\.json|composer\.json)$/;
-const PHP_CONFIG_FILE = /^(?:phpcs\.xml(?:\.dist)?|\.phpcs\.xml(?:\.dist)?|phpstan\.neon(?:\.dist)?|phpstan[\w.-]*\.neon|phpunit\.xml(?:\.dist)?|\.php-cs-fixer(?:\.dist)?\.php|scoper\.inc\.php|rector\.php|psalm\.xml(?:\.dist)?)$/;
+const PHP_CONFIG_FILE = /^(?:phpcs\.xml(?:\.dist)?|\.phpcs\.xml(?:\.dist)?|phpstan\.neon(?:\.dist)?|phpstan[\w.-]*\.neon|phpunit\.xml(?:\.dist)?|\.php-cs-fixer(?:\.dist)?\.php|scoper\.inc\.php|rector\.php|psalm\.xml(?:\.dist)?|phpdoc\.(?:dist\.)?xml)$/;
 const MAX_FILE_BYTES = 1_000_000;
 
 // The extraction plugin's own list (v6.56) of @wordpress packages it bundles rather than
