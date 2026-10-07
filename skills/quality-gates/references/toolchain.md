@@ -36,7 +36,7 @@ code's fix, never in the baseline, unless the user explicitly asks to re-baselin
 | Pre-commit equivalent | `npm run lint:check` | Where defined, this is `format` + `lint:js` |
 | JS/TS | `npm run lint:js` | `wp-scripts lint-js` on WordPress projects |
 | CSS/SCSS | `npm run lint:css` | `wp-scripts lint-style` |
-| Format | `npm run format` | Prettier via `wp-scripts format` |
+| Format | `npm run format` | wp-prettier via `wp-scripts format`, which carries `@wordpress/prettier-config`. Never bare `prettier`; see below |
 | Unit tests | `npm run test:unit` | |
 | E2E | `npm run test:e2e` | Playwright; needs a running environment |
 | Build | `npm run build` | Verify the change compiles before pushing |
@@ -45,6 +45,17 @@ code's fix, never in the baseline, unless the user explicitly asks to re-baselin
 plugin each with their own `package.json`, sometimes an inner `src/`. Root scripts often
 delegate (`npm run build --prefix themes/<theme>`). Lint a file in the workspace that owns
 it; running the root script may silently skip it.
+
+**WordPress projects format with wp-prettier and `@wordpress/prettier-config`, never
+Prettier's defaults.** That config sets tabs, single quotes and `parenSpacing`
+(`foo( bar )`), and it usually reaches Prettier only through `wp-scripts format` or an
+explicit `--config`: most WordPress packages have no `.prettierrc` and no `prettier` key in
+`package.json`. So `npx prettier --write <file>`, even from inside the right package, finds
+wp-prettier but no config and rewrites the whole file to Prettier's defaults. On
+linchpin.com that turned a 28-line change into a 226-line diff. Run the package's `format`
+script, the repo's own format wrapper if it has one, or `npx wp-scripts format <files>` from
+the package that owns the file. To check without writing, pass the config explicitly:
+`npx prettier --check --config "$(node -p "require.resolve('@wordpress/prettier-config')")" <files>`.
 
 **Non-WordPress projects** (Workers, Astro, API services) use `eslint.config.mjs` +
 `.prettierrc` directly. Same rule: run the declared `package.json` script.

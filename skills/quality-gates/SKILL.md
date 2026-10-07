@@ -2,7 +2,7 @@
 name: quality-gates
 description: Run a Linchpin project's own lint, coding-standards, static-analysis, test and Plugin Check gates before committing or opening a PR — detecting the toolchain from composer.json, package.json, phpcs.xml.dist and lint-staged rather than assuming it. Use when preparing to commit, when asked "is this ready to commit/ship", when CI lint or PHPCS is failing, when a pre-commit hook blocks you, when a plugin has to pass Plugin Check before it ships, or when a repo is missing the standard lint scripts. Not for writing the commit message — use `commit-and-release`.
 when_to_use: Also when someone asks "is this ready to commit", "did lint pass", when PHPCS or ESLint is failing in CI, when a pre-commit hook is blocking a commit, or when a plugin has to pass Plugin Check before it ships.
-version: 1.4.0
+version: 1.5.0
 allowed-tools: Read Grep Glob Bash(composer run lint) Bash(composer run phpcs) Bash(composer run phpstan) Bash(composer run phpunit) Bash(composer run plugin-check) Bash(composer run fixer:test) Bash(composer lint) Bash(composer phpcs) Bash(npm run lint:check) Bash(npm run lint:css) Bash(npm run lint:js) Bash(npm run test:unit) Bash(npm run test:e2e) Bash(git diff*) Bash(git status*) Bash(git merge-base*)
 ---
 
@@ -150,6 +150,11 @@ registered there hides exactly the bug the sniff exists to catch. Setting the sn
   stated reason the user accepted, no editing a PHPStan baseline to hide a new error.
 - **Never** reformat files the change didn't touch. A formatting-only diff across the repo
   buries the actual change and blows up review.
+- **Never** format a WordPress project with bare `prettier`. It formats with wp-prettier and
+  `@wordpress/prettier-config`, which usually reaches Prettier only through `wp-scripts format`
+  or an explicit `--config`; without it Prettier applies its defaults and rewrites whole files.
+  Use the `format` script or `npx wp-scripts format <files>` (see
+  [references/toolchain.md](references/toolchain.md)).
 - **Never** run `composer update` or `npm update` to fix a lint failure — that's a
   dependency change ([`dependency-updates`](../dependency-updates/SKILL.md)), not a fix.
 - **Never** commit `vendor/`, `node_modules/`, or build output unless the repo already
