@@ -1,9 +1,9 @@
 ---
 name: task-tracking
-description: Associate every unit of work with a task in Linchpin's task platform (currently ClickUp, via the ClickUp MCP) with the least friction, update it when the work lands, and leave a handoff when stopping mid-flight. Use whenever starting work, creating a TODO, scoping something that will span multiple sessions or PRs, preparing to commit, finishing a change, or pausing work someone else may pick up — and whenever anyone says "create an issue", "create a task", "file a ticket", or "log a bug", all of which mean a ClickUp task unless they name GitHub. If no task exists, confirm NO-TASK and keep working; the commit scope carries the task key (e.g. LINCHPIN-5113) or NO-TASK.
-when_to_use: Also when someone says "create an issue", "file a ticket", "log a bug", "make a task", asks for the task or issue number, or is stopping mid-flight and the state needs handing over.
-version: 1.5.0
-allowed-tools: Read Grep Glob Bash(git status*) Bash(git branch --show-current*) Bash(git log*)
+description: Associate every unit of work with a task in Linchpin's task platform (ClickUp), update it when the work lands — logging its time and closing it once the final deploy is verified — and leave a handoff when stopping mid-flight. Use whenever starting work, creating a TODO, scoping work that spans sessions or PRs, preparing to commit, finishing a change, logging time, closing a task after a deploy, or pausing work someone else may pick up — and whenever anyone says "create an issue", "create a task", "file a ticket", or "log a bug", all ClickUp tasks unless they name GitHub. Commits carry the task key (e.g. LINCHPIN-5113) or NO-TASK. Not for sweeping many stale tasks — use `task-closeout`.
+when_to_use: Also when someone says "create an issue", "file a ticket", "log a bug", "make a task", "log my time", "how long did that take", "close the task", "it's deployed", asks for the task or issue number, or is stopping mid-flight and the state needs handing over.
+version: 1.6.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(git branch --show-current*) Bash(git log*) Bash(node *scripts/session-time.mjs*) Bash(gh search prs*) Bash(gh pr view*) Bash(gh release list*) Bash(gh api repos/*/compare/*)
 ---
 
 # Task tracking (ClickUp)
@@ -25,18 +25,22 @@ specifics in the tool calls, so the workflow below survives a platform change.
   list of distinct action items. See step 2.
 - Opening a local TODO that should exist in the task system too.
 - Preparing to commit and needing the scope key.
-- Finishing work — the task needs its status and a pointer to the PR.
+- Finishing work — the task needs its status, a pointer to the PR, and the time it took.
+- A deploy landed — the task's change is live, and the task can close.
 
 **Not this skill:** the commit message grammar and release behavior —
 [`commit-and-release`](../commit-and-release/SKILL.md). Running checks before you commit —
 [`quality-gates`](../quality-gates/SKILL.md). Which space and folder a task belongs in —
-[`engagement-types`](../engagement-types/SKILL.md).
+[`engagement-types`](../engagement-types/SKILL.md). Sweeping a board for tasks that shipped
+but never closed, or never got their time logged —
+[`task-closeout`](../task-closeout/SKILL.md).
 
 ## Owns
 
 Canonical for: resolving, creating, and updating the task; how work is split across tasks
-and subtasks; the **scope key** that goes in commits; branch naming; and the PR ↔ task link.
-Everything about the commit message *other than the scope* belongs to
+and subtasks; the **scope key** that goes in commits; branch naming; the PR ↔ task link;
+**time entries** — the evidence, the confirmation, and the call; and **when a task may
+close**. Everything about the commit message *other than the scope* belongs to
 [`commit-and-release`](../commit-and-release/SKILL.md).
 
 ## Preflight
@@ -153,20 +157,37 @@ path that works:
 
 ### 5. Update the task when the work lands
 
-A task that never moves is worse than no task — it makes the board lie. Once the change is
-committed and the PR is open, close the loop in ClickUp:
+A task that never moves is worse than no task — it makes the board lie. And a finished task
+with no time on it makes the hours lie too. Close the loop in ClickUp:
 
 1. **Comment with the pointer.** `clickup_create_comment` with the PR URL and a one-line
    summary. This is what makes the task useful to whoever picks it up next — do it even if
    you can't move the status.
-2. **Move the status, but read the valid ones first** (`expand_statuses: true`, or
-   `clickup_get_list`). They're per-Space/List and there can be dozens. If none obviously
-   matches the state ("PR open, awaiting review"), ask rather than guess.
-3. **Don't close what you can't verify.** An open PR is *in review*, not done — terminal
-   statuses need the user's word or a deploy you observed.
-4. **Subtasks close as they land; the parent closes last.** Moving a parent while its
+2. **Log the time when your part finishes** — the PR is open, or the task is passing to
+   review, QA, or deploy. A ClickUp timer running on this task? Stop it; that's the entry.
+   Otherwise gather the evidence (`node <skill-dir>/scripts/session-time.mjs <KEY>`, git, the
+   estimate), suggest a figure in one `AskUserQuestion`, and log the confirmed duration with
+   `clickup_add_time_entry`, one entry per day worked, dated when the work happened.
+   Entries go in as the signed-in user, so work someone else did gets a comment asking them
+   to log it, not an entry. Evidence, field values, and the double-logging check:
+   [`references/time-and-closing.md`](references/time-and-closing.md).
+3. **Move the status, but read the valid ones first** (`expand_statuses: true`, or
+   `clickup_get_list`). Names are per-Space/List and there can be dozens; each status's
+   `type` (`custom` → `done` → `closed`) is what's stable. If none obviously matches the
+   state ("PR open, awaiting review"), ask rather than guess.
+4. **Close once the final deploy is verified.** An open PR is *in review*. A merged one is
+   waiting on a deploy (`needs … deploy`, `needs release build`). When every PR's merge
+   commit is inside a successful deploy to the repo's last environment — or a published
+   release, for packages — and nothing is still waiting on a person, move the task to its
+   list's `closed`-type status. One environment short advances it to the next deploy
+   status instead. Closing is also the checkpoint for step 2: a task about to close with
+   `time_spent: 0` gets the time question first. The checks are in the same reference.
+5. **Subtasks close as they land; the parent closes last.** Moving a parent while its
    subtasks are open is the same lie as never moving anything.
-5. **Time tracking is opt-in** — `clickup_add_time_entry` only when asked.
+
+The final deploy usually lands after the session that did the work has ended. If you're
+there when it lands, close the task then. Otherwise
+[`task-closeout`](../task-closeout/SKILL.md) is the sweep that catches it.
 
 For `NO-TASK` work there's nothing to update — skip this step silently.
 
@@ -231,12 +252,16 @@ Call signatures for every step: [`references/clickup-mcp-tools.md`](references/c
   said out loud, not treated as though the board was updated.
 - **Never block the user** waiting for a task decision. NO-TASK is always available and is
   not a failure state; offer creation, accept "no", move on.
-- **Never mark a task complete** on your own judgment, and **never guess a status name** —
-  they're Space-specific. An open PR is at most "in review".
+- **Never close a task without proof it shipped** — every PR verified in the final
+  environment, or the person's word — and **never guess a status name**; read the list and
+  use its `closed`-type status. An open PR is at most "in review".
+- **Never log a duration the person didn't confirm.** Evidence suggests a figure; only a
+  person states one. Time entries are billing records.
+- **Never log time for work someone else did** — entries go in as the signed-in user — and
+  never stack a manual entry on a running timer or an existing entry for the same work.
 - **Never create a duplicate task** — search first; an open one usually exists.
 - **Never dump the full workspace hierarchy** into a prompt; scope `space_ids` and
   `max_depth`.
-- Don't log time unless asked.
 
 ## Done
 
@@ -252,5 +277,9 @@ Call signatures for every step: [`references/clickup-mcp-tools.md`](references/c
       carries the same scope, and the PR body links `app.clickup.com/t/<custom_id>`.
 - [ ] For task-backed work: a comment with the PR link exists, and the status reflects
       reality without over-claiming completion.
+- [ ] Time for the finished work is logged as the person's confirmed figure, dated when the
+      work happened — or they explicitly declined.
+- [ ] A task whose every PR is verified in the final environment, with nothing waiting on a
+      person, is in its list's `closed`-type status. One still waiting is not.
 - [ ] If work is pausing unfinished, a handoff comment exists that a teammate could act on
       cold, and nothing is left uncommitted.

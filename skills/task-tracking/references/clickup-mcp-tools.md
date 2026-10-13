@@ -18,9 +18,15 @@ MCP's; if these tools aren't in the session, the workflow's Preflight says what 
 | Open the PR | `gh pr create` — title `type(KEY): …`, body links `app.clickup.com/t/<KEY>` |
 | Comment on the task | `clickup_create_comment` (PR URL + one-line summary) |
 | Move the status | `clickup_update_task` (valid statuses come from the List) |
+| Is a timer running? | `clickup_get_current_time_entry` → stop it with `clickup_stop_time_tracking` |
+| Has any time been logged? | `clickup_get_task` → `time_spent` (ms, every user) |
+| Session evidence | `node <skill-dir>/scripts/session-time.mjs <KEY>…` |
+| Log confirmed time | `clickup_add_time_entry` (`task_id`, `start`, `duration`) |
+| List existing entries | `clickup_get_time_entries` (`task_id`, `start_date`, `end_date`, `assignee: ["any"]`) |
+| Close | `clickup_update_task` with the list's `closed`-type status |
 | Hand off mid-flight | `clickup_create_comment` with the five-line handoff block |
 
-## Two that bite
+## Three that bite
 
 **`custom_id` is assigned after creation.** `clickup_create_task` returns `custom_id: null`
 much of the time — the key exists moments later. Always `clickup_get_task` before using a key
@@ -29,7 +35,13 @@ as a commit scope, and never read `null` as "this space doesn't use custom IDs".
 **Statuses are per-Space/List and there are often dozens** — a single Linchpin list carries
 open, unstarted, custom, done, and closed variants (`needs estimate`, `needs peer/code
 review`, `in qa/testing`, `blocked by client`, `resolved`, `complete`, …). Read them; never
-guess a name, and never assume `complete` is the only terminal one.
+guess a name, and never assume `complete` is the only terminal one. Each status carries a
+`type` (`open`, `unstarted`, `custom`, `done`, `closed`), which is stable across lists.
+
+**`clickup_get_time_entries` looks narrower than it is.** Without `start_date`/`end_date` it
+returns only recent entries, and without `assignee: ["any"]` it returns only yours — so an
+old entry, or a teammate's, looks missing. To ask "is there any time on this task?", read
+`time_spent` from `clickup_get_task` instead.
 
 ## Escaping note for editors of this file
 

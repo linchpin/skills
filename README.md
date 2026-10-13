@@ -83,6 +83,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Find out why something's broken | "the hero image 404s on mobile" | `investigate` |
 | Test a site like a user, and fix what's found | "QA the checkout flow" | `web-qa` |
 | File work for later | "create an issue for the broken footer link" | `task-tracking` |
+| Close out shipped work and log the missing time | "these are all deployed — close them and backfill my time" | `task-closeout` |
 | Check it's ready to commit | "is this ready to commit?" | `quality-gates` |
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
@@ -386,7 +387,8 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
 | `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
-| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands, and carry the task key in the commit scope. |
+| `task-tracking` | Workflow | Tie every unit of work to a ClickUp task (or explicit `NO-TASK`) with minimal friction via the ClickUp MCP — resolve/search a task, create one on request ("create an issue" means ClickUp, not GitHub), split work that spans sessions or PRs into parent + subtasks, name the branch, update the task when the work lands — logging confirmed time from session and git evidence (`scripts/session-time.mjs`) and closing it once the final deploy is verified — and carry the task key in the commit scope. |
+| `task-closeout` | Workflow | Sweep a ClickUp board for finished work that never closed or never got its time logged: verify which stuck tasks actually shipped and close them, then backfill each person's missing time from session and git evidence. The person confirms every figure in one proposal, and chooses per run whether entries are dated when the work happened or today. |
 | `write-a-linchpin-skill` | Meta | The house standard for authoring skills in this library — placement test, tier model, required frontmatter, the section skeleton, and the four house rules. Enforced by `scripts/validate-skills.mjs`. |
 
 _(More WordPress, React, Cloudflare Workers, marketing, and design skills to come.)_
