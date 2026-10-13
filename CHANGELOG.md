@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/linchpin/skills/compare/v1.6.0...v1.7.0) (2026-10-13)
+
+
+### Features ✨
+
+* **LINCHPIN-5823:** Log time on finished tasks and close them once their final deploy lands ([#64](https://github.com/linchpin/skills/issues/64)) ([79108db](https://github.com/linchpin/skills/commit/79108db1c3f45111d785f3747b61abe17889fcfe))
+
+
+### Documentation 📚
+
+* **NO-TASK:** Format WordPress projects with wp-prettier and the WordPress config ([#63](https://github.com/linchpin/skills/issues/63)) ([1f1c848](https://github.com/linchpin/skills/commit/1f1c8487449f319124da15dbf42fd06b198438a2))
+
 ## [1.6.0](https://github.com/linchpin/skills/compare/v1.5.0...v1.6.0) (2026-10-02)
 
 
