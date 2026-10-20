@@ -2,7 +2,7 @@
 name: wp-plugin-admin-ui
 description: Build or review a Linchpin plugin's admin screen the house way — a React app on @linchpinagency/ui (linchpin/ui) in psst's shape, with an Admin_Page controller that mounts one div and hands over the REST root and nonce, REST_Base routes under {slug}/v1/admin/*, views made of SettingsCard, DataViews and snackbar notices, and the build that ships it. Use when adding a settings page, admin screen, status or tools page to a plugin, when asked to build or review a plugin's admin UI, or when a plugin still renders its screen in PHP or with the Settings API. Not for blocks — use `wp-block-conventions`.
 when_to_use: Also when someone says "add an options page", "make it look like psst", "use linchpin/ui", "our admin pages all look different", asks where a plugin's settings screen belongs in the menu, or is moving a screen to a new @linchpinagency/ui release.
-version: 1.0.0
+version: 1.1.0
 allowed-tools: Read Grep Glob Bash(npm view @linchpinagency/ui*) Bash(gh api repos/linchpin/*) Bash(git ls-files*)
 ---
 
@@ -80,8 +80,14 @@ Every file named below has a skeleton in
    render callback echoes only `<div id="{slug}-admin" class="{slug}-admin"></div>`. Add a
    Settings link through `plugin_action_links_{basename}`. → The page opens to an empty mount
    div, under Linchpin beside Mantle and under Settings without it.
+
+   **One exception.** An operations console that runs only on Linchpin's own infrastructure
+   and never ships to a client site may own a top-level menu instead. Sisyphus on
+   packagist.linchpin.com is one. It registers with `add_menu_page()` just under the
+   Dashboard, and its submenu items link to its sections, so the sidebar is the navigation.
+   A plugin a client site carries never takes a top-level menu.
 2. **Load the app on that page only.** Gate `admin_enqueue_scripts` on the hook suffix
-   `add_submenu_page()` returned. Read `build/admin.asset.php` through `Helper\Assets::read()`,
+   `add_submenu_page()` (or, for the exception, `add_menu_page()`) returned. Read `build/admin.asset.php` through `Helper\Assets::read()`,
    which returns null when the build is missing. Enqueue script `{slug}-admin` with the
    manifest's dependencies plus `wp-api-fetch`, call `wp_set_script_translations()`, and enqueue
    `build/admin.css` depending on `wp-components` (plus `wp-theme` when it is registered). Pass
@@ -159,7 +165,8 @@ Every file named below has a skeleton in
 
 - [ ] Preflight ran, and the `@linchpinagency/ui` version is the current release or the reason
       it isn't is stated.
-- [ ] The page registers under Mantle or Settings, renders one mount div, and has a Settings
+- [ ] The page registers under Mantle or Settings (or, for an operations console on Linchpin's
+      own infrastructure, its own top-level menu), renders one mount div, and has a Settings
       link on the plugins screen.
 - [ ] Assets load only on that page, translations are set, and the stylesheet depends on
       `wp-components`.
