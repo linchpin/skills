@@ -93,7 +93,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 | Give a plugin an admin screen that matches the others | "add a settings page to this plugin" | `wp-plugin-admin-ui` |
 
-The full list is in [Available skills](#available-skills) — 32 of them, each with a
+The full list is in [Available skills](#available-skills) — 35 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -382,7 +382,8 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `safety-hooks` | Workflow | Enforced guardrails — a `PreToolUse` hook that makes destructive commands (`wp db drop`, `search-replace` without `--dry-run`, force-push, `rm -rf`) require confirmation, plus an optional edit boundary. Claude Code only. |
 | `engagement-types` | Project mgmt | Tell support, site maintenance, projects, product/plugin work, and pre-sales apart — each lives somewhere different in ClickUp and is planned and closed differently. |
 | `support-triage` | Project mgmt | Run a client support request end to end — clarify the real need, reproduce, judge urgency and scope, fix in the right layer, verify, and close the loop with the requester. |
-| `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, transitive security advisories and the scoped `overrides` that fix them, `@wordpress/*` package sets. |
+| `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, holds, `@wordpress/*` package sets. |
+| `security-updates` | Workflow | Fix security advisories the house way — Dependabot alerts on as the signal, Dependabot's PRs off, and every fix declared in the manifest: a scoped `overrides` entry naming the parent for a transitive npm package, a root `conflict` floor for Composer, never a lockfile-only bump. Owns the Renovate and Dependabot security settings and when an override comes out. |
 | `maintenance-window` | Workflow | Run the recurring maintenance pass that drains a repo's bot-PR backlog — a read-only inventory script, one `maintenance/YYYY-MM` window of non-majors merged by one review (never squashed), each major on its own PR, stranded security fixes first, shared failures fixed once, and a report on the maintenance task. |
 | `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
 | `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |

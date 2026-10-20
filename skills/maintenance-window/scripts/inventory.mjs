@@ -453,10 +453,10 @@ export function classify(data, { now = new Date() } = {}) {
     );
   }
   if (closeDupes.length) step('close duplicates', closeDupes, 'superseded by the copy on the newest base');
-  if (lockOnly.length) step('check, then close, lockfile-only Dependabot PRs', numbersOf(lockOnly), 'close each one the base already satisfies (npm ls <pkg>)');
+  if (lockOnly.length) step('check, then close, lockfile-only Dependabot PRs', numbersOf(lockOnly), 'close each one; an advisory still open is fixed in the manifest via security-updates');
   const dependabotManifest = prs.filter((p) => p.bucket === 'dependabot:manifest');
   if (dependabotManifest.length) {
-    step('hand Dependabot manifest bumps to Renovate', numbersOf(dependabotManifest), 'close each one Renovate already carries; a security fix it has not raised ships via dependency-updates');
+    step('hand Dependabot manifest bumps to Renovate', numbersOf(dependabotManifest), 'close each one Renovate already carries; a security fix it has not raised ships via security-updates');
   }
   const security = prs.filter((p) => p.bucket === 'renovate:security');
   const alertNote = data.alerts?.runtimeHighOrCritical ? `; ${data.alerts.runtimeHighOrCritical} high/critical runtime alert(s) open on ${def}` : '';

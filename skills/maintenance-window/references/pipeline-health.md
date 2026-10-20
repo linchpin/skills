@@ -92,8 +92,8 @@ restated here.
 
 | id | Severity | Means | Fix | Lives in |
 | --- | --- | --- | --- | --- |
-| `dependabot-security-prs` | wastes | Dependabot's security-update PRs are on beside Renovate. They edit only lockfiles, and duplicate `lockFileMaintenance` | Switch off the PR opener and keep the alerts. The command and the reasoning belong to [`dependency-updates`](../../dependency-updates/SKILL.md) | Repo settings |
-| `open-alerts` | blocks if high or critical runtime, else info | Dependabot alerts open on the default branch | Runtime high or critical: procedure step 4. Development-only: the batch or `lockFileMaintenance` usually clears them. Re-read after the drain | — |
+| `dependabot-security-prs` | wastes | Dependabot's security-update PRs are on beside Renovate. They edit only lockfiles, and duplicate `lockFileMaintenance` | Switch off the PR opener and keep the alerts. The command and the reasoning belong to [`security-updates`](../../security-updates/references/repo-settings.md) | Repo settings |
+| `open-alerts` | blocks if high or critical runtime, else info | Dependabot alerts open on the default branch | Runtime high or critical: procedure step 4. Development-only: fix each in this pass through [`security-updates`](../../security-updates/SKILL.md), which writes the fix into the manifest rather than leaving it to `lockFileMaintenance`. Re-read after the drain | — |
 | `two-bots` | wastes | Dependabot PRs are open on a Renovate repo | Procedure step 6, then `dependabot-security-prs` | — |
 
 ## Hybrid routing — the repo-level config
