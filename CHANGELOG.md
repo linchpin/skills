@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/linchpin/skills/compare/v1.7.0...v1.8.0) (2026-10-20)
+
+
+### Features ✨
+
+* **LINCHPIN-5880:** Let an internal operations console take a top-level admin menu ([#67](https://github.com/linchpin/skills/issues/67)) ([698a801](https://github.com/linchpin/skills/commit/698a801fec39900546b842df8b16f1bd9246bb7a))
+* **NO-TASK:** Add the security-updates skill and declare every security fix in the manifest ([#66](https://github.com/linchpin/skills/issues/66)) ([29bf0e7](https://github.com/linchpin/skills/commit/29bf0e7152d96970600d16f14fc0a97b53601b65))
+
 ## [1.7.0](https://github.com/linchpin/skills/compare/v1.6.0...v1.7.0) (2026-10-13)
 
 
