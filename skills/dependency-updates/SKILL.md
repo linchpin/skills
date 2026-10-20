@@ -1,9 +1,9 @@
 ---
 name: dependency-updates
-description: Update npm and Composer dependencies on a Linchpin project the way Renovate expects — handling the work Renovate can't automerge (majors, breaking changes, conflicted or failing bot PRs, security advisories in transitive dependencies, @wordpress package bumps). Use when a Renovate PR is failing, conflicted, or needs review, when asked to upgrade or bump packages, when a security advisory lands, when npm audit or Dependabot flags a sub-dependency nothing in package.json names, when deciding whether to add an override or resolution, or when a lockfile is out of sync. Not for fixing lint failures — use `quality-gates`. Not for draining the whole backlog — use `maintenance-window`.
-when_to_use: Also when a Renovate PR is red or conflicted, when someone says "bump the packages" or "deps are out of date", when a security advisory lands, or when a lockfile is out of sync with its manifest.
-version: 1.3.1
-allowed-tools: Read Grep Glob Bash(npm audit) Bash(composer audit*) Bash(npm outdated*) Bash(composer outdated*) Bash(git status*) Bash(git diff*)
+description: Update npm and Composer dependencies on a Linchpin project the way Renovate expects — handling the work Renovate can't automerge (majors, breaking changes, conflicted or failing bot PRs, @wordpress package bumps, holds). Use when a Renovate PR is failing, conflicted, or needs review, when asked to upgrade or bump packages, when a major version needs moving, or when a lockfile is out of sync. Not for security advisories, Dependabot alerts, or overrides — use `security-updates`. Not for fixing lint failures — use `quality-gates`. Not for draining the whole backlog — use `maintenance-window`.
+when_to_use: Also when a Renovate PR is red or conflicted, when someone says "bump the packages" or "deps are out of date", or when a lockfile is out of sync with its manifest.
+version: 2.0.0
+allowed-tools: Read Grep Glob Bash(npm outdated*) Bash(composer outdated*) Bash(git status*) Bash(git diff*)
 ---
 
 # Dependency updates
@@ -12,18 +12,19 @@ allowed-tools: Read Grep Glob Bash(npm audit) Bash(composer audit*) Bash(npm out
 patches, minors, and dev dependencies for both npm and Composer, grouped by manager. If you
 run `npm update` by hand you are fighting a bot that will re-open the same change tomorrow.
 
-Your job is the part Renovate deliberately leaves to a human: **majors, breakage, conflicts,
-and urgency.**
+Your job is the part Renovate deliberately leaves to a human: **majors, breakage, and
+conflicts.**
 
 ## When to use
 
 - A Renovate PR is failing CI, conflicted, or waiting on a judgment call.
 - A major version bump is requested or required.
-- A security advisory needs a fix now rather than on the bot's schedule.
 - `@wordpress/*` packages need moving as a set.
 - A lockfile is out of sync with its manifest.
 
-**Not this skill:** lint/test failures unrelated to a version change — [`quality-gates`](../quality-gates/SKILL.md).
+**Not this skill:** a security advisory, a Dependabot alert or PR, or an `overrides` entry —
+[`security-updates`](../security-updates/SKILL.md), which owns the security standard.
+Lint/test failures unrelated to a version change — [`quality-gates`](../quality-gates/SKILL.md).
 Committing and releasing the result — [`commit-and-release`](../commit-and-release/SKILL.md).
 Working through the whole bot-PR backlog, or a `maintenance/YYYY-MM` window — the recurring
 pass is [`maintenance-window`](../maintenance-window/SKILL.md), which hands each single update
@@ -34,7 +35,9 @@ not worth owning — is [`wp-plugin-dependency-audit`](../wp-plugin-dependency-a
 
 Canonical for: deciding whether an update is Renovate's job or yours, the manual upgrade
 procedure, lockfile hygiene, and holding an update Renovate must not raise yet. The recurring
-pass over the whole backlog is [`maintenance-window`](../maintenance-window/SKILL.md)'s.
+pass over the whole backlog is [`maintenance-window`](../maintenance-window/SKILL.md)'s;
+advisories, overrides, `conflict` floors and the Dependabot settings belong to
+[`security-updates`](../security-updates/SKILL.md).
 
 ## Preflight — read the automation first
 
@@ -44,8 +47,8 @@ pass over the whole backlog is [`maintenance-window`](../maintenance-window/SKIL
 | `renovate.json` → `ignoreDeps` | Packages deliberately pinned; upgrading one needs a reason |
 | `renovate.json` → `rangeStrategy` | Whether manifest ranges get bumped (`bump`) or only the lockfile |
 | `renovate.json` → `lockFileMaintenance` | The bot refreshes lockfiles on its own schedule |
-| `package.json` → `overrides` / `resolutions` | Transitive packages already forced past a parent's range — each is a standing liability to re-check |
-| Open Dependabot PRs touching **only** a lockfile | Duplicates of work `lockFileMaintenance` already does — see below before merging any |
+| `package.json` → `overrides`, `composer.json` → `conflict` | Security floors owned by [`security-updates`](../security-updates/SKILL.md). An update that moves a parent may let one come out — check its retirement rule rather than deleting inline |
+| Open Dependabot PRs | Dependabot's PRs are off by standard; any that are open belong to [`security-updates`](../security-updates/SKILL.md) |
 | Open PRs labelled `type: dependencies` | Work already in flight — extend it, don't duplicate it |
 | `composer.json` / `package.json` `engines`, `require.php` | Floors you must not raise without approval |
 | `.nvmrc`, CI matrix | The Node/PHP versions the update must keep working |
@@ -55,8 +58,9 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
 
 ## Procedure
 
-1. **Classify the update.** Routine (bot's job) · major/breaking · security · lockfile
-   repair. → You can say which one and why in a sentence.
+1. **Classify the update.** Routine (bot's job) · major/breaking · lockfile repair. A security
+   fix is not one of them: hand it to [`security-updates`](../security-updates/SKILL.md).
+   → You can say which one and why in a sentence.
 2. **Work on a branch, one concern at a time.** A major upgrade and a security patch don't
    share a PR. For an existing bot PR, check it out and push fixes onto that branch rather
    than opening a rival — but read *Failing Renovate PR* below first, because pushing hands
@@ -78,25 +82,6 @@ Hand-updating creates lockfile churn and conflicts against the bot's next run.
    change is `build(<TASK-KEY>): …` when it changes what ships, `chore(<TASK-KEY>): …` for
    dev tooling. Note breaking changes explicitly in the PR body.
 
-## Transitive advisories — refresh first, override second
-
-Most advisories on a Linchpin repo are **transitive**: the vulnerable package sits three
-levels down and nothing in `package.json` names it. There are only two ways to move one, and
-trying them out of order is what produces the endless bot PRs.
-
-1. **Let the lock file refresh reach it** — this works whenever the parent's range already
-   allows the patched version, which is most cases: Renovate's `lockFileMaintenance` on its
-   schedule, `npm update --package-lock-only` locally. A lockfile-only PR can never do more,
-   which is why Dependabot's security-update PRs are switched off on Renovate repos (the
-   alerts stay on).
-2. **Override the one package that is stuck** — only when a parent's range *pins* the
-   vulnerable version. A scoped `overrides` entry that names the parent, as a range, verified
-   with `npm ci` and `npm audit` in every workspace. Composer's equivalent is a root
-   `conflict` entry.
-
-The recipe, the Dependabot switch, the silent failure modes, and the measurements behind each
-rule: [`references/transitive-advisories.md`](references/transitive-advisories.md).
-
 ## Special cases
 
 - **Failing Renovate PR** — first check it isn't simply stale: a PR behind its base ran its
@@ -113,12 +98,9 @@ rule: [`references/transitive-advisories.md`](references/transitive-advisories.m
 - **Conflicted Renovate PR** — `rebaseWhen: conflicted` means the bot rebases itself. Give
   it a chance before rebasing by hand; if you do rebase, regenerate the lockfile rather than
   resolving it line by line.
-- **Security advisory** — patch the specific package, verify the advisory is actually closed
-  (`npm audit`, `composer audit`), and ship it on its own branch ahead of other work. If the
-  vulnerable package is transitive, follow the section above before touching anything.
-- **A Dependabot PR that only edits a lockfile** — check whether the target version is already
-  in `main` (`npm ls <pkg>`) before doing anything with it. On a Renovate repo it usually is,
-  and the PR should be closed rather than merged.
+- **A Renovate `[SECURITY]` PR, a Dependabot PR, or an advisory** — stop and use
+  [`security-updates`](../security-updates/SKILL.md). It owns how the fix is written, and a
+  routine merge here would land a lockfile-only fix the standard rejects.
 - **PHP or WordPress minimum bumps** — these are product decisions with support
   implications. Confirm with the user; never raise a floor as a side effect.
 - **Holding an update that can't land yet** — add a `renovate.json` `packageRules` entry
@@ -138,13 +120,9 @@ rule: [`references/transitive-advisories.md`](references/transitive-advisories.m
 - **Never** raise `engines`, `require.php`, or the WordPress minimum without approval.
 - **Never** bundle unrelated upgrades into one PR; a rollback then has to take back changes
   nobody wanted to revert.
-- **Never** add a bare top-level `override`/`resolution` for a transitive advisory — it
-  rewrites every copy in the tree. Name the parent that is stuck.
-- **Never** pin an override to an exact version; a range keeps Renovate able to move it.
-- **Never** disable Dependabot *alerts* — only the security-update PR opener. The alerts are
-  the feed Renovate reads.
-- **Never** leave an override in place once the parent ships the fix; delete it and prove it
-  with `npm audit`.
+- **Never** remove or rewrite an `overrides` or `conflict` entry as a side effect of an
+  update. Each one is a security floor; its rules are
+  [`security-updates`](../security-updates/SKILL.md)'s.
 - Don't duplicate an update Renovate would automerge — check open bot PRs first.
 
 ## Done
@@ -155,6 +133,3 @@ rule: [`references/transitive-advisories.md`](references/transitive-advisories.m
 - [ ] Clean install (`npm ci` / `composer install`) followed by green quality gates and build.
 - [ ] Version floors (Node, PHP, WordPress) unchanged, or changed with explicit approval.
 - [ ] One concern per PR, with breaking changes called out in the body.
-- [ ] Any transitive advisory was tried against a lockfile refresh **before** an override.
-- [ ] Every override names the stuck parent, uses a range, and is verified with `npm ci` +
-      `npm audit` in each workspace.

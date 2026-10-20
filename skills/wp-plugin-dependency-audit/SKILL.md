@@ -2,7 +2,7 @@
 name: wp-plugin-dependency-audit
 description: Audit a Linchpin WordPress plugin's npm and Composer dependencies for what it does not need to own — packages nothing uses, tooling @wordpress/scripts or a shared standard already provides, imports that only resolve through hoisting, stale or abandoned packages, and Composer packages that run on every request — then trim the manifests and prove nothing broke. Use when asked "do we need all these dependencies", "audit our packages", or "why is X a dependency", when security alerts keep naming packages nobody uses, before modernizing a plugin, or after a @wordpress/scripts major. Not for upgrading or patching a package — use `dependency-updates`.
 when_to_use: Also when someone asks whether a plugin can lean on what wp-scripts already ships, clsx or classnames, whether to port or drop a package nobody maintains, or whether to move unit tests from Jest to Vitest.
-version: 1.0.0
+version: 1.0.1
 allowed-tools: Read Grep Glob Bash(node *scripts/audit-deps.mjs*) Bash(npm ls*) Bash(npm view*) Bash(composer why*) Bash(composer depends*) Bash(git grep*) Bash(git status*) Bash(git diff*)
 ---
 
@@ -33,7 +33,8 @@ replacement catalogue ([`references/replacements.md`](references/replacements.md
 Jest → Vitest migration recipe ([`references/jest-to-vitest.md`](references/jest-to-vitest.md)),
 and proving a removal safe.
 
-Defers: version bumps, advisories, and `overrides` → [`dependency-updates`](../dependency-updates/SKILL.md).
+Defers: version bumps → [`dependency-updates`](../dependency-updates/SKILL.md); advisories and
+`overrides` → [`security-updates`](../security-updates/SKILL.md).
 Running the gates → [`quality-gates`](../quality-gates/SKILL.md). The commit and PR →
 [`commit-and-release`](../commit-and-release/SKILL.md). The task → [`task-tracking`](../task-tracking/SKILL.md).
 

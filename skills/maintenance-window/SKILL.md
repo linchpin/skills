@@ -1,8 +1,8 @@
 ---
 name: maintenance-window
-description: Run a Linchpin repo's recurring dependency maintenance pass end to end — inventory the Renovate and Dependabot backlog, collapse stale maintenance/YYYY-MM windows, fix shared failures once, drain non-majors into one window merged by a single review, send each major to its own PR, verify, merge, and report. Use when doing this month's site maintenance, when dependency PRs pile up or won't merge, when a maintenance branch is open, stale, or ready to merge, or when asked to make dependency updates easier to merge. Not for one specific update, major, or advisory — use `dependency-updates`.
+description: Run a Linchpin repo's recurring dependency maintenance pass end to end — inventory the Renovate and Dependabot backlog, collapse stale maintenance/YYYY-MM windows, fix shared failures once, drain non-majors into one window merged by a single review, send each major to its own PR, verify, merge, and report. Use when doing this month's site maintenance, when dependency PRs pile up or won't merge, when a maintenance branch is open, stale, or ready to merge, or when asked to make dependency updates easier to merge. Not for one specific update or major — use `dependency-updates`; not for an advisory — use `security-updates`.
 when_to_use: Also when someone says "clear the Renovate backlog", "there are 30 dependency PRs", "why won't the bot PRs merge", "merge the maintenance PR", "close out the maintenance window", or "run the monthly maintenance" — and at the start of a recurring task in a client's Site Maintenance folder.
-version: 0.1.0
+version: 0.2.0
 allowed-tools: Read Grep Glob Bash(node *scripts/inventory.mjs*) Bash(npm audit) Bash(composer audit*) Bash(gh pr list*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh run list*) Bash(gh run view*) Bash(git ls-remote*) Bash(git log*) Bash(git status*) Bash(git diff*)
 ---
 
@@ -21,9 +21,10 @@ The pipeline problems that caused the pile-up get reported, so the backlog doesn
 - A `maintenance/YYYY-MM` branch exists, has gone stale, or is ready to merge.
 - Someone asks why dependency PRs won't merge, or how to make them easier to merge.
 
-**Not this skill:** a single update, i.e. one major, one failing Renovate PR, an advisory, a
-lockfile repair, or a hold. Use [`dependency-updates`](../dependency-updates/SKILL.md); this
-pass hands each of those there. Lint or test failures that aren't caused by a version change
+**Not this skill:** a single update, i.e. one major, one failing Renovate PR, a lockfile
+repair, or a hold. Use [`dependency-updates`](../dependency-updates/SKILL.md); this pass hands
+each of those there. A single advisory goes to
+[`security-updates`](../security-updates/SKILL.md) the same way. Lint or test failures that aren't caused by a version change
 belong to [`quality-gates`](../quality-gates/SKILL.md). Which ClickUp folder the maintenance
 task lives in is [`engagement-types`](../engagement-types/SKILL.md).
 
@@ -38,8 +39,10 @@ Canonical for:
 - the inventory script, `scripts/inventory.mjs`
 
 Defers:
-- individual updates, overrides, holds, lockfile repair, and switching off Dependabot's
-  security PRs → [`dependency-updates`](../dependency-updates/SKILL.md)
+- individual updates, holds, and lockfile repair →
+  [`dependency-updates`](../dependency-updates/SKILL.md)
+- advisories, overrides, and the Dependabot and Renovate security settings →
+  [`security-updates`](../security-updates/SKILL.md)
 - running the gates → [`quality-gates`](../quality-gates/SKILL.md)
 - PR titles and commit grammar → [`commit-and-release`](../commit-and-release/SKILL.md)
 - the task, the branch, and the PR↔task link → [`task-tracking`](../task-tracking/SKILL.md)
@@ -52,7 +55,7 @@ Defers:
 | --- | --- | --- | --- |
 | Non-major: minor, patch, pin, digest, lock-file maintenance | The one open `maintenance/YYYY-MM` window | Automerged into the window; **one** human review of the window PR | One review per month instead of one per PR, and the default branch's strict checks run once |
 | Major | Its own PR to the default branch | A human, through `dependency-updates` | A breaking major can't strand the batch |
-| Security fix | The default branch, ahead of the batch | A human, through `dependency-updates` | A fix merged into a window isn't on the site until the window merges |
+| Security fix | The default branch, ahead of the batch | A human, through `security-updates` | A fix merged into a window isn't on the site until the window merges |
 
 Two failures behind the model, both measured in September 2026:
 - **A major stranded a window.** On linchpin.com, `maintenance/2026-07` carried three majors
@@ -122,7 +125,8 @@ enough.
 4. **Land stranded security fixes first.** A window holding `[SECURITY]` commits that aren't
    on the default branch means the site is unpatched. So do high or critical alerts in runtime
    dependencies, which the inventory reads from the default branch. Ship those fixes to the
-   default branch now, through `dependency-updates`' security case, before closing anything.
+   default branch now, through [`security-updates`](../security-updates/SKILL.md), before
+   closing anything.
    → On a clean checkout of the default branch, `npm audit` / `composer audit` no longer lists
    those advisories. Run them locally: many repos audit only on PRs.
 5. **Collapse to one window.** For each stale window, list what it holds that the default
@@ -140,9 +144,10 @@ enough.
 
    → Exactly one `maintenance/*` branch is left. Renovate re-raises the open topics against it
    on its next run.
-6. **Close the moot.** That means cross-window duplicates, Dependabot lockfile-only PRs the
-   default branch already satisfies (check them the way `dependency-updates` does), and
-   Dependabot manifest bumps that Renovate already carries. Every close gets a comment naming
+6. **Close the moot.** That means cross-window duplicates, every Dependabot lockfile-only PR
+   (the standard never merges one: an advisory still open is fixed through
+   [`security-updates`](../security-updates/SKILL.md)), and Dependabot manifest bumps that
+   Renovate already carries. Every close gets a comment naming
    what supersedes it. → A re-run of the inventory shows no duplicates and no
    `dependabot:lockfile-only` PRs.
 7. **Rebase before diagnosing.** Checks on a PR that's behind its base ran against old code.
