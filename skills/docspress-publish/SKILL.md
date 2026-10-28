@@ -1,7 +1,7 @@
 ---
 name: docspress-publish
 description: Publish a repo's Markdown docs to docs.linchpin.com with DocsPress — the shared page tree, the pinned linchpin/docspress fork that scopes deletion per repo, the WP_ACCESS_TOKEN secret, and the dry-run to draft to publish promotion ladder. Use when a project needs documentation published, when asked to "set up docspress" or "get these docs on the docs site", when a sync-docs workflow fails or deletes another repo's pages, or when docs exist in the repo but nowhere else. Not for writing the docs themselves — that's `generate-docs-from-source`, vendored from the same fork.
-version: 1.2.0
+version: 1.2.1
 allowed-tools: Read Grep Glob Bash(git remote get-url*) Bash(gh secret list*)
 ---
 
@@ -254,9 +254,10 @@ names the valid values for one attribute — rather than the skill table or an e
   sibling project's pages.
 - **Never SHA-pin `linchpin/docspress`.** It is our own fork, in our own organisation,
   behind branch protection, so a SHA pin defends against nothing while guaranteeing the
-  workflow misses its fixes. Use `@v1` — it moves forward as fixes land, and a breaking
-  change becomes `v2`. `actions/checkout` **is** third party and stays SHA-pinned, because
-  this job is exposed to a WordPress token.
+  workflow misses its fixes. Use `@v2` — it moves forward as fixes land. The Action, theme,
+  and blocks plugin share one version line, so a breaking change in any of them starts
+  `v3`, and `v1` stopped at 1.3.1. `actions/checkout` **is** third party and stays
+  SHA-pinned, because this job is exposed to a WordPress token.
 - **Never add, mint, or move `WP_ACCESS_TOKEN` yourself** — report its absence and let the
   repo owner provision it.
 - **Never enable `mode: reconcile`** without explicit sign-off and the loop guard; merging
@@ -271,7 +272,7 @@ names the valid values for one attribute — rather than the skill table or an e
 - [ ] Docs live under `docs/<repo-slug>/`; nothing publishable sits at the root of `docs/`.
 - [ ] Every page has a frontmatter `title:` and no H1 in the body.
 - [ ] `.github/workflows/sync-docs.yml` exists, `actions/checkout` SHA-pinned and
-      `linchpin/docspress@v1`, inputs validated against that revision's `action.yml`.
+      `linchpin/docspress@v2`, inputs validated against that revision's `action.yml`.
 - [ ] `managed-path` is `<root-slug>/<repo-slug>` and matches the directory on disk.
 - [ ] Local verification passes: blocks parse, links resolve, converter round-trips clean.
 - [ ] Workflow is still `workflow_dispatch`-only with `dry-run: true` and `status: draft`.

@@ -40,7 +40,7 @@ Canonical for: the docs.linchpin.com target configuration, the pinned fork and w
 
 ## Guardrails
 
-- Never SHA-pin `linchpin/docspress`. It is our own fork, behind branch protection — use `@v1`, which moves forward as fixes land.
+- Never SHA-pin `linchpin/docspress`. It is our own fork, behind branch protection — use `@v2`, which moves forward as fixes land. `v1` stopped at 1.3.1.
 - Never add, mint, or move `WP_ACCESS_TOKEN` yourself. Report its absence and let the repo owner provision it.
 
 <!-- wp:docspress/callout {"tone":"warning","title":"First run can trash another project's pages","content":"<p>Never enable a push trigger, turn off dry-run, or set status to publish in the same change that adds the workflow. Never widen managed-path to root-slug — that hands this repo ownership of every sibling project's pages. If a dry run reports deletions you cannot account for, stop and report rather than writing.</p>","collapsible":false} /-->
@@ -52,7 +52,7 @@ Canonical for: the docs.linchpin.com target configuration, the pinned fork and w
 - [ ] `.docspress/brief.md` exists, outside `docs/`, and every acceptance check in it was reported as met.
 - [ ] Docs live under `docs/<repo-slug>/`; nothing publishable sits at the root of `docs/`.
 - [ ] Every page has a frontmatter `title:` and no H1 in the body.
-- [ ] `.github/workflows/sync-docs.yml` exists, `actions/checkout` SHA-pinned and `linchpin/docspress@v1`, inputs validated against that revision's `action.yml`.
+- [ ] `.github/workflows/sync-docs.yml` exists, `actions/checkout` SHA-pinned and `linchpin/docspress@v2`, inputs validated against that revision's `action.yml`.
 - [ ] `managed-path` is `<root-slug>/<repo-slug>` and matches the directory on disk.
 - [ ] Local verification passes: blocks parse, links resolve, converter round-trips clean.
 - [ ] Workflow is still `workflow_dispatch`-only with `dry-run: true` and `status: draft`.
