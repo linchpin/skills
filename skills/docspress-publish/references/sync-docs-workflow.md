@@ -27,7 +27,7 @@ name: Sync docs to WordPress
 # this job is exposed to a WordPress token. linchpin/docspress is not pinned —
 # it is our own fork, in our own organisation, behind branch protection, so a
 # SHA pin defends against nothing here while guaranteeing we miss its fixes.
-# See its README for the v1 contract.
+# See its README for how the major tag moves.
 
 on:
   workflow_dispatch:
@@ -60,8 +60,8 @@ jobs:
       # actions/checkout v7
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      # v1 moves forward as fixes land; a breaking change becomes v2.
-      - uses: linchpin/docspress@v1
+      # v2 moves forward as fixes land; a breaking change becomes v3.
+      - uses: linchpin/docspress@v2
         with:
           mode: publish
 
@@ -152,11 +152,11 @@ gh api repos/actions/checkout/git/ref/tags/v7 --jq '.object.sha'
 ```
 
 `linchpin/docspress` is deliberately **not** SHA-pinned — see the header comment in the
-template. Confirm `@v1` still carries the inputs the workflow passes:
+template. Confirm `@v2` still carries the inputs the workflow passes:
 
 ```bash
 gh api repos/linchpin/docspress/contents/action.yml -H 'Accept: application/vnd.github.raw' \
-  --method GET -f ref=v1 | grep -E '^  [a-z0-9-]+:'
+  --method GET -f ref=v2 | grep -E '^  [a-z0-9-]+:'
 ```
 
 Validate every `with:` key against that list before the first run — an unknown input is
