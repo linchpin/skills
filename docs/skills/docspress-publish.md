@@ -21,7 +21,7 @@ DocsPress does not write documentation. It is a sync action: it reads Markdown o
 
 ## How it works
 
-<!-- wp:docspress/flow {"start":1,"steps":[{"title":"Confirm the generator is present","content":"<p>Check that generate-docs-from-source, vendored from the linchpin/docspress fork, is installed, and fetch it if it's missing. The fork matters because it reads the per-repo brief that upstream's generator ignores.</p>"},{"title":"Shape the tree","content":"<p>Put the repo's docs under a subdirectory named for the repo, since anything else under docs/ publishes too.</p>"},{"title":"Generate the content","content":"<p>Hand off to generate-docs-from-source, after writing .docspress/brief.md so it knows this repo's shape, required pages, and acceptance checks.</p>"},{"title":"Add the workflow","content":"<p>Copy the sync-docs.yml template in and set managed-path to scope deletion to this repo alone, not the whole shared root.</p>"},{"title":"The token","content":"<p>WP_ACCESS_TOKEN is an organisation secret, already available. There is normally nothing to provision, and its absence from a repo secret listing proves nothing.</p>"},{"title":"Verify locally","content":"<p>Before any run, check that blocks parse as JSON, links and anchors resolve, and the pinned converter round-trips the tree cleanly.</p>"},{"title":"Promote one rung at a time","content":"<p>Dry run, then real writes as drafts, then publish, then, only later, the push trigger — reviewing the Actions summary before each step.</p>"}]} /-->
+<!-- wp:docspress/flow {"start":1,"steps":[{"title":"Confirm the generator is present","content":"<p>Check that generate-docs-from-source, vendored from the linchpin/docspress fork, is installed, and fetch it if it's missing. The fork matters because it reads the per-repo brief that upstream's generator ignores.</p>"},{"title":"Shape the tree","content":"<p>Put the repo's docs under a subdirectory named for the repo, since anything else under docs/ publishes too.</p>"},{"title":"Generate the content","content":"<p>Hand off to generate-docs-from-source, after writing .docspress/brief.md so it knows this repo's shape, required pages, and acceptance checks.</p>"},{"title":"Add the workflow","content":"<p>Copy the sync-docs.yml template in and set managed-path to scope deletion to this repo alone, not the whole shared root.</p>"},{"title":"The token","content":"<p>WP_ACCESS_TOKEN can be a repository or an organisation secret. There is normally nothing to provision, and its absence from a repo secret listing proves nothing.</p>"},{"title":"Verify locally","content":"<p>Before any run, check that blocks parse as JSON, links and anchors resolve, and the pinned converter round-trips the tree cleanly.</p>"},{"title":"Promote one rung at a time","content":"<p>Dry run, then real writes as drafts, then publish, then, only later, the push trigger — reviewing the Actions summary before each step.</p>"}]} /-->
 
 | Rung | Change | Confirms |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ DocsPress does not write documentation. It is a sync action: it reads Markdown o
 
 ## What it checks first
 
-Reads the git remote to get the repo slug, `docs/` to see what already exists, whether `.github/workflows/sync-docs.yml` is already wired, and `.docspress/brief.md` for what this repo's docs must contain. A `gh secret list --repo` only shows repository-level overrides — it says nothing about `WP_ACCESS_TOKEN`, which is an organisation secret and normally already there. It doesn't call `project-context`; it derives repo identity itself from the git remote.
+Reads the git remote to get the repo slug, `docs/` to see what already exists, whether `.github/workflows/sync-docs.yml` is already wired, and `.docspress/brief.md` for what this repo's docs must contain. A `gh secret list --repo` only shows repository secrets, so a `WP_ACCESS_TOKEN` set on the organisation never appears there. The first dry run is the check. It doesn't call `project-context`; it derives repo identity itself from the git remote.
 
 ## What it owns
 
@@ -41,7 +41,7 @@ Canonical for: the docs.linchpin.com target configuration, the pinned fork and w
 ## Guardrails
 
 - Never SHA-pin `linchpin/docspress`. It is our own fork, behind branch protection — use `@v2`, which moves forward as fixes land. `v1` stopped at 1.3.1.
-- Never add, mint, or move `WP_ACCESS_TOKEN` yourself. Report its absence and let the repo owner provision it.
+- Never add, mint, or move `WP_ACCESS_TOKEN` yourself. When a run fails on it, report the failure and let the repo owner set it as a repository or organisation secret.
 
 <!-- wp:docspress/callout {"tone":"warning","title":"First run can trash another project's pages","content":"<p>Never enable a push trigger, turn off dry-run, or set status to publish in the same change that adds the workflow. Never widen managed-path to root-slug — that hands this repo ownership of every sibling project's pages. If a dry run reports deletions you cannot account for, stop and report rather than writing.</p>","collapsible":false} /-->
 
