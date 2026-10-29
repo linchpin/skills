@@ -1,7 +1,7 @@
 ---
 name: docspress-publish
 description: Publish a repo's Markdown docs to docs.linchpin.com with DocsPress — the shared page tree, the pinned linchpin/docspress fork that scopes deletion per repo, the WP_ACCESS_TOKEN secret, and the dry-run to draft to publish promotion ladder. Use when a project needs documentation published, when asked to "set up docspress" or "get these docs on the docs site", when a sync-docs workflow fails or deletes another repo's pages, or when docs exist in the repo but nowhere else. Not for writing the docs themselves — that's `generate-docs-from-source`, vendored from the same fork.
-version: 1.2.1
+version: 1.2.2
 allowed-tools: Read Grep Glob Bash(git remote get-url*) Bash(gh secret list*)
 ---
 
@@ -51,7 +51,7 @@ Read before acting. Never assume a repo's shape.
 | `git remote get-url origin` | The repo slug — this becomes the page-tree segment | Ask; do not guess from the directory name |
 | `docs/` contents | Whether content exists, and whether anything there should *not* be published | Nothing to sync yet — generate first |
 | `.github/workflows/sync-docs.yml` | Already wired; you are debugging, not installing | Install it from `references/sync-docs-workflow.md` |
-| `gh secret list --repo <owner>/<repo>` | Only whether a **repo-level** override exists | Nothing — `WP_ACCESS_TOKEN` is an org secret and will not appear here. See step 5 |
+| `gh secret list --repo <owner>/<repo>` | Only whether the token is set on **this repo** | Not a blocker — an organisation secret never appears here. See step 5 |
 | `.docspress/brief.md` | What this repo's docs must contain and the checks they must pass | Write one before generating — step 3 |
 | `generate-docs-from-source` in the skill list | The generator is installed (it ships vendored) | Fetch it (step 1) before writing any page |
 
@@ -178,24 +178,30 @@ actually runs, not just declared in `action.yml`.
 
 ## Step 5 — The token
 
-`WP_ACCESS_TOKEN` is an **organisation secret**, available to every repo in `linchpin`.
-There is normally nothing to provision, and nothing to check.
+The workflow reads `WP_ACCESS_TOKEN`, which can be set as a **repository secret** or as an
+**organisation secret** shared by every repo that publishes to the site. A repository secret
+takes precedence over an organisation secret with the same name. There is normally nothing
+to provision.
 
 **Do not report it as a blocker on a `gh secret list` miss.** That command lists only
-*repository* secrets, so an org secret never appears in it. Reading absence there as "the
-token is missing" produces a confident false blocker on every repo:
+*repository* secrets, so an organisation secret never appears in it. Reading absence there
+as "the token is missing" produces a confident false blocker on every repo that inherits it:
 
 ```bash
-# Lists repo-level secrets ONLY — an empty result proves nothing about the org secret.
+# Lists repository secrets ONLY — an empty result proves nothing about an organisation secret.
 gh secret list --repo <owner>/<repo>
 ```
 
-Enumerating org secrets needs the `admin:org` scope, which an agent normally will not have,
-so treat "cannot verify" as the expected state rather than a problem.
+Listing organisation secrets needs the `admin:org` scope, which an agent normally will not
+have, so treat "cannot verify" as the expected state rather than a problem.
 
-The real signal is the first dry run: a token that is missing or unauthorised fails there
-with a 401 or 403 from WordPress, and that is a workflow-run result, not something to
-predict beforehand.
+The real signal is the first dry run — a workflow-run result, not something to predict
+beforehand:
+
+| The run fails with | Meaning |
+| --- | --- |
+| `Input required and not supplied: wordpress-access-token` | No secret by that name reaches this repo, at either level |
+| A 401 or 403 from WordPress | The token arrives but WordPress rejects it — revoked, or issued without the `global` scope |
 
 → **Checkable:** nothing to do unless a run has actually failed on auth.
 
@@ -258,8 +264,9 @@ names the valid values for one attribute — rather than the skill table or an e
   and blocks plugin share one version line, so a breaking change in any of them starts
   `v3`, and `v1` stopped at 1.3.1. `actions/checkout` **is** third party and stays
   SHA-pinned, because this job is exposed to a WordPress token.
-- **Never add, mint, or move `WP_ACCESS_TOKEN` yourself** — report its absence and let the
-  repo owner provision it.
+- **Never add, mint, or move `WP_ACCESS_TOKEN` yourself.** When a run fails on it, report
+  the failure and let the repo owner set it, as a repository or organisation secret. Its
+  absence from `gh secret list --repo` is not a failure.
 - **Never enable `mode: reconcile`** without explicit sign-off and the loop guard; merging
   the action's own sync branch produces a push that syncs back forever.
 - If a dry run reports deletions you cannot account for, **stop and report** rather than
