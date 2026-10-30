@@ -13,7 +13,7 @@ An audit is only worth what its evidence is worth. The job is to measure what ca
 
 ## Where it stops
 
-> **Not this skill:** lint, PHPCS, PHPStan, or tests — [`quality-gates`](quality-gates.md). Performance *techniques* (caching, asset strategy) — the upstream `wp-performance` skill. Operating the local site — [`wp-studio-cli`](wp-studio-cli.md). Operating a live server — [`wp-pressable`](wp-pressable.md). Auditing a plugin **repo** against the house standard — files, headers, workflows — [`wp-plugin-standards`](wp-plugin-standards.md); this skill audits a running **site**.
+> **Not this skill:** lint, PHPCS, PHPStan, or tests — [`quality-gates`](quality-gates.md). Performance *techniques* (caching, asset strategy) — the upstream `wp-performance` skill. Operating the local site — [`wp-studio-cli`](wp-studio-cli.md). Operating a live server — [`wp-pressable`](wp-pressable.md). Auditing a plugin **repo** against the house standard — files, headers, workflows — [`wp-plugin-standards`](wp-plugin-standards.md); this skill audits a running **site**. The client audit report (a baseline covering every area from hosting to broken links, positives first, with an action plan), and the later comparison against that baseline: [`wp-performance-audit`](wp-performance-audit.md), which applies this skill's thresholds and evidence rules. A quick before/after on one fix stays here.
 
 ## How it works
 
@@ -25,6 +25,10 @@ An audit is only worth what its evidence is worth. The job is to measure what ca
 | FCP | < 1800 ms | 1800–3000 ms | > 3000 ms |
 | LCP | < 2500 ms | 2500–4000 ms | > 4000 ms |
 | CLS | < 0.1 | 0.1–0.25 | > 0.25 |
+| INP | ≤ 200 ms | 200–500 ms | > 500 ms |
+| TBT | < 200 ms | 200–600 ms | > 600 ms |
+
+INP exists only in field data (real users). TBT is its lab stand-in, and its bands are Lighthouse's scoring thresholds rather than a Core Web Vital.
 
 ## What it checks first
 
