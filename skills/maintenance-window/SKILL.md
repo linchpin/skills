@@ -2,7 +2,7 @@
 name: maintenance-window
 description: Run a Linchpin repo's recurring dependency maintenance pass end to end — inventory the Renovate and Dependabot backlog, collapse stale maintenance/YYYY-MM windows, fix shared failures once, drain non-majors into one window merged by a single review, send each major to its own PR, verify, merge, and report. Use when doing this month's site maintenance, when dependency PRs pile up or won't merge, when a maintenance branch is open, stale, or ready to merge, or when asked to make dependency updates easier to merge. Not for one specific update or major — use `dependency-updates`; not for an advisory — use `security-updates`.
 when_to_use: Also when someone says "clear the Renovate backlog", "there are 30 dependency PRs", "why won't the bot PRs merge", "merge the maintenance PR", "close out the maintenance window", or "run the monthly maintenance" — and at the start of a recurring task in a client's Site Maintenance folder.
-version: 0.2.0
+version: 0.2.1
 allowed-tools: Read Grep Glob Bash(node *scripts/inventory.mjs*) Bash(npm audit) Bash(composer audit*) Bash(gh pr list*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh run list*) Bash(gh run view*) Bash(git ls-remote*) Bash(git log*) Bash(git status*) Bash(git diff*)
 ---
 
@@ -27,6 +27,8 @@ each of those there. A single advisory goes to
 [`security-updates`](../security-updates/SKILL.md) the same way. Lint or test failures that aren't caused by a version change
 belong to [`quality-gates`](../quality-gates/SKILL.md). Which ClickUp folder the maintenance
 task lives in is [`engagement-types`](../engagement-types/SKILL.md).
+A site on Sisyphus's nightly rolling maintenance has a permanent `maintenance` branch and no
+monthly window; putting a site there is [`maintenance-onboarding`](../maintenance-onboarding/SKILL.md).
 
 ## Owns
 
