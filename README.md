@@ -88,12 +88,13 @@ The fastest way to understand the library is to run one loop end to end:
 | Commit and open the PR properly | "commit this and open a PR" | `commit-and-release` + `task-tracking` |
 | Handle a client support ticket | "the client says their contact form isn't sending" | `support-triage` |
 | Do a site's monthly dependency maintenance | "run this month's maintenance — the bot PRs won't merge" | `maintenance-window` |
+| Put a site on nightly rolling maintenance | "get this client onto Sisyphus" | `maintenance-onboarding` |
 | Add guardrails before touching prod | "careful mode — I'm on production" | `safety-hooks` |
 | Get the newest version of these skills | "update the skills" | `skill-updates` |
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 | Give a plugin an admin screen that matches the others | "add a settings page to this plugin" | `wp-plugin-admin-ui` |
 
-The full list is in [Available skills](#available-skills) — 35 of them, each with a
+The full list is in [Available skills](#available-skills) — 36 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -385,6 +386,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 | `dependency-updates` | Workflow | Handle the dependency work Renovate can't automerge — majors, breaking changes, failing or conflicted bot PRs, holds, `@wordpress/*` package sets. |
 | `security-updates` | Workflow | Fix security advisories the house way — Dependabot alerts on as the signal, Dependabot's PRs off, and every fix declared in the manifest: a scoped `overrides` entry naming the parent for a transitive npm package, a root `conflict` floor for Composer, never a lockfile-only bump. Owns the Renovate and Dependabot security settings and when an override comes out. |
 | `maintenance-window` | Workflow | Run the recurring maintenance pass that drains a repo's bot-PR backlog — a read-only inventory script, one `maintenance/YYYY-MM` window of non-majors merged by one review (never squashed), each major on its own PR, stranded security fixes first, shared failures fixed once, and a report on the maintenance task. |
+| `maintenance-onboarding` | Workflow | Put a site on Sisyphus's nightly rolling maintenance without the setup failures that stop its first nights — a read-only check of all 17 onboarding steps (Pressable dev site and its `WP_ENVIRONMENT_TYPE`, DNS and Access, GitHub environments and secrets, enrollment, Ghost Inspector) posted to the site's task, the choices a person settles, then `convert-repo` and `onboard-site` from linchpin/actions in phase order. |
 | `skill-updates` | Workflow | Bring this library's installed skills current — find every install across agents and scopes with `--scan`, apply the command each one recorded, verify, and summarize what changed from the shipped changelog. |
 | `engineering-discipline` | Workflow | Keep a change honest and small — surface assumptions instead of guessing, write the minimum that solves it, touch only what the request implies, and define what "working" means before claiming it. Adapted from Karpathy's LLM-coding-mistakes guidelines. |
 | `commit-and-release` | Workflow | Write commit messages and PR titles that satisfy the repo's own commitlint rules, and stay out of release-please's way (it owns versions and `CHANGELOG.md`). Branch naming lives in `task-tracking`. |
