@@ -1,7 +1,8 @@
 ---
 name: wp-audit
-description: Audit a WordPress site for performance, accessibility, and visible frontend quality, then report prioritized fixes and re-measure after changes. Use when asked to review, optimize, QA, or "check why the site is slow", when Core Web Vitals or Lighthouse scores come up, when a client asks about accessibility or WCAG, or before handing a build back to a client. Measures locally via the Studio MCP; production numbers require the live site. Not for fixing lint or tests — use `quality-gates`.
-version: 1.3.0
+description: Audit a WordPress site for performance, accessibility, and visible frontend quality, then report prioritized fixes and re-measure after changes. Use when asked to review, optimize, QA, or "check why the site is slow", when Core Web Vitals or Lighthouse scores come up, when a client asks about accessibility or WCAG, or before handing a build back to a client. Measures locally via the Studio MCP, and production with its own footprint and Lighthouse scripts after reading the cache stack. Not for fixing lint or tests — use `quality-gates`.
+when_to_use: Also when someone says "the PageSpeed score is low", "TTFB is slow", "is this page cached", "Cloudflare isn't caching", "what's our page weight", or wants a baseline before a launch or a domain move.
+version: 1.4.0
 allowed-tools: Read Grep Glob
 ---
 
@@ -31,15 +32,16 @@ house standard — files, headers, workflows —
 ## Owns
 
 Canonical for: audit scope selection, the measurement loop, the thresholds below, evidence
-honesty, and the before/after comparison. Defers the fixes themselves to the skill that owns
-the code being changed.
+honesty, the before/after comparison, reading a production cache stack, and the
+`scripts/footprint.mjs` and `scripts/lighthouse.mjs` measurements. Defers the fixes themselves
+to the skill that owns the code being changed.
 
 ## Preflight — what are you actually measuring?
 
 | Target | How | Caveat |
 | --- | --- | --- |
 | Local Studio site | [`wp-studio-cli`](../wp-studio-cli/SKILL.md) → `need_for_speed`, `take_screenshot`, `inspect_design` | **Synthetic.** PHP-WASM + SQLite, no CDN, no production cache — good for diagnosis and before/after, not a production claim |
-| Production / staging | A real browser via [`browser-automation`](../browser-automation/SKILL.md) against the live URL; server state via [`wp-pressable`](../wp-pressable/SKILL.md) read-only commands | The only numbers you can quote to a client as real |
+| Production / staging | Read the cache stack first, then `scripts/footprint.mjs` and `scripts/lighthouse.mjs` ([references/production-performance.md](references/production-performance.md)); a real browser via [`browser-automation`](../browser-automation/SKILL.md) for traces and anything behind a sign-in; server state via [`wp-pressable`](../wp-pressable/SKILL.md) read-only commands | The only numbers you can quote to a client as real. Which cache layer answered decides what every number means |
 | Legacy local (wp-env / LocalWP) | [`browser-automation`](../browser-automation/SKILL.md) against the local URL | Studio MCP tools won't apply |
 
 Resolve two things before measuring: **which environment**, and **which URL path** (default
@@ -49,17 +51,23 @@ Resolve two things before measuring: **which environment**, and **which URL path
 
 1. **Pick the scope** — performance, accessibility, visual QA, or a named combination. Say
    which you chose when the request was ambiguous. → The user knows what's being measured.
-2. **Measure** with the tools the environment offers. Take a screenshot for anything visual
-   so findings are anchored to evidence. → Raw numbers and images captured, not recalled.
+2. **Measure** with the tools the environment offers. On production, record which cache layer
+   answered each page, then run the two scripts so the numbers are comparable later (the
+   DevTools MCP's `lighthouse_audit` omits the Performance category). Take a screenshot for
+   anything visual so findings are anchored to evidence. → Raw numbers, cache state and images
+   captured, not recalled; `--json` and report files saved for the after run.
 3. **Interpret against the thresholds** below rather than by feel. → Every finding is
    Good / Needs improvement / Poor, with the measured value shown.
 4. **Diagnose in WordPress terms.** A number is not a finding; "LCP 4.1s because the hero
    image is an unresized 2.4 MB PNG" is. Inspect the theme, plugins, and block markup to get
-   from symptom to cause. → Each finding names a probable cause and where it lives.
+   from symptom to cause; the production causes and the evidence for each are in
+   [references/production-performance.md](references/production-performance.md). → Each
+   finding names a probable cause and where it lives.
 5. **Prioritize ruthlessly.** A short list ordered by impact-per-effort beats an exhaustive
    one. → Top findings first; the long tail summarized, not enumerated.
 6. **Re-measure after fixes**, same environment and path, and report what moved, what didn't,
-   and any tradeoff taken. → Before/after pairs for every metric you claimed to improve.
+   and any tradeoff taken; `footprint.mjs --compare before.json after.json` prints the deltas.
+   → Before/after pairs for every metric you claimed to improve.
 
 ## Thresholds
 
@@ -107,6 +115,9 @@ and proposed pairing so the decision is reviewable.
   quietly edits things can't be trusted as a baseline.
 - **Never run mutating commands against production** to gather evidence — read-only
   diagnostics via [`wp-pressable`](../wp-pressable/SKILL.md), and confirm before anything else.
+- **Never change CDN or host configuration as part of an audit** — a Cloudflare rule or
+  setting, Pressable's edge cache, `wp-config.php` constants. Each is a production change:
+  propose it with the exact rule or value and apply it only once the user approves.
 - **Don't over-optimize one dimension silently.** When performance, accessibility, and design
   conflict, surface the tradeoff and let the user choose.
 - Don't pad the report. Ten low-impact nitpicks buried around two real problems is a worse
@@ -115,6 +126,7 @@ and proposed pairing so the decision is reviewable.
 ## Done
 
 - [ ] Environment and URL path stated, and the environment's limits noted.
+- [ ] On production, the cache layer that answered each page is recorded.
 - [ ] Scope stated, and it matches what was asked.
 - [ ] Every metric reported with its measured value and threshold band.
 - [ ] Every finding has a probable cause and a location, not just a symptom.
