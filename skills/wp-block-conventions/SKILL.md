@@ -1,7 +1,7 @@
 ---
 name: wp-block-conventions
 description: Build and edit custom Gutenberg blocks the way Linchpin structures them — apiVersion 3 under the `linchpin/` namespace, dynamic `render.php` plus Interactivity API `view.js`, parent/child blocks wired through block context, and the shared wp-scripts build with `--blocks-manifest --webpack-copy-php --experimental-modules`. Use when creating a custom block, editing an existing one, deciding whether a block belongs in the shared linchpin-blocks plugin or a project's functionality plugin, or reviewing block code. Not for authoring page content from blocks — use `wordpress-blocks`.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob Bash(npm run lint:js) Bash(npm run lint:css) Bash(npm run build)
 ---
 
@@ -85,6 +85,32 @@ the field-by-field detail, the parent/child context pattern, and `render.php` co
   custom attributes — you get the core UI and theme.json integration for free.
 - **PHP logic belongs in a Model/Helper class**, not inline in `render.php`. Keep render
   files to composing wrapper attributes and echoing markup.
+
+### Front-end assets
+
+A block's view module is deferred by nature; what slows a page is the classic vendor scripts
+around it (GSAP, ScrollTrigger, SVG.js, Swiper, lottie) and editor packages that leak onto the
+front end.
+
+- **Register vendor libraries on `init` with `[ 'in_footer' => true, 'strategy' => 'defer' ]`,
+  and enqueue them from a `render_block` filter for the blocks that use them.** A global enqueue
+  loads them on every page; a `has_block()` or `parse_blocks()` check on the queried post misses
+  a block in a template or part, and parses the post on every request.
+- **Never attach an `after` inline script to a handle you want deferred.** WordPress makes any
+  handle with one blocking. GSAP, ScrollTrigger and SVG.js set their own `window` globals, so a
+  `window.gsap = gsap;` line does nothing except stop the defer.
+- **Read `window.*` libraries when the view module runs, never at import.** WordPress prints
+  script modules before the footer's classic scripts, so a deferred library has not run when the
+  module is evaluated: `const { gsap } = window;` at the top of `view.js` is `undefined`. The
+  Interactivity API hydrates on `DOMContentLoaded`, after every deferred script, so a read inside
+  a callback or action always works.
+- **One copy of each library per page.** When two plugins bundle the same library, the one that
+  is optional steps aside (dequeues its copy) on a page where the shared one is already queued.
+- **Front-end code never imports editor packages.** If a view or frontend script's
+  `.asset.php` lists `wp-data`, `wp-element` or `wp-api-fetch`, it pulls React and a dozen
+  `wp-*` packages onto every page that loads it.
+
+Measuring the result is [`wp-audit`](../wp-audit/SKILL.md)'s job.
 
 ## Build and registration
 
