@@ -2,7 +2,7 @@
 name: maintenance-onboarding
 description: Bring a site onto Sisyphus's nightly rolling maintenance — check its repository, GitHub environments and secrets, Pressable dev site, environment type, DNS, Cloudflare Access, enrollment and Ghost Inspector suite against the 17-step onboarding checklist, fix what it can with approval, and run linchpin/actions' convert-repo and onboard-site. Use when onboarding or enrolling a site in nightly maintenance, when a new site's first night fails at Preflight, or when Deploy to Dev refuses to install Safety Net. Not for the monthly maintenance/YYYY-MM pass — use `maintenance-window`.
 when_to_use: Also when someone says "roll out nightly maintenance to the next client", "convert this repo to rolling maintenance", "get this site on Sisyphus", "is this site ready for nightly runs", "Safety Net won't install on dev", or "Preflight timed out" on a site that has never passed a night — and at the start of a task made from the onboarding template.
-version: 0.1.0
+version: 0.1.1
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh variable list*) Bash(gh secret list*) Bash(gh pr list*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh run list*) Bash(gh run view*) Bash(git ls-remote*) Bash(dig +short*)
 ---
 
@@ -24,18 +24,21 @@ leaves a night half set up.
 **Not this skill:** the monthly `maintenance/YYYY-MM` pass on a site that is not enrolled —
 use [`maintenance-window`](../maintenance-window/SKILL.md). Creating a repository and its
 deploy environments from nothing — use [`github-repo-setup`](../github-repo-setup/SKILL.md).
-A failed night on a site that has passed before — Sisyphus's own *Triage a failed night*
-page on docs.linchpin.com.
+A client with no dev or staging site yet, or one missing from api.linchpin.com — use
+[`wp-hosting-environments`](../wp-hosting-environments/SKILL.md), which creates and
+registers it. A failed night on a site that has passed before — Sisyphus's own *Triage a
+failed night* page on docs.linchpin.com.
 
 ## Owns
 
-Canonical for: the 17-step onboarding checklist, the order of its four phases, and what dev
-has to be for Sisyphus — a Pressable staging site that nothing else uses, reporting
-`development`, reachable on its status route, and deployed from an environment Safety Net
-accepts.
+Canonical for: the 17-step onboarding checklist, the order of its four phases, and the
+checks that prove a site is ready for its first night.
 
 Defers:
-- Environment naming beyond dev, and which variables and secrets go at which scope →
+- What dev and staging are — Pressable site type, `WP_ENVIRONMENT_TYPE`, hostname,
+  GitHub environment name, and their rows in api.linchpin.com →
+  [`wp-hosting-environments`](../wp-hosting-environments/SKILL.md).
+- Which variables and secrets go at which scope →
   [`github-repo-setup`](../github-repo-setup/SKILL.md).
 - The task, its status, and the scope key in commits →
   [`task-tracking`](../task-tracking/SKILL.md).
@@ -45,8 +48,8 @@ Defers:
 
 ## Preflight
 
-Read all of these before the first check. Never assume what the scripts or the Safety Net
-action accept: they change, and the check has to follow them.
+Read all of these before the first check. Never assume what the scripts accept: they
+change, and the check has to follow them.
 
 | Look for | Tells you | If missing |
 | --- | --- | --- |
@@ -55,7 +58,7 @@ action accept: they change, and the check has to follow them.
 | A checkout of linchpin/actions at the `v4` tag, with `bin/convert-repo` and `bin/onboard-site` | The two scripts this skill drives | Clone it, `git checkout v4`. Say so if either script is missing |
 | `gh auth status`, with admin on the repository | Whether environments, secrets and rulesets can be read and written | Stop: an admin has to run phase 2 |
 | The Pressable MCP (`get_site_status`, `run_site_wpcli_commands`) | Site type, environment type, Mantle, SFTP users | Say so. A person reads them in MyPressable, and every Pressable row stays `?` |
-| What Safety Net accepts: [references/checks.md](references/checks.md#what-safety-net-accepts) | The name dev's GitHub environment must have | Don't guess. Use `development`, which every version accepts |
+| `linchpin hosting audit <client>` | Whether production, dev and staging are registered in api.linchpin.com, which `onboard-site` reads to enroll | Install `@linchpinagency/cli` per [`wp-hosting-environments`](../wp-hosting-environments/SKILL.md). Until then, step 1 stays `?` |
 | `SISYPHUS_AUTH`: a WordPress application password on packagist.linchpin.com | Whether `onboard-site` can enroll | Phase 3 waits for a person to make one. Read the enrollment with `wp sisyphus sites` instead |
 
 ## Procedure
@@ -79,9 +82,9 @@ Every check, with its command and what ✓ means, is in
     → Checks 1–5 are ✓ on a second run.
 4. **Repository (phase 2, steps 6–10).**
     - Plan first. Run `bin/convert-repo <repo>` with `--dev-site-id`, `--dev-url`, `--task`, and
-      **`--dev-environment <the name Safety Net accepts>`** every time. Left out,
-      `convert-repo` reuses whichever environment already deploys dev's site, whatever its
-      name.
+      **`--dev-environment development`** every time. Left out, `convert-repo` reuses
+      whichever environment already deploys dev's site, whatever its name, and Safety Net
+      refuses any name but `development`.
     - Give `--dev-ssh-user` the SFTP username a person confirms (checks.md, step 7). Add
       `--close-windows` only when every window holds Renovate's commits alone.
     - Read the plan: a line starting `!` needs a person. Then, after a yes, run it again
@@ -106,13 +109,16 @@ Every check, with its command and what ✓ means, is in
   dev or staging, or deploy to it. Running `wp eval` reads on production is the limit.
 - **Never choose dev when there is a choice.** A person picks. Never pick a site that another
   enrolled site, or any feature work, deploys to.
-- **Never name a feature-work environment so that it starts with `development`.** GitHub
-  can't rename an environment: create the new one, and let a person delete the old one.
+- **Never give dev's GitHub environment any name but `development`** (any case). GitHub
+  can't rename an environment: `convert-repo` creates `development`, and a person deletes
+  the one it replaces. The repository's other environments keep their names here; moving
+  them to plain role names is [`github-repo-setup`](../github-repo-setup/SKILL.md)'s task.
 - **Never merge the conversion PR**, never close a window holding people's commits, and never
   delete a branch or an environment. Those belong to a person.
 - **Never copy an organisation secret into a repository.** `gh secret list` shows repository
   and environment secrets only, so an organisation secret missing from it proves nothing.
-  Never store `SSH_PASS` for a Pressable site.
+  Pressable deploys by key, so never store `SSH_PASS` for it
+  ([secrets and variables](../github-repo-setup/references/secrets-and-variables.md)).
 - **Never turn on Run nightly before Deploy to Dev has passed.** Preflight refuses a dev
   without Safety Net, and the night fails.
 - DNS and Cloudflare Access changes are a person's. Print the records; don't add them.

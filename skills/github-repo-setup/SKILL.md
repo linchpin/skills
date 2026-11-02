@@ -1,7 +1,7 @@
 ---
 name: github-repo-setup
 description: Create a GitHub repo under the linchpin org and wire it for deployments — populated from a source repo you always ask the user to name, with the production, staging and development environments plus the secrets and variables linchpin/actions v4 reads. Use when starting a new client site or product repo, when asked to "create the repo", "set it up for deploys", "add the dev environment", or "add the deploy secrets/variables" — including on a repo that already exists — when a deploy fails because HOST or SITE_ID is empty, or when workflows point at `@main`. Not for the repo contents or local Studio wiring — use `wp-local-setup`; not for the hosting installs — use `wp-hosting-environments`.
-version: 3.0.0
+version: 3.0.1
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh secret list*) Bash(gh variable list*) Bash(gh search code*)
 ---
 
@@ -50,8 +50,9 @@ GitHub silently created empty, because the caller's `environment:` matched nothi
   [`wp-hosting-environments`](../wp-hosting-environments/SKILL.md).
 - **Operating the live server** after a deploy → [`wp-pressable`](../wp-pressable/SKILL.md).
 - **Nightly maintenance on dev** (the `maintenance` branch, Sisyphus enrollment) →
-  linchpin/actions' `bin/onboard-site` and `bin/convert-repo`, which also write
-  `deploy-dev.yml` and the `Development` environment's variables.
+  [`maintenance-onboarding`](../maintenance-onboarding/SKILL.md), which runs linchpin/actions'
+  `bin/convert-repo` and `bin/onboard-site`; they also write `deploy-dev.yml` and the
+  `Development` environment's variables.
 - **Commit/PR grammar and release-please** → [`commit-and-release`](../commit-and-release/SKILL.md).
 - **The `WP_ACCESS_TOKEN` docs secret** → [`docspress-publish`](../docspress-publish/SKILL.md).
 - **What a plugin repo must contain, and which `linchpin/actions` reusables it calls** →
