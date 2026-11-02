@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0](https://github.com/linchpin/skills/compare/v1.8.0...v1.9.0) (2026-11-02)
+
+
+### Features ✨
+
+* **LINCHPIN-5987:** Add a skill that puts a site on nightly rolling maintenance ([#73](https://github.com/linchpin/skills/issues/73)) ([8156db9](https://github.com/linchpin/skills/commit/8156db91c3678c9b3ef2ec6104b0a2decd3ed49c))
+* **LINCHPIN-6003:** Add wp-hosting-environments and move github-repo-setup to v4 ([#75](https://github.com/linchpin/skills/issues/75)) ([3133f91](https://github.com/linchpin/skills/commit/3133f91184aec0581fa2d0db06f99a130216df16))
+* **MANTLE-563:** Teach wp-plugin-admin-ui the 1.0 page contract ([#69](https://github.com/linchpin/skills/issues/69)) ([e1c6e49](https://github.com/linchpin/skills/commit/e1c6e49f123f4032b52e1e9eb8f1c419b53cc3a5))
+* **NO-TASK:** Measure production performance in wp-audit with footprint and Lighthouse scripts ([#74](https://github.com/linchpin/skills/issues/74)) ([05f0833](https://github.com/linchpin/skills/commit/05f08332a01855d57ee01b6517537031efca73b2))
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-5970:** Point docspress-publish at the DocsPress v2 release line ([#71](https://github.com/linchpin/skills/issues/71)) ([932a0ad](https://github.com/linchpin/skills/commit/932a0ada8f32c116d679fe907373faf5b0b320c7))
+
 ## [1.8.0](https://github.com/linchpin/skills/compare/v1.7.0...v1.8.0) (2026-10-20)
 
 
