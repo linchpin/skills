@@ -6,7 +6,7 @@
 answer before creating anything. Find candidates first so the question has real options:
 
 ```bash
-gh search code --owner linchpin "actions/.github/workflows/deploy.yml@v3" \
+gh search code --owner linchpin "actions/.github/workflows/deploy.yml@v4" \
   --limit 30 --json repository,path --jq '.[].repository.nameWithOwner' | sort -u
 ```
 
@@ -33,7 +33,7 @@ Two things to know before using it:
   `plopfile.js`, `prompts.js`, `prompts/`, `actions/`, `scaffold/`, `install-package.json`,
   `wiki/` — plus `CHANGELOG.md` and the lockfiles, which are regenerated for this project.
 - **Its deploy workflows are unusable.** The root has none; the generator writes into
-  `output/` and emits only pre-v3 per-host callers (`deploy-wpengine-*`,
+  `output/` and emits only per-host callers that predate v3 (`deploy-wpengine-*`,
   `deploy-cloudways-*`) pinned to `@main`, which no longer resolves — and there is **no
   Pressable template at all**. Take the callers below instead.
 
@@ -41,7 +41,7 @@ Also rename `phpcs.xml` → `phpcs.xml.dist`, which is what the house tooling de
 
 ### B) Another repo the user names — usually the better answer
 
-A sibling already deploying on v3 with the same host gives you working callers and a layout
+A sibling already deploying on v4 with the same host gives you working callers and a layout
 that matches how we build now. Also the route when this isn't a WordPress site repo at all.
 
 ```bash
@@ -82,13 +82,19 @@ grep -rn "linchpin/actions/.github/workflows" .github/workflows/
 
 | What you see | Meaning |
 | --- | --- |
-| `deploy.yml@v3` | Correct — `v3` is a maintained branch and the fleet standard |
+| `deploy.yml@v4` / `@v4.x.y` | Correct — the current line |
+| `deploy.yml@v3` | An older repo on the maintained `v3` branch. Leave it; say so |
 | `deploy-wpengine.yml@main`, `deploy-cloudways.yml@main`, `build.yml@main` | **Broken** — those files were removed from `main` when it became v4; the run fails at startup |
-| `…@main` (anything) | Unpinned against a branch that is now v4 — repin to `@v3` |
-| `deploy.yml@v4` / `@v4.x.y` | The newer line. Ask before changing it |
+| `…@main` (anything) | Unpinned against the moving tip — repin to `@v4` |
 | Nothing | Add the callers below |
 
-### v3 caller — production (release-triggered)
+A v4 site repo carries five callers. Two are dispatched **by file name** — api.linchpin.com
+dispatches `deploy-production-continue.yml`, Sisyphus dispatches `deploy-dev.yml` — so keep
+the names. All of them pass `secrets: inherit` and grant `contents: write` and
+`deployments: write`, because the shared build job attaches `release.zip` and a called
+workflow cannot exceed its caller's grant.
+
+### v4 caller — `deploy-production.yml` (release-triggered)
 
 ```yaml
 name: Deploy to Production
@@ -97,17 +103,78 @@ on:
   release:
     types: [published] # Only run when a release is published via release-please
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  deployments: write
+
 jobs:
+  preflight:
+    name: Preflight
+    uses: linchpin/actions/.github/workflows/validate-composer.yml@v4
+    secrets: inherit
+
   deploy:
-    uses: linchpin/actions/.github/workflows/deploy.yml@v3
+    name: Deploy to Production
+    needs: [preflight]
+    uses: linchpin/actions/.github/workflows/deploy.yml@v4
     secrets: inherit
     with:
-      environment: 'production-<slug>'
-      skip_lint: false
+      environment: production
+      build_for_release: ${{ github.event.release.tag_name }}
       do_backup: true
 ```
 
-### v3 caller — staging (branch-triggered)
+`do_backup: true` has api.linchpin.com back the site up first and then dispatch the continue
+workflow, which deploys the build the first run made.
+
+### v4 caller — `deploy-production-continue.yml` (dispatched by api.linchpin.com)
+
+```yaml
+name: Continue Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_id:
+        description: "GitHub deployment ID from the original deploy run"
+        required: true
+        type: string
+      workflow_run_id:
+        description: "Run ID of the original deploy (source of the release artifact)"
+        required: true
+        type: string
+      release_tag:
+        description: "Set when the original deploy used a release asset (e.g. v1.2.0)"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+  actions: read
+
+jobs:
+  deploy:
+    name: Continue Deploy to Production
+    uses: linchpin/actions/.github/workflows/deploy-continue.yml@v4
+    secrets: inherit
+    with:
+      environment: production
+      deployment_id: ${{ inputs.deployment_id }}
+      workflow_run_id: ${{ inputs.workflow_run_id }}
+      release_tag: ${{ inputs.release_tag }}
+```
+
+### v4 caller — `deploy-staging.yml` (branch-triggered)
 
 ```yaml
 name: Deploy to Staging
@@ -115,60 +182,127 @@ name: Deploy to Staging
 on:
   push:
     branches:
-      - 'staging'
+      - staging
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  deployments: write
 
 jobs:
   deploy:
-    uses: linchpin/actions/.github/workflows/deploy.yml@v3
+    name: Deploy to Staging
+    uses: linchpin/actions/.github/workflows/deploy.yml@v4
     secrets: inherit
     with:
-      environment: 'staging-<slug>'
-      skip_lint: false
-      do_backup: false   # staging rarely needs an on-demand backup
+      environment: staging
 ```
+
+### v4 caller — `deploy-dev.yml` (dispatched by Sisyphus)
+
+`bin/convert-repo` in linchpin/actions writes this one, from
+`templates/rolling-maintenance/deploy-dev.yml`, together with `maintenance.yml` and
+`snapshots.yml`; prefer running it over hand-copying. The shape, so you recognise it:
+
+```yaml
+name: Deploy to Dev
+
+# Sisyphus finds its dispatch by the correlation_id in the name.
+run-name: Deploy ${{ github.ref_name }} to dev ${{ inputs.correlation_id }}
+
+on:
+  workflow_dispatch:          # never on push — a push would land mid-sync
+    inputs:
+      correlation_id:
+        description: "Set by Sisyphus to find this run; leave it empty"
+        type: string
+        required: false
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  deploy:
+    name: Deploy to Dev
+    uses: linchpin/actions/.github/workflows/deploy.yml@v4
+    secrets: inherit
+    with:
+      environment: development
+      correlation_id: ${{ inputs.correlation_id }}
+      safety_net: true
+```
+
+`safety_net: true` installs Linchpin's Safety Net as an mu-plugin and fails the deploy unless
+the production data the nightly sync copied onto dev is scrubbed. It is refused for any
+other `environment`, and on a server whose `WP_ENVIRONMENT_TYPE` is not `development`.
+
+### v4 caller — `rollback.yml` (manual)
+
+```yaml
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to redeploy (e.g. v1.1.0)"
+        required: true
+        type: string
+      environment:
+        description: "Environment to roll back"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  deploy:
+    name: Roll back ${{ inputs.environment }} to ${{ inputs.release_tag }}
+    uses: linchpin/actions/.github/workflows/deploy.yml@v4
+    secrets: inherit
+    with:
+      environment: ${{ inputs.environment }}
+      release_tag: ${{ inputs.release_tag }}
+```
+
+A rollback redeploys the `release.zip` attached to an earlier release, without a backup.
+Dev is not in the list on purpose: it is rebuilt from production every night.
 
 ### One repo, several sites
 
-When a repo deploys more than one site, the second job **inherits the first job's build**
-instead of rebuilding — the pattern `cando` uses for its two properties:
+When a repo deploys more than one site, each site is its own environment and its own
+`deploy.yml` job, and the `<stage>-<slug>` naming from v3 is the one to keep so the names
+stay distinct — `production-insurance`, `production-financial`. v4 has no `inherit_build`;
+each job builds. Each environment carries its own `SITE_ID`, `SITE_URL` and `BRANCH`.
 
-```yaml
-jobs:
-  deploy_first:
-    uses: linchpin/actions/.github/workflows/deploy.yml@v3
-    secrets: inherit
-    with:
-      environment: 'production-<site-a>'
-      skip_lint: false
-      do_backup: true
+### v4 caller inputs
 
-  deploy_second:
-    needs: deploy_first        # the inherited build must exist first
-    uses: linchpin/actions/.github/workflows/deploy.yml@v3
-    secrets: inherit
-    with:
-      environment: 'production-<site-b>'
-      skip_lint: true
-      do_backup: true
-      inherit_build: true
-```
-
-Each environment carries its own `SITE_ID`, `SITE_URL`, `ENVIRONMENT`, and `BRANCH`.
-
-### v3 caller inputs
-
-`environment` (the only one that matters), `skip_lint`, `do_backup`, `inherit_build`,
-`build_commands`, `post_deploy_command`. **There is no rollback path in v3** —
-`release_tag`, `build_for_release`, `health_check`, `protected_paths` and
-`preserve_symlinks` are v4 inputs and fail validation on a v3 caller. A v3 rollback means
-re-running the deploy from the previous tag.
-
-v3 callers need no `permissions:` or `concurrency:` block; the shared workflow handles
-deployment bookkeeping and supersedes the previous deployment itself.
+`environment` (the only one that matters), `build_for_release`, `release_tag`, `do_backup`,
+`maintenance_mode`, `health_check` (default `true`), `protected_paths`,
+`preserve_symlinks`, `runner`, `build_runner`, `correlation_id`, `safety_net`,
+`safety_net_version`, `continue_workflow`, `build_commands`, `post_deploy_command`.
+`skip_lint` and `inherit_build` are v3 inputs and fail validation on a v4 caller.
 
 The `environment:` value in each caller **must** name an environment that exists on the
-repo, and that environment must set `ENVIRONMENT` to the same string. Check the whole set
-at once:
+repo. Check the whole set at once:
 
 ```bash
 grep -rhn "environment:" .github/workflows/ | sed 's/^ *//' | sort -u
@@ -197,7 +331,7 @@ grep -rniI --exclude-dir={.git,vendor,node_modules,build,dist} \
 | `composer.json` | `name`, `description`, `autoload` PSR-4 namespace, `installer-paths` |
 | `package.json` / `package-lock.json` | `name`, `description`, `repository` |
 | `README.md` | Title, description, **CI badge URLs** (they silently point at the old repo) |
-| `.github/workflows/*.yml` | `environment:` values, any hardcoded URL, install name, or site id left in a v3 file |
+| `.github/workflows/*.yml` | `environment:` values, any hardcoded URL, install name, or site id left in a workflow file |
 | `release-please-config.json`, `.release-please-manifest.json` | Component/package names and paths |
 | `CHANGELOG.md` | Delete it — release-please writes a new one from this repo's commits |
 | `commitlint.config.*` | Scope allow-lists that name the old project |
