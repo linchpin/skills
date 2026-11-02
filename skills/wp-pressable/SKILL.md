@@ -1,8 +1,8 @@
 ---
 name: wp-pressable
-description: Operate a Pressable-hosted WordPress site (production or staging) from an agent — connect via the Pressable MCP or SSH+WP-CLI, run read-first diagnostics, and safely fix the classic "renders locally but not on production" Full-Site-Editing bug where database template/part overrides shadow the deployed theme files. Use for any WordPress project hosted on Pressable when you need to inspect or change the live server (not just the repo).
+description: Operate a Pressable-hosted WordPress site (production, staging or development) from an agent — connect via the Pressable MCP or SSH+WP-CLI, run read-first diagnostics, and safely fix the classic "renders locally but not on production" Full-Site-Editing bug where database template/part overrides shadow the deployed theme files. Use for any WordPress project hosted on Pressable when you need to inspect or change the live server (not just the repo).
 when_to_use: Also when a deploy fails or is stuck, when someone asks to clear the cache on staging or production, when SFTP or database access is needed, or when a site is slow or erroring on Pressable specifically.
-version: 1.2.0
+version: 1.2.1
 allowed-tools: Read Grep Glob
 ---
 
