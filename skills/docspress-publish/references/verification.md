@@ -90,12 +90,12 @@ fake domains — and for unverified version numbers.
 ## 3. Converter round-trip
 
 The strongest check: run **the converter the workflow actually uses** over the tree and
-confirm every block survives. Check out `v1` — the same ref the workflow runs — somewhere
+confirm every block survives. Check out `v2` — the same ref the workflow runs — somewhere
 scratch first.
 
 ```bash
 git clone https://github.com/linchpin/docspress /tmp/docspress-pin
-git -C /tmp/docspress-pin checkout v1
+git -C /tmp/docspress-pin checkout v2
 ( cd /tmp/docspress-pin && npm ci --omit=dev )
 ```
 
