@@ -74,7 +74,7 @@ path as a workflow input with per-host defaults. Leave it unset.
 | `SATISPRESS_USER` / `SATISPRESS_PASSWORD` | org | only when `REMOTE_PLUGIN_INSTALL=true` |
 | `GH_BOT_TOKEN` | org | README updates, maintenance PRs |
 | `QA_API_TOKEN`, `QA_SCHEMA_TOKEN` | repo | only if the project uses the QA workflows |
-| `WP_ACCESS_TOKEN` | repo | docs publishing — owned by [`docspress-publish`](../../docspress-publish/SKILL.md) |
+| `WP_ACCESS_TOKEN` | repo or org | docs publishing — owned by [`docspress-publish`](../../docspress-publish/SKILL.md) |
 
 Retired v3 names — if you see them in a workflow, the workflow is stale, not the repo:
 `PRIVATE_KEY`, `CLOUDWAYS_SSH_KEY`, `MANTLE_SECRET`.
