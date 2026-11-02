@@ -94,7 +94,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 | Give a plugin an admin screen that matches the others | "add a settings page to this plugin" | `wp-plugin-admin-ui` |
 
-The full list is in [Available skills](#available-skills) — 36 of them, each with a
+The full list is in [Available skills](#available-skills) — 37 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*

@@ -2,7 +2,7 @@
 name: wp-hosting-environments
 description: Stand up and audit a client's hosting environments — production plus at least one copy, with staging and development both expected, each registered in api.linchpin.com with its role; on Pressable a copy is a staging-type site (never a sandbox) whose WP_ENVIRONMENT_TYPE names its role so Safety Net runs there. Use when onboarding a client or site to hosting, when asked "does this client have a dev or staging site", "spin up a dev environment", "what environments does X have", or "why isn't Safety Net running on dev". Not for the repo's deploy wiring — use `github-repo-setup`; not for operating an existing site — use `wp-pressable`.
 when_to_use: Also when inventorying what a client has on Pressable, WP Engine, Cloudways or Pantheon, when a Pressable site's type (live, staging, sandbox) looks wrong, when a staging site is missing from api.linchpin.com, when `linchpin hosting audit` reports a gap, or when Sisyphus refuses a dev target.
-version: 0.1.0
+version: 0.1.1
 allowed-tools: Read Grep Glob Bash(linchpin hosting ls*) Bash(linchpin hosting audit*)
 ---
 
@@ -27,8 +27,8 @@ is the layout, how it maps onto each host, and the audit that finds the gaps.
 **Not this skill:** creating the GitHub repo or its environment secrets and variables — use
 [`github-repo-setup`](../github-repo-setup/SKILL.md). Inspecting or fixing a site that
 already exists — use [`wp-pressable`](../wp-pressable/SKILL.md). Enrolling a site in
-nightly maintenance — that is linchpin/actions' `bin/onboard-site`, which this skill hands
-off to.
+nightly maintenance — use [`maintenance-onboarding`](../maintenance-onboarding/SKILL.md),
+which this skill hands off to.
 
 ## Owns
 
@@ -39,7 +39,7 @@ registering an environment in api.linchpin.com, and the audit.
 
 Defers: GitHub environments and secrets → [`github-repo-setup`](../github-repo-setup/SKILL.md).
 Touching a live site → [`wp-pressable`](../wp-pressable/SKILL.md). Sisyphus enrollment and
-the `maintenance` branch → linchpin/actions `bin/onboard-site` and `bin/convert-repo`.
+the `maintenance` branch → [`maintenance-onboarding`](../maintenance-onboarding/SKILL.md).
 The task → [`task-tracking`](../task-tracking/SKILL.md).
 
 ## The layout
@@ -125,7 +125,7 @@ and its parameters. In order:
    ls <client>` shows the row.
 8. **Re-audit** — `linchpin hosting audit <client>`. → Exit 0 for that production.
 9. **Hand off** — the GitHub environment and its `SITE_ID`/`SITE_URL`/`SSH_*` →
-   `github-repo-setup`; nightly maintenance → `bin/onboard-site` in linchpin/actions, which
+   `github-repo-setup`; nightly maintenance → `maintenance-onboarding`, whose `bin/onboard-site`
    reads the rows you just registered. Record it on the task → `task-tracking`.
 
 ### C. Other hosts

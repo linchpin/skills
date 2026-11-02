@@ -24,27 +24,19 @@ packagist.linchpin.com: `sisyphus sites --format=csv` lists every enrolled site 
 staging, repository, run time and promotion target, and `sisyphus list --format=csv
 --limit=50` lists recent runs.
 
-## What Safety Net accepts
+## Dev's GitHub environment
 
-Two checks guard Safety Net, and dev's GitHub environment has to pass both. Read them at the
-`v4` tag every time rather than trusting this page:
-
-```bash
-gh api 'repos/linchpin/actions/contents/actions/safety-net/action.yml?ref=v4' --jq .content \
-  | base64 -d | sed -n '/Refuse anything but development/,/^$/p'
-gh api 'repos/linchpin/actions/contents/.github/workflows/deploy.yml?ref=v4' --jq .content \
-  | base64 -d | grep -n 'Refuse Safety Net' -A2
-```
-
-At v4.21.0 both compare the whole name, in any case, with `development`: `Development`
-passes, and `development-<slug>` and `site-maintenance-<slug>` are refused. When both accept
-a `development` prefix, name dev's environment the way the repository names the others.
+Dev deploys from the `development` environment, in any case: `Development` is the same one.
+[`wp-hosting-environments`](../../wp-hosting-environments/SKILL.md) owns the name, and
+linchpin/actions refuses Safety Net on any other, so `dev-<slug>`, `development-<slug>` and
+`site-maintenance-<slug>` all fail Deploy to Dev. When Deploy to Dev refuses Safety Net,
+check this name first.
 
 ## Phase 1: hosting
 
 | Step | Read | ✓ when |
 | --- | --- | --- |
-| 1. Dev is a staging site no one else uses | `get_site_status` on `<dev-id>`; `sisyphus sites`; the repository's environments (step 7) | `staging: true` and `sandbox: false`. No other enrolled site lists `<dev-id>`, and no environment deploys a branch other than `maintenance` to it |
+| 1. Dev is a staging site no one else uses | `get_site_status` on `<dev-id>`; `linchpin hosting audit <client>`; `sisyphus sites`; the repository's environments (step 7) | `staging: true` and `sandbox: false`. The audit lists dev as production's only `development` environment, because `onboard-site` enrolls only what api.linchpin.com holds. No other enrolled site lists `<dev-id>`, and no environment deploys a branch other than `maintenance` to it |
 | 2. Environment types | The eval above, on dev and on staging | `ENV=development` on dev, and `ENV=staging` on staging |
 | 3. Mantle | The eval above, on dev | `mantle=no`, or `clone=connected` |
 | 4. DNS and certificate | `dig +short <dev> A`, then `curl -s "https://<dev>/wp-json/safety-net/v1/status?cb=$RANDOM"` | `dig` prints addresses, and curl returns JSON. `rest_no_route` is fine until step 13 |
@@ -64,7 +56,7 @@ The answers for step 4:
 | Step | Read | ✓ when |
 | --- | --- | --- |
 | 6. Monthly windows | `git ls-remote --heads https://github.com/<repo> 'maintenance/*'` | Nothing is listed. For each window, `gh api repos/<repo>/compare/<production branch>...<window> --jq '[.commits[].author.login] \| unique'` decides: `renovate[bot]` alone means `--close-windows`, anyone else means a person merges it |
-| 7. Environments and secrets | `gh api repos/<repo>/environments --jq '.environments[].name'`, then `gh variable list --repo <repo> --env <env>` and `gh secret list --repo <repo> --env <env>` for each one | Dev's environment has the name Safety Net accepts, with `BRANCH=maintenance`, `SITE_ID=<dev-id>`, `SITE_URL=https://<dev>`, `ENVIRONMENT` set to its own name, and an `SSH_USER` secret. The repository holds `HOST`, `SSH_HOST` and `SSH_KEY` |
+| 7. Environments and secrets | `gh api repos/<repo>/environments --jq '.environments[].name'`, then `gh variable list --repo <repo> --env <env>` and `gh secret list --repo <repo> --env <env>` for each one | Dev's environment is `development` (any case), with `BRANCH=maintenance`, `SITE_ID=<dev-id>`, `SITE_URL=https://<dev>`, `ENVIRONMENT` set to its own name, and an `SSH_USER` secret. The repository holds `HOST`, `SSH_HOST` and `SSH_KEY` |
 | 8. The monthly process is retired | `gh api repos/<repo>/contents/.github/workflows --jq '.[].name'`; `git ls-remote --heads https://github.com/<repo> site-maintenance` | None of `auto-approve-maintenance.yml`, `combine-dependency-prs.yml`, `combine-dependency-prs-schedule.yml` or `deploy-maintenance.yml`, and no `site-maintenance` branch |
 | 9. The conversion PR is merged | The same workflow listing | `maintenance.yml`, `snapshots.yml` and `deploy-dev.yml` are on the production branch |
 | 10. The ruleset, and PR checks that run | `gh api repos/<repo>/rulesets --jq '.[].name'`; for an open Renovate PR into `maintenance`, `gh api repos/<repo>/commits/<head sha>/check-runs --jq .total_count` | "Green checks into maintenance" is listed, and the count is above 0 |
@@ -72,7 +64,9 @@ The answers for step 4:
 **Dev's SSH user (step 7).** `list_site_ftp_accounts` on `<dev-id>` lists the site's SFTP
 logins. The API doesn't say which login carries the repository's `SSH_KEY`, because
 `ssh_key_label` is usually null. A person confirms the username before `--dev-ssh-user`
-stores it. Never store `SSH_PASS`, or an environment-level `SSH_HOST`, for Pressable.
+stores it. The scope of every secret is github-repo-setup's
+[secrets and variables](../../github-repo-setup/references/secrets-and-variables.md); for
+Pressable that means no `SSH_PASS`.
 
 **A PR check that never runs (step 10).** With no check runs on a commit, rolling maintenance
 counts the PR as green and merges it. Two filters cause this:
