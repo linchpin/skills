@@ -93,7 +93,7 @@ The fastest way to understand the library is to run one loop end to end:
 | Keep a change small and actually verified | "don't over-engineer this" | `engineering-discipline` |
 | Give a plugin an admin screen that matches the others | "add a settings page to this plugin" | `wp-plugin-admin-ui` |
 
-The full list is in [Available skills](#available-skills) — 35 of them, each with a
+The full list is in [Available skills](#available-skills) — 36 of them, each with a
 `When to use` section that says exactly when it applies and which skill to use instead.
 
 **When you want to be explicit**, name the skill: *"use the wp-audit skill on the homepage."*
@@ -356,6 +356,7 @@ decision are covered by [`agent-capabilities`](skills/agent-capabilities/SKILL.m
 
 | Skill | Domain | What it does |
 | --- | --- | --- |
+| `wp-hosting-environments` | WordPress | Stand up and audit a client's hosting environments — production plus at least one copy, with staging and development both expected, each registered in api.linchpin.com with its role; on Pressable a copy is a staging-type site (never a sandbox) whose `WP_ENVIRONMENT_TYPE` names its role so Safety Net and Sisyphus see it. Reads `linchpin hosting audit`. |
 | `wp-local-setup` | WordPress | Stand up the Linchpin baseline local environment — scaffold a new wp-content-shaped project repo (Composer plugins from wpackagist + packagist.linchpin.com) and/or wire a repo into a WordPress Studio site by symlinking it in as `wp-content`. |
 | `wp-theme-baseline` | WordPress | Choose and stand up the baseline for a new theme — a child theme of a parent that owns behavior, a fresh block theme, or (last resort) a fork — with the token-coverage check that decides it and the precedents that close the recurring questions. |
 | `wp-design-tokens` | WordPress | Make `theme.json` the source of truth for color, type, spacing, and shadow — the slug vocabulary, the theme.json-vs-SCSS precedence rules that make an edit appear to do nothing, and where the Linchpin brand values live. |
