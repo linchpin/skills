@@ -272,7 +272,7 @@ class Admin_Status extends REST_Base {
 import { createRoot } from '@wordpress/element';
 import domReady from '@wordpress/dom-ready';
 import { __ } from '@wordpress/i18n';
-import { Button } from '@wordpress/components';
+import { ButtonLink } from '@wordpress/ui';
 import apiFetch from '@wordpress/api-fetch';
 
 /**
@@ -343,15 +343,9 @@ function App() {
 				subTitle={ __( 'One sentence on what the plugin does.', '{slug}' ) }
 				navigation={ sectionNavigation( { sections: SECTIONS } ) }
 				actions={
-					<Button
-						__next40pxDefaultSize
-						variant="secondary"
-						href={ LINKS.readme }
-						target="_blank"
-						rel="noreferrer"
-					>
+					<ButtonLink variant="outline" href={ LINKS.readme } openInNewTab>
 						{ __( 'Documentation', '{slug}' ) }
-					</Button>
+					</ButtonLink>
 				}
 			>
 				<LinchpinNotices />
@@ -441,6 +435,11 @@ export default function Sidebar() {
 
 ## `src/admin/views/status.js` — facts and an action
 
+The view's action goes in the page header through `PageHeaderActions`, and its facts are a
+`FactList` in a flat `SettingsSection`. `Button`, `Spinner` and the rest come from
+`@wordpress/ui`; `LinchpinNotice`, `FactList`, `PageHeaderActions` and `SettingsSection` from
+`@linchpinagency/ui`.
+
 ```jsx
 export default function StatusView() {
 	const { data, error, isLoading, refetch } = useRoute( '/{slug}/v1/admin/status' );
@@ -449,9 +448,9 @@ export default function StatusView() {
 
 	if ( error ) {
 		return (
-			<Notice status="error" isDismissible={ false }>
-				{ error.message || __( 'The status could not be loaded.', '{slug}' ) }
-			</Notice>
+			<LinchpinNotice tone="error" title={ __( 'The status could not be loaded.', '{slug}' ) }>
+				{ error.message }
+			</LinchpinNotice>
 		);
 	}
 
@@ -479,17 +478,51 @@ export default function StatusView() {
 	};
 
 	return (
-		<SettingsCard
-			title={ __( 'Status', '{slug}' ) }
-			description={ __( 'One sentence on what this section is for.', '{slug}' ) }
-			actions={
-				<Button __next40pxDefaultSize variant="primary" isBusy={ isBusy } disabled={ isBusy } onClick={ run }>
+		<>
+			<PageHeaderActions>
+				<Button variant="solid" loading={ isBusy } disabled={ isBusy } onClick={ run }>
 					{ __( 'Run now', '{slug}' ) }
 				</Button>
-			}
-		>
-			<dl className="{slug}-admin__facts">{ /* one <div className="{slug}-admin__row is-ok|is-warn"><dt/><dd/></div> per fact */ }</dl>
-		</SettingsCard>
+			</PageHeaderActions>
+
+			<SettingsSection
+				title={ __( 'Status', '{slug}' ) }
+				description={ __( 'One sentence on what this section is for.', '{slug}' ) }
+			>
+				<FactList items={ /* [ { id, label, value, tone: 'ok' | 'warning' } ] from data */ [] } />
+			</SettingsSection>
+		</>
+	);
+}
+```
+
+## `src/admin/views/settings.js` — settings and the one Save
+
+Every section of a settings screen saves with one `PageSaveAction` in the header. It holds no
+form state, so it works with react-hook-form or plain state; `onSave` must reject when the save
+fails (with `saveEntityRecord`, pass `throwOnError: true`).
+
+```jsx
+export default function SettingsView( { settings, save } ) {
+	const [ values, setValues ] = useState( settings );
+	const isDirty = values.enabled !== settings.enabled;
+
+	return (
+		<>
+			<PageSaveAction isDirty={ isDirty } onSave={ () => save( values ) } />
+
+			<SettingsSection
+				title={ __( 'Sharing', '{slug}' ) }
+				description={ __( 'One sentence on what this section is for.', '{slug}' ) }
+			>
+				<SwitchControl
+					label={ __( 'Allow sharing', '{slug}' ) }
+					description={ __( 'What turning it on does.', '{slug}' ) }
+					checked={ values.enabled }
+					onCheckedChange={ ( enabled ) => setValues( { ...values, enabled } ) }
+				/>
+			</SettingsSection>
+		</>
 	);
 }
 ```
@@ -572,7 +605,7 @@ when the top bar gets the plugin's own mark.
 `@linchpinagency/ui` and every peer it names, as **devDependencies**, at the versions psst
 uses: `@wordpress/admin-ui`, `@wordpress/components`, `@wordpress/data`,
 `@wordpress/element`, `@wordpress/i18n`, `@wordpress/icons`, `@wordpress/notices`,
-`@wordpress/theme`, plus what the views import (`@wordpress/api-fetch`,
+`@wordpress/theme`, `@wordpress/ui` (0.25 or later from library 1.0), plus what the views import (`@wordpress/api-fetch`,
 `@wordpress/dom-ready`, `@wordpress/dataviews`, `@wordpress/date`, `@wordpress/url`), and
 `webpack-remove-empty-scripts`. `npm view @linchpinagency/ui peerDependencies` lists the peers
 for the release being installed.
