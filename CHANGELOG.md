@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/linchpin/skills/compare/v1.9.0...v1.9.1) (2026-11-02)
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-5987:** Name dev's environment development and defer the layout to wp-hosting-environments ([#77](https://github.com/linchpin/skills/issues/77)) ([d6552c1](https://github.com/linchpin/skills/commit/d6552c1775fd5ec45040209d6bd9d10fd6ba7dd9))
+
 ## [1.9.0](https://github.com/linchpin/skills/compare/v1.8.0...v1.9.0) (2026-11-02)
 
 
