@@ -1,8 +1,8 @@
 ---
 name: wp-plugin-admin-ui
-description: Build or review a Linchpin plugin's admin screen the house way — a React app on @linchpinagency/ui (linchpin/ui) in psst's shape, with an Admin_Page controller that mounts one div and hands over the REST root and nonce, REST_Base routes under {slug}/v1/admin/*, views made of SettingsCard, DataViews and snackbar notices, and the build that ships it. Use when adding a settings page, admin screen, status or tools page to a plugin, when asked to build or review a plugin's admin UI, or when a plugin still renders its screen in PHP or with the Settings API. Not for blocks — use `wp-block-conventions`.
+description: Build or review a Linchpin plugin's admin screen the house way — a React app on @linchpinagency/ui (linchpin/ui) in psst's shape, with an Admin_Page controller that mounts one div and hands over the REST root and nonce, REST_Base routes under {slug}/v1/admin/*, views made of flat SettingsSections, header actions and one header Save, DataViews and snackbar notices, and the build that ships it. Use when adding a settings page, admin screen, status or tools page to a plugin, when asked to build or review a plugin's admin UI, or when a plugin still renders its screen in PHP or with the Settings API. Not for blocks — use `wp-block-conventions`.
 when_to_use: Also when someone says "add an options page", "make it look like psst", "use linchpin/ui", "our admin pages all look different", asks where a plugin's settings screen belongs in the menu, or is moving a screen to a new @linchpinagency/ui release.
-version: 1.1.0
+version: 1.2.0
 allowed-tools: Read Grep Glob Bash(npm view @linchpinagency/ui*) Bash(gh api repos/linchpin/*) Bash(git ls-files*)
 ---
 
@@ -109,6 +109,11 @@ Every file named below has a skeleton in
    `<AboutLinchpinPage />`. Mount with `createRoot` inside `domReady`, and add no
    `ThemeProvider` or `SlotFillProvider` of your own. → Bar, header, tabs, notices and footer
    render, and `?tab=` switches sections.
+
+   Every screen follows the **page contract** in the library's README (one surface, one left
+   edge, the header owns the verbs, one Save, gaps not margins, one control per choice,
+   headings that follow the page, one notice). Read it before writing a view; don't restate
+   it here or in the plugin.
 5. **Write the views to the house patterns** below. → Every view has loading, error and loaded
    states, and every action reports through a snackbar.
 6. **Style with tokens.** `src/scss/admin.scss`, imported after `@linchpinagency/ui/style.css`,
@@ -118,7 +123,8 @@ Every file named below has a skeleton in
    colour appears in the plugin's admin styles.
 7. **Build it.** Point a webpack `admin` entry at `src/admin/index.js`, building into `build/`,
    with any other entry, such as an editor panel, beside it. Add `@linchpinagency/ui` and its
-   `@wordpress/*` peers as devDependencies at the versions psst uses, and make `build.sh`
+   `@wordpress/*` peers as devDependencies at the versions psst uses (from 1.0 that includes
+   `@wordpress/ui` 0.25 or later), and make `build.sh`
    require `build/admin.js`, `build/admin.asset.php` and `build/admin.css`. → `npm run build`
    and the release build pass. An `admin.js` near 850 KB is expected: `admin-ui`, `dataviews`
    and `icons` are bundled, not externalised.
@@ -128,15 +134,25 @@ Every file named below has a skeleton in
 
 ### House patterns for views
 
+Components come from `@wordpress/ui` where it has them (`Button`, `Badge`, `SwitchControl`,
+`RadioGroupControl`, `InputControl`, `Notice`, `Spinner`, `Stack`), and the rest from the
+library.
+
 | Need | Pattern |
 | --- | --- |
 | Data | A `useRoute( path )` hook in `hooks.js`, returning `{ data, error, isLoading, refetch }` |
-| A section of a screen | `SettingsCard` with a title and one sentence, and its action in `actions` |
-| Read-only facts | A `<dl>` of rows inside a `SettingsCard`, each marked ok, warn or info |
-| A table | DataViews with `defaultLayouts={ { table: {} } }`, and `filterSortAndPaginate` for a list that arrives whole. Row actions are DataViews actions |
-| Run, save, sync | `Button __next40pxDefaultSize variant="primary"` with `isBusy` and `disabled`, then `createSuccessNotice` or `createErrorNotice( …, { type: 'snackbar' } )`, then `refetch()` |
-| A view that fails to load | `<Notice status="error" isDismissible={ false }>` with the error's message |
-| Loading | A `Spinner` with a short label, in a `{slug}-admin__loading` row |
+| A section of a screen | `SettingsSection`, flat, with a title and one sentence. `surface="card"` only for a section that has to read as an object of its own |
+| The screen's verbs (Run now, Sync, Create) | `PageHeaderActions` from inside the view, never a toolbar row at the top of the body |
+| The screen's state ("Recording", "Not connected") | `PageHeaderBadges` with `Badge` |
+| Saving settings | One `PageSaveAction` per screen, in the header, never a button per section |
+| A choice with a few answers | `MenuButton`, never a row of sibling buttons |
+| Read-only facts | `FactList` |
+| Counts that lead somewhere | `StatTiles` of `StatTile` |
+| A table | DataViews with `defaultLayouts={ { table: {} } }`, full bleed on the page, and `filterSortAndPaginate` for a list that arrives whole. Row actions are DataViews actions |
+| Run or sync | `Button variant="solid"` with `loading`, then `createSuccessNotice` or `createErrorNotice( …, { type: 'snackbar' } )`, then `refetch()` |
+| A view that fails to load | `LinchpinNotice tone="error"` with the error's message |
+| A fact about the whole install | `LinchpinGlobalNotices` under the top bar, once, never repeated on each screen |
+| Loading | `Spinner` from `@wordpress/ui` with a short label, in a `{slug}-admin__loading` row |
 | Something irreversible | `<DangerZone>`, with the plugin owning any confirmation |
 | Copy with a link in it | `createInterpolateElement()` around one translatable sentence |
 
@@ -144,8 +160,13 @@ Every file named below has a skeleton in
 
 - **Never render a Linchpin plugin's admin screen in PHP, or build it with Settings API
   forms** — not even a small status page. That is exactly how the screens drifted apart.
-- **Never hand-roll what the library ships**: the top bar, page header, tabs, cards, help and
-  About cards, notices, footer or danger zone. When every plugin needs something the library
+- **Never hand-roll what the library ships**: the top bar, page header, tabs, sections, help
+  and About cards, notices, the header Save, menu buttons, facts, stat tiles, footer or
+  danger zone.
+- **Never box a settings section on the page panel**, or put a bordered box inside a card.
+  The page is already the surface.
+- **Never put a screen's actions in the body** or a save button at the foot of each section.
+  They go in the header. When every plugin needs something the library
   lacks, add it to linchpin/ui, not to one plugin.
 - **Never restate linchpin/ui's component docs** in a plugin or a skill. Link them.
 - **Never put a hex colour in a plugin's admin styles.** Brand through `defineBrand()`,
