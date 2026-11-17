@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/linchpin/skills/compare/v1.9.1...v1.10.0) (2026-11-17)
+
+
+### Features ✨
+
+* **LINCHPIN-6153:** Bring maintenance onboarding up to the 19-step process ([#79](https://github.com/linchpin/skills/issues/79)) ([bd4ccf6](https://github.com/linchpin/skills/commit/bd4ccf672b4cae414861eb48da63fdc06c555e31))
+
 ## [1.9.1](https://github.com/linchpin/skills/compare/v1.9.0...v1.9.1) (2026-11-02)
 
 
