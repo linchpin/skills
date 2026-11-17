@@ -77,6 +77,19 @@ the Cloudflare API (`/accounts/<account>/access/...`):
 - Never add the bypass to the client's own application, and never widen the path.
 - ✓ when the status curl returns JSON and `https://<dev>/` still redirects to Access.
 
+**A new dev (step 1).** It writes, so only after a person's yes:
+
+- Pressable's `clone_site` with production's id, a name of `<client>-maintenance`, and
+  `staging: true`. It refuses with "You do not have permission to clone this site" when the
+  seat the MCP uses lacks the Clone site role on production. A client's own Pressable account
+  often grants fewer roles: `search_account_collaborators` with `site_id` lists them.
+- On Linchpin's own account, Pressable attaches `<name>.linchpin.build` as the clone's
+  primary domain. The `linchpin.build` zone is in Cloudflare: add two A records for it,
+  proxied, pointing at the IPs `get_site_status` lists for the clone.
+- The clone's collaborators are new logins, dev@linchpin.com's included: look up `SSH_USER`
+  again (step 10).
+- Then step 2 on the clone, and step 3 when production runs Mantle.
+
 ## Phase 2: the repository
 
 | Step | Read | ✓ when |
@@ -122,6 +135,23 @@ counts the PR as green and merges it. Two filters cause this:
    - Then escape output without changing what renders, or annotate with a reason where the
      call already escapes, such as `wp_get_attachment_image()`.
 
+**A prep PR into a branch `convert-repo` will reuse.** `convert-repo --apply` force-pushes
+`issue/<task>` from the production branch. Merge the prep PR before applying the conversion,
+or the prep PR's commits are dropped from its branch.
+
+**An exact Composer pin packagist no longer serves.** `composer update --lock`, and any
+`composer require`, refuses when `composer.json` pins a version the repository no longer
+lists, such as `linchpin/gravityforms` `2.9.25`. Don't raise a production package in the prep
+PR. Write the new `content-hash` into `composer.lock` with Composer's own function, after
+checking it reproduces the committed hash from the committed `composer.json`:
+
+```text
+php -r 'Phar::loadPhar("<path to composer>", "composer.phar"); require "phar://composer.phar/vendor/autoload.php"; echo Composer\Package\Locker::getContentHash(file_get_contents($argv[1]));' composer.json
+```
+
+Then `composer install --dry-run` says "Nothing to install, update or remove". Renovate
+raises the stale pin once rolling maintenance runs.
+
 **Dev's SSH user (step 10).** `SSH_USER` is the deploy account's login on dev. Which account
 that is, and how to find its login with the Pressable MCP, is github-repo-setup's
 [secrets and variables](../../github-repo-setup/references/secrets-and-variables.md). A new
@@ -151,6 +181,21 @@ new_name=main`. GitHub moves the default branch and retargets open PRs, but noth
 | 14. Suites | `sisyphus/v1/admin/suites/<production>`, through the REST eval below | Dev's suite is mapped with `nightly: true`; staging's and production's are mapped with `nightly: false` |
 | 15. Running | `sisyphus sites` (`enabled`) and `sisyphus list` | `enabled` is `yes`, and a run for the site is `passed` |
 
+**Where snapshots promote (step 12).** Before proposing `staging`, list what the `staging`
+branch holds that the production branch lacks:
+
+```text
+git log --no-merges --cherry-pick --right-only --oneline origin/<production branch>...origin/staging
+```
+
+- Nothing listed: `staging` can take snapshots.
+- Unreleased work, such as a feature merged from `develop`: promote into `main`. A snapshot
+  merged into that `staging` conflicts on `composer.json` and `composer.lock`, and can't
+  reach production until the feature ships.
+- Old commits only, such as stale lockfile bumps: promote into `main`, or a person resets
+  `staging` from the production branch.
+- Change an enrolled site's target with `sisyphus enroll <production> --promotion-target=main`.
+
 **Enrolling from WP-CLI (step 11).** It writes, so only after a person settles the choices:
 
 ```text
@@ -177,6 +222,22 @@ eval 'error_reporting(E_ALL & ~E_DEPRECATED); $u = get_users( [ "role" => "admin
   with the parameters `environment` (the `environment_id` above) and `nightly` (`true` only
   for dev's suite).
 - **Checking:** a `GET` on `/sisyphus/v1/admin/suites/<production>` lists what is mapped.
+
+**A dev suite (step 14).** api.linchpin.com lists, maps, updates and runs suites, but can't
+create one. Calling Ghost Inspector's API directly (`https://api.ghostinspector.com/v1`, key
+as `?apiKey=`) needs a person's yes, since the api is otherwise its only caller.
+
+- **A staging suite exists:** `POST /suites/<id>/duplicate/`, then rename the copy
+  `<Client> - Site Maintenance` and point its `baseUrl` variable at dev, each in its own
+  `POST /suites/<copy>/` (`{"name": …}`, then `{"variables.baseUrl": {"value": …}}`).
+  Delete from the copy any test that completes a checkout or submits a form: dev is a copy of
+  production, and Safety Net doesn't turn payment gateways off.
+- **None exists:** `POST /suites/` with `name` and `organization` (from
+  `GET /organizations/`), set `baseUrl`, then `POST /suites/<id>/import-test/json` with one
+  test whose `startUrl` is `{{baseUrl}}` and whose steps are `assertElementPresent` on
+  `body`, `assertElementNotPresent` on `#error-page`, and `assertTextNotPresent` on `body`
+  with the value `There has been a critical error`.
+- ✓ when `GET /tests/<id>/execute/` passes against dev, and step 14's mapping lists the suite.
 
 ## Phase 4: proving it
 
