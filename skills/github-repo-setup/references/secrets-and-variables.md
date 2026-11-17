@@ -104,6 +104,28 @@ The three environments carry the same keys with their own values:
 site on the account answers at `sftp.pressable.com`; `SSH_USER` is the per-site value and
 always lives at environment scope.
 
+### `SSH_USER` on Pressable: the deploy account's login
+
+Pressable gives every collaborator with SFTP access their own login on each site, a random
+username, and keys live on the MyPressable account rather than the site. The public half of
+Linchpin's deploy key — the private half is the repositories' `SSH_KEY` — is in the
+**dev@linchpin.com** account. So an environment's `SSH_USER` is dev@linchpin.com's login on
+the site that environment deploys to.
+
+To find it with the Pressable MCP:
+
+1. `list_site_ftp_accounts` on the site's id.
+2. `get_ftp_account_details` on each username, until its `account_email` is
+   `dev@linchpin.com`.
+
+- **`ssh_key_label` tells you nothing:** it is null on every login, the deploy one included.
+- **No such login** means dev@linchpin.com isn't a collaborator with the `sftp_access` role
+  on that site. Adding it is a person's call.
+- **A new site has new logins,** a re-clone included. Look the login up again and update
+  `SSH_USER` with it; never copy another environment's.
+- **The deploy reports a wrong login** as `Permission denied (publickey)` at its first SSH
+  step.
+
 ### Which value actually chooses the target
 
 `SSH_HOST` / `SSH_USER` / `SSH_KEY` decide where the release is written. `SITE_ID` decides
