@@ -2,7 +2,7 @@
 name: wp-pressable
 description: Operate a Pressable-hosted WordPress site (production, staging or development) from an agent — connect via the Pressable MCP or SSH+WP-CLI, run read-first diagnostics, and safely fix the classic "renders locally but not on production" Full-Site-Editing bug where database template/part overrides shadow the deployed theme files. Use for any WordPress project hosted on Pressable when you need to inspect or change the live server (not just the repo).
 when_to_use: Also when a deploy fails or is stuck, when someone asks to clear the cache on staging or production, when SFTP or database access is needed, or when a site is slow or erroring on Pressable specifically.
-version: 1.2.1
+version: 1.2.2
 allowed-tools: Read Grep Glob
 ---
 
@@ -84,6 +84,10 @@ claude mcp add --transport http pressable https://mcp.pressable.com/mcp \
 When the MCP is down (or you want deterministic, scriptable fixes), use SSH.
 
 - Get SSH/SFTP credentials from the Pressable dashboard (**Sites → <site> → SSH/SFTP**).
+  Logins are per site and per MyPressable account, and a key works with its own account's
+  login. The deploy account's login, which deploys use as `SSH_USER`, is found as
+  github-repo-setup's [secrets and variables](../github-repo-setup/references/secrets-and-variables.md)
+  describes.
 - Connect; you land in the site root with `wp` on `PATH`. Confirm: `wp --info`.
 - Everything below is plain WP-CLI, so it works identically whether you reach `wp` over SSH
   or through the MCP's WP-CLI tool.
