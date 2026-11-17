@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/linchpin/skills/compare/v1.10.0...v1.11.0) (2026-11-17)
+
+
+### Features ✨
+
+* **LINCHPIN-6153:** Teach maintenance onboarding what Birth23, Malco Saw and CGS showed ([#81](https://github.com/linchpin/skills/issues/81)) ([71f3a01](https://github.com/linchpin/skills/commit/71f3a01b6082de7c5f16ec561f13a1b6b914b0e2))
+
+
+### Miscellaneous 🧹
+
+* **deps:** update dependency node to v26 ([#70](https://github.com/linchpin/skills/issues/70)) ([0783d1c](https://github.com/linchpin/skills/commit/0783d1c082114d28284b6468ca75fa996edd740b))
+
 ## [1.10.0](https://github.com/linchpin/skills/compare/v1.9.1...v1.10.0) (2026-11-17)
 
 
