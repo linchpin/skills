@@ -20,7 +20,7 @@ Things you might say that load it: "roll out nightly maintenance to the next cli
 
 ## How it works
 
-<!-- wp:docspress/flow {"start": 1, "steps": [{"title": "Check, writing nothing", "content": "<p>Runs all 19 checks and posts one table on the site's task: each step ✓, ✗ or ?, with the next action or what blocked it.</p>"}, {"title": "Settle the choices", "content": "<p>A person picks dev, staging, where snapshots go, the run time, and whether a <code>master</code> branch becomes <code>main</code>.</p>"}, {"title": "Hosting", "content": "<p>After a yes: dev's environment type, Mantle's clone constant, and the Access application that lets Sisyphus read Safety Net's status. DNS records are printed for a person to add.</p>"}, {"title": "Repository", "content": "<p>A prep PR with a CI workflow that really runs and Composer pinned to production's PHP. Then <code>bin/convert-repo</code>, with dev's environment named <code>development</code> and the deploy account's SSH login. A person merges both PRs.</p>"}, {"title": "Sisyphus", "content": "<p>Enrolls the site paused, checks its environments in api.linchpin.com, maps its Ghost Inspector suites, runs Deploy to Dev, then turns on the nightly run and starts one.</p>"}, {"title": "Prove it", "content": "<p>Re-checks at each stop of the task until five unattended nights have passed and a snapshot has reached production.</p>"}]} /-->
+<!-- wp:docspress/flow {"start": 1, "steps": [{"title": "Check, writing nothing", "content": "<p>Runs all 19 checks and posts one table on the site's task: each step ✓, ✗ or ?, with the next action or what blocked it.</p>"}, {"title": "Settle the choices", "content": "<p>A person picks dev, staging, where snapshots go, the run time, and whether a <code>master</code> branch becomes <code>main</code>.</p>"}, {"title": "Hosting", "content": "<p>After a yes: dev's environment type, Mantle's clone constant, the Access application that lets Sisyphus read Safety Net's status, and a cloned dev with its two DNS records when one is missing.</p>"}, {"title": "Repository", "content": "<p>A prep PR with a CI workflow that really runs and Composer pinned to production's PHP. Then <code>bin/convert-repo</code>, with dev's environment named <code>development</code> and the deploy account's SSH login. A person merges both PRs.</p>"}, {"title": "Sisyphus", "content": "<p>Enrolls the site paused, checks its environments in api.linchpin.com, maps its Ghost Inspector suites, runs Deploy to Dev, then turns on the nightly run and starts one.</p>"}, {"title": "Prove it", "content": "<p>Re-checks at each stop of the task until five unattended nights have passed and a snapshot has reached production.</p>"}]} /-->
 
 ## What it checks first
 
@@ -44,7 +44,8 @@ Canonical for the 19-step onboarding checklist, the order of its four phases, an
 - Never picks dev when there's a choice, and never one that takes `develop` or other feature work.
 - Never names dev's GitHub environment anything but `development`.
 - Never merges a PR, renames a production branch, closes a window holding people's commits, or deletes a branch or an environment: those are a person's.
-- Never adds DNS records. Its only Access change is the status-route application, after a yes.
+- Only adds DNS records for dev's own `linchpin.build` hostname, after a yes, and never in a client's zone. Its only Access change is the status-route application, after a yes.
+- Proposes `staging` for snapshots only when the `staging` branch holds nothing the production branch lacks.
 - Never turns on the nightly run before Deploy to Dev has passed.
 
 ## Done when
@@ -58,7 +59,7 @@ Canonical for the 19-step onboarding checklist, the order of its four phases, an
 ## Files
 
 - [`SKILL.md`](https://github.com/linchpin/skills/blob/main/skills/maintenance-onboarding/SKILL.md) is the skill's main instructions.
-- [`references/checks.md`](https://github.com/linchpin/skills/blob/main/skills/maintenance-onboarding/references/checks.md) — every check with the read that proves it, plus the recipes that write: the status-route Access application, the prep PR, renaming `master`, enrolling from WP-CLI and mapping suites.
+- [`references/checks.md`](https://github.com/linchpin/skills/blob/main/skills/maintenance-onboarding/references/checks.md) — every check with the read that proves it, plus the recipes that write: cloning a dev, the status-route Access application, the prep PR, renaming `master`, where snapshots promote, enrolling from WP-CLI, mapping suites and making a dev suite.
 
 Pre-approved, so the agent can run them without a prompt: reading and searching files, `gh` reads (variables, secrets, PRs, checks, runs, issues), `git ls-remote` and `dig`. Everything that writes still asks.
 

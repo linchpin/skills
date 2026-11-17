@@ -2,7 +2,7 @@
 name: maintenance-onboarding
 description: Bring a site onto Sisyphus's nightly rolling maintenance — check its Pressable dev site, environment type, DNS, Cloudflare Access, PR checks, PHP pin, GitHub environments and secrets, enrollment and Ghost Inspector suites against the 19-step onboarding checklist, fix what it can with approval, and run linchpin/actions' convert-repo and onboard-site. Use when onboarding or enrolling a site in nightly maintenance, when a new site's first night fails at Preflight, or when Deploy to Dev refuses to install Safety Net. Not for the monthly maintenance/YYYY-MM pass — use `maintenance-window`.
 when_to_use: Also when someone says "roll out nightly maintenance to the next client", "convert this repo to rolling maintenance", "get this site on Sisyphus", "is this site ready for nightly runs", "Safety Net won't install on dev", or "Preflight timed out" on a site that has never passed a night — and at the start of a task made from the onboarding template.
-version: 0.2.0
+version: 0.3.0
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh variable list*) Bash(gh variable get*) Bash(gh secret list*) Bash(gh pr list*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh run list*) Bash(gh run view*) Bash(gh issue list*) Bash(git ls-remote*) Bash(dig +short*)
 ---
 
@@ -78,7 +78,10 @@ Every check, with its command and what ✓ means, is in
     - Which site is dev, when more than one could be. Never one that deploys `develop` or
       any other feature work, because the nightly sync overwrites it.
     - Staging, and where snapshots promote (`staging` or `main`). A staging Pressable lists
-      as live-type can't be enrolled: promote into `main` until it is converted.
+      as live-type can't be enrolled: promote into `main` until it is converted. Propose
+      `staging` only when the `staging` branch holds nothing `main` lacks (checks.md, *Where
+      snapshots promote*): a snapshot merged into a branch carrying unreleased work
+      conflicts, and can't reach production until that work ships.
     - The run time: 30 minutes from every other enrolled site.
     - Whether a `master` production branch is renamed to `main` first (checks.md, step 10).
 
@@ -87,7 +90,10 @@ Every check, with its command and what ✓ means, is in
     - Set dev's environment type through Pressable's `update_site_wp_environment_type`
       (`development`), and staging's (`staging`).
     - Define Mantle's clone constant on dev when production runs Mantle (checks.md, step 3).
-    - Print the exact DNS records for a person to add.
+    - A missing dev is a clone of production (checks.md, *A new dev*). Pressable refuses
+      the clone unless the seat has the Clone site role on that site.
+    - Add dev's two proxied A records in `linchpin.build`, or print them when the Cloudflare
+      API isn't available.
     - Add the status-route Access application, or print its settings when the Cloudflare API
       isn't available (checks.md, step 5).
 
@@ -103,7 +109,15 @@ Every check, with its command and what ✓ means, is in
     - **`--dev-ssh-user`** is the deploy account's login on dev (checks.md, step 10).
     - **`--ci-workflow CI`** while the prep PR isn't merged yet. Otherwise `convert-repo`
       detects the old workflows that never run, and Rolling Maintenance waits on those.
-    - **`--close-windows`** only when every window holds Renovate's commits alone.
+    - **`--close-windows`** only when every window holds Renovate's commits alone. A
+      person's only commits being merges of Renovate's PRs still count as a person's: they
+      decide.
+    - **`--apply` only after the prep PR has merged.** `convert-repo` force-pushes
+      `issue/<task>` from the production branch, so a prep PR on the same branch loses its
+      commits.
+    - **A `development` environment that exists with no variables** stops `--apply` with a
+      404: it updates variables rather than creating them. Set them with `gh variable set
+      -e development` and plan again.
     - Read the plan: a line starting `!` needs a person. Then, after a yes, run it again
       with `--apply`.
     - List what it leaves for a person to remove: `deploy-maintenance.yml`, the
@@ -116,6 +130,9 @@ Every check, with its command and what ✓ means, is in
       `--dev-ssh-user` to `convert-repo`, so run it only once the old dev environment is
       gone. Otherwise enroll with `wp sisyphus enroll` (checks.md, step 11). Check the
       environments' roles in api.linchpin.com (step 12), and map the suites (step 14).
+    - **No dev suite:** copy the staging suite, leaving out any test that places an order or
+      sends a form, or make a home-page suite (checks.md, *A dev suite*). The api can't
+      create suites, so a direct Ghost Inspector call needs a person's yes.
     - **Deploy to Dev:** `gh workflow run deploy-dev.yml -R <repo> --ref maintenance`.
       `maintenance` must already hold `deploy-dev.yml`; Rolling Maintenance brings it in when
       the conversion merges.
@@ -147,9 +164,10 @@ Every check, with its command and what ✓ means, is in
   ([secrets and variables](../github-repo-setup/references/secrets-and-variables.md)).
 - **Never turn on Run nightly before Deploy to Dev has passed.** Preflight refuses a dev
   without Safety Net, and the night fails.
-- **DNS records are a person's:** print them, don't add them. The only Access change this
-  skill makes is the status-route application with the reusable Safety Net Status policy,
-  after a yes. Never add a bypass to a client's own application or widen its path.
+- **DNS:** the only records this skill adds are dev's own A records in `linchpin.build`,
+  after a yes. Never touch a client's zone. The only Access change it makes is the
+  status-route application with the reusable Safety Net Status policy, after a yes. Never
+  add a bypass to a client's own application or widen its path.
 - No force push, no `--no-verify`. When a check is blocked by missing access, report `?`
   with what it needs, rather than working around it.
 
