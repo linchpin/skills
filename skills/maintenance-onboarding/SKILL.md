@@ -138,7 +138,9 @@ Every check, with its command and what ✓ means, is in
       the conversion merges.
     - **Turn it on:** once the status route answers `"active":true` and
       `"environment":"development"`, run `sisyphus enroll <production> --enable`, then
-      `sisyphus run <production>`.
+      `sisyphus run <production>` once the enable has finished. Pressable runs the commands
+      of one `run_site_wpcli_commands` call side by side, so a run sent with the enable can
+      start first and fail Preflight with "enrolled but not enabled".
 
     → One run has passed.
 6. **Prove it (phase 4, steps 16–19).** Re-run checks 16–19 when asked, or at each stop of
