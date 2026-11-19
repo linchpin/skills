@@ -1,9 +1,9 @@
 ---
 name: commit-and-release
 description: Write commit messages and PR titles that satisfy a Linchpin repo's own commitlint rules, and stay out of the way of release-please, which owns versions and CHANGELOG.md. Use when composing a commit message, when commitlint or a husky hook rejects one, when opening a PR, when asked how a change gets released or deployed, or before touching a version number anywhere. Not for running lint or tests — use `quality-gates`. Not for naming the branch or resolving the task key in the scope — use `task-tracking`.
-when_to_use: Also when commitlint or a husky hook rejects a commit message, when a PR title fails the convention check, when asked what version a change will cut or how it gets deployed, or before touching a version number or CHANGELOG.md by hand.
-version: 1.2.0
-allowed-tools: Read Grep Glob Bash(git status*) Bash(git log*) Bash(git diff*) Bash(gh pr view*) Bash(gh pr checks*) Bash(npx commitlint*)
+when_to_use: Also when commitlint or a husky hook rejects a commit message, when a PR title fails the convention check, when asked what version a change will cut or how it gets deployed, or before touching a version number or CHANGELOG.md by hand. And when writing a commit, PR, comment or doc in a public repository, where nothing may name a client.
+version: 1.3.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(git log*) Bash(git diff*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh repo view*) Bash(npx commitlint*)
 ---
 
 # Commit and release
@@ -47,6 +47,7 @@ write and what release-please generates. Defers task resolution **and branch nam
 | `release-please-config.json` → `extra-files` | **Every file whose version string is machine-owned** — never hand-edit these |
 | `.release-please-manifest.json` | The current version (also machine-owned) |
 | `.github/workflows/` | Whether release and deploy are automated, and off which branch |
+| `gh repo view --json visibility -q .visibility` | `PUBLIC` means everything you write here is world-readable — see **Public repositories** |
 
 Real variation to expect: one repo accepts `update` and `improve` in the header pattern,
 another omits `update`, another also accepts `NO-JIRA`, and another enforces only
@@ -99,6 +100,25 @@ version bump, so use it deliberately.
 `chore(main): release …` is release-please's own commit. Never write one by hand, and never
 use `main` as a scope for normal work.
 
+## Public repositories
+
+On a `PUBLIC` repo, every commit message, branch name, PR title and body, release note and
+`CHANGELOG.md` line is world-readable, and so are the code comments and docs the change
+adds. Describe the problem fixed or the feature added, never the client it was for:
+
+- No client names, initials, repository names, domains, hostnames, site or server IDs, or
+  links to a client repo's runs. "A client site", "one caller" or "the pilot" makes the point.
+- Examples use placeholders (`linchpin/example-site`, `www.example.com`, `123456`), not the
+  site the change was tested on.
+- Evidence from a client repo (failed runs, plugin lists, error output) goes in the private
+  ClickUp task, which the PR links.
+- The scope is never a client task key. That rule is [`task-tracking`](../task-tracking/SKILL.md)'s.
+
+Catch it before pushing, because removing it afterwards only goes so far. Commits stay in
+history, and GitHub keeps the old text of an edited PR description and a renamed title where
+anyone can read them. A past `CHANGELOG.md` entry can be reworded by hand, since
+release-please only adds new entries above it.
+
 ## Procedure
 
 1. **Resolve the scope key** via [`task-tracking`](../task-tracking/SKILL.md) — an existing
@@ -150,31 +170,24 @@ use `main` as a scope for normal work.
 
 ## Type → changelog behavior
 
-Configured per repo; the common shape:
-
-| Types | Effect |
-| --- | --- |
-| `feat`, `feature` | Features section; minor bump (pre-1.0 config may bump patch) |
-| `fix` | Bug Fixes section; patch bump |
-| `improve`, `tweak`, `refactor` | "Changes to Existing Features" section |
-| `docs`, `build`, `ci` | Usually hidden from the changelog |
-| `chore`, `style`, `test`, `perf`, `revert` | Their own sections |
-| any type with `!` or `BREAKING CHANGE:` | Major bump |
-
-A type missing from `changelog-sections` still commits fine but may never surface in a
-release note — pick the type that reflects what actually changed.
+Which types reach the changelog, and what each bumps, is set per repo in
+`release-please-config.json`. The common shape is in
+[`references/changelog-sections.md`](references/changelog-sections.md).
 
 ## Guardrails
 
 - **Never** hand-edit `CHANGELOG.md`, `.release-please-manifest.json`, or any version string
   in a file listed under `extra-files` (plugin header, `style.css`, `readme.txt`,
   `package.json`, `composer.json`). Release-please rewrites them and the conflict lands on
-  whoever merges next.
+  whoever merges next. The one exception is rewording a past `CHANGELOG.md` entry that names
+  a client in a public repo.
 - **Never** create git tags or GitHub releases by hand — tags are what deploys fire on.
 - **Never** commit with `--no-verify`, and never loosen `commitlint.config.js` to make a
   message pass.
 - **Never** commit directly to `main` or force-push a shared branch.
 - **Never** invent a task key. `NO-TASK` is a legitimate answer; a fabricated key is not.
+- **Never** name a client in a public repo, whether in a commit, PR, release note, comment,
+  doc or example. See **Public repositories**.
 - Don't bundle unrelated changes into one commit — release notes are generated from these
   messages, and a mixed commit lands in the wrong section.
 
@@ -188,5 +201,7 @@ release note — pick the type that reflects what actually changed.
       punctuation outside `[\w\d\s,\-]`.
 - [ ] PR title follows the same convention, was linted in its own right (not just the
       commits), and the body links the ClickUp task.
+- [ ] On a public repo, nothing in the commits, PR, comments, docs or examples names a
+      client.
 - [ ] No version string, `CHANGELOG.md`, manifest, or tag was written by hand.
 - [ ] The resulting release PR shows the change under the expected section.

@@ -2,8 +2,8 @@
 name: task-tracking
 description: Associate every unit of work with a task in Linchpin's task platform (ClickUp), update it when the work lands — logging its time and closing it once the final deploy is verified — and leave a handoff when stopping mid-flight. Use whenever starting work, creating a TODO, scoping work that spans sessions or PRs, preparing to commit, finishing a change, logging time, closing a task after a deploy, or pausing work someone else may pick up — and whenever anyone says "create an issue", "create a task", "file a ticket", or "log a bug", all ClickUp tasks unless they name GitHub. Commits carry the task key (e.g. LINCHPIN-5113) or NO-TASK. Not for sweeping many stale tasks — use `task-closeout`.
 when_to_use: Also when someone says "create an issue", "file a ticket", "log a bug", "make a task", "log my time", "how long did that take", "close the task", "it's deployed", asks for the task or issue number, or is stopping mid-flight and the state needs handing over.
-version: 1.6.0
-allowed-tools: Read Grep Glob Bash(git status*) Bash(git branch --show-current*) Bash(git log*) Bash(node *scripts/session-time.mjs*) Bash(gh search prs*) Bash(gh pr view*) Bash(gh release list*) Bash(gh api repos/*/compare/*)
+version: 1.7.0
+allowed-tools: Read Grep Glob Bash(git status*) Bash(git branch --show-current*) Bash(git log*) Bash(gh repo view*) Bash(node *scripts/session-time.mjs*) Bash(gh search prs*) Bash(gh pr view*) Bash(gh release list*) Bash(gh api repos/*/compare/*)
 ---
 
 # Task tracking (ClickUp)
@@ -224,6 +224,12 @@ never commit straight to `main`.
   the key so GitHub ↔ ClickUp stay connected; for NO-TASK, note there's no task. The title
   follows the commit convention, whose grammar is `commit-and-release`'s.
 - Keep every commit on the branch using the same scope.
+- **In a public repo, never use a client key.** A client Space's custom-ID prefix is the
+  client's initials, so the key alone names the client. When `gh repo view --json visibility
+  -q .visibility` says `PUBLIC`, the branch, commits and PR carry a `LINCHPIN-` task for the
+  shared change, or `NO-TASK`. The client task still gets the step 5 comment with the PR
+  link, which stays private in ClickUp. Everything else a public repo must leave out belongs
+  to `commit-and-release`.
 
 ## Reducing friction
 
@@ -247,7 +253,8 @@ Call signatures for every step: [`references/clickup-mcp-tools.md`](references/c
 - **Never invent a task key**, and never fall back to the internal id (`86badg2te`) because
   the create call returned `custom_id: null` — read it back. Unresolvable means `NO-TASK`.
 - **Never assume the custom-ID prefix** — it's Space-specific; read it off the task rather
-  than reaching for `LINCHPIN-` on non-Linchpin work.
+  than reaching for `LINCHPIN-` on non-Linchpin work. The exception runs the other way: a
+  public repo never carries a client key, even for client work (see **Scope, branch & PR**).
 - **Never claim a task exists that you didn't create.** A missing MCP or a failed call gets
   said out loud, not treated as though the board was updated.
 - **Never block the user** waiting for a task decision. NO-TASK is always available and is
@@ -275,6 +282,7 @@ Call signatures for every step: [`references/clickup-mcp-tools.md`](references/c
       every task or subtask carries a "done when".
 - [ ] The branch matches the key (`issue/<custom_id>` or `no-task/<slug>`), every commit on it
       carries the same scope, and the PR body links `app.clickup.com/t/<custom_id>`.
+- [ ] On a public repo, no client task key appears in the branch, the commits or the PR.
 - [ ] For task-backed work: a comment with the PR link exists, and the status reflects
       reality without over-claiming completion.
 - [ ] Time for the finished work is logged as the person's confirmed figure, dated when the
