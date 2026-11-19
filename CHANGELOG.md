@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/linchpin/skills/compare/v1.11.0...v1.11.1) (2026-11-19)
+
+
+### Bug Fixes 🐛
+
+* **LINCHPIN-6181:** Add each dev's status route to the shared Safety Net app by exact hostname ([#83](https://github.com/linchpin/skills/issues/83)) ([32b893e](https://github.com/linchpin/skills/commit/32b893e110efe88cbed2e65be3918dfc0f69e1b1))
+
 ## [1.11.0](https://github.com/linchpin/skills/compare/v1.10.0...v1.11.0) (2026-11-17)
 
 
