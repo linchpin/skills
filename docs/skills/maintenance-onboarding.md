@@ -44,7 +44,7 @@ Canonical for the 19-step onboarding checklist, the order of its four phases, an
 - Never picks dev when there's a choice, and never one that takes `develop` or other feature work.
 - Never names dev's GitHub environment anything but `development`.
 - Never merges a PR, renames a production branch, closes a window holding people's commits, or deletes a branch or an environment: those are a person's.
-- Only adds DNS records for dev's own `linchpin.build` hostname, after a yes, and never in a client's zone. Its only Access change is the status-route application, after a yes.
+- Only adds DNS records for dev's own `linchpin.build` hostname, after a yes, and never in a client's zone. Its only Access change is adding dev's status route, by its exact hostname, to the shared Safety Net Status application, after a yes.
 - Proposes `staging` for snapshots only when the `staging` branch holds nothing the production branch lacks.
 - Never turns on the nightly run before Deploy to Dev has passed.
 

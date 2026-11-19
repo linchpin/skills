@@ -68,13 +68,20 @@ The answers for steps 4 and 5:
 **The status-route application (step 5).** It writes, so only after a person's yes, through
 the Cloudflare API (`/accounts/<account>/access/...`):
 
-- The account holds a reusable Bypass policy named **Safety Net Status** (Include:
-  Everyone). List `access/policies` and reuse it; create it only when it's missing.
-- Add one self-hosted application per dev for the path `<dev>/wp-json/safety-net/v1/status`
-  alone, named `Linchpin - <Client> - Dev - Safety Net status`, with a 24-hour session,
-  hidden from the App Launcher, and that one policy. The path application takes precedence
-  over the client's own application for that path only.
-- Never add the bypass to the client's own application, and never widen the path.
+- One shared application holds every dev's status route: **Linchpin Dev/Build - Safety Net
+  Status**, with the reusable Bypass policy **Safety Net Status : Dev,Build,Site ONLY**
+  (Include: Everyone) and nothing else. Add dev's path, `<dev>/wp-json/safety-net/v1/status`,
+  as one more destination on it (an application takes up to 50). Create the application
+  only when it's missing, with a 24-hour session and hidden from the App Launcher.
+- **Name dev's exact hostname, never a wildcard.** Access picks the application with the more
+  specific hostname before it compares paths, so `*.linchpin.build/wp-json/...` loses to a
+  client application that names `<dev>` exactly, such as `Linchpin - LCB`, and the route stays
+  behind the login. An exact hostname with the path wins for that path only.
+- Never add the bypass to a host-wide application, the client's or one made for dev: a
+  Bypass policy is evaluated before Allow, so the whole site opens.
+- A dev in `*.linchpin.dev` needs no application of its own: the `Linchpin Development
+  Environments` wildcard already allows Linchpin and bypasses Ghost Inspector's IPs. One made
+  for dev must carry `Ghost Inspector Skip Access` too, or the nightly tests hit the login.
 - ✓ when the status curl returns JSON and `https://<dev>/` still redirects to Access.
 
 **A new dev (step 1).** It writes, so only after a person's yes:

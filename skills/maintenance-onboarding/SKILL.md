@@ -2,7 +2,7 @@
 name: maintenance-onboarding
 description: Bring a site onto Sisyphus's nightly rolling maintenance — check its Pressable dev site, environment type, DNS, Cloudflare Access, PR checks, PHP pin, GitHub environments and secrets, enrollment and Ghost Inspector suites against the 19-step onboarding checklist, fix what it can with approval, and run linchpin/actions' convert-repo and onboard-site. Use when onboarding or enrolling a site in nightly maintenance, when a new site's first night fails at Preflight, or when Deploy to Dev refuses to install Safety Net. Not for the monthly maintenance/YYYY-MM pass — use `maintenance-window`.
 when_to_use: Also when someone says "roll out nightly maintenance to the next client", "convert this repo to rolling maintenance", "get this site on Sisyphus", "is this site ready for nightly runs", "Safety Net won't install on dev", or "Preflight timed out" on a site that has never passed a night — and at the start of a task made from the onboarding template.
-version: 0.3.0
+version: 0.3.1
 allowed-tools: Read Grep Glob Bash(gh auth status*) Bash(gh repo view*) Bash(gh variable list*) Bash(gh variable get*) Bash(gh secret list*) Bash(gh pr list*) Bash(gh pr view*) Bash(gh pr checks*) Bash(gh run list*) Bash(gh run view*) Bash(gh issue list*) Bash(git ls-remote*) Bash(dig +short*)
 ---
 
@@ -94,8 +94,8 @@ Every check, with its command and what ✓ means, is in
       the clone unless the seat has the Clone site role on that site.
     - Add dev's two proxied A records in `linchpin.build`, or print them when the Cloudflare
       API isn't available.
-    - Add the status-route Access application, or print its settings when the Cloudflare API
-      isn't available (checks.md, step 5).
+    - Add dev's status route, by its exact hostname, to the shared Safety Net Status
+      application, or print it when the Cloudflare API isn't available (checks.md, step 5).
 
     → Checks 1–5 are ✓ on a second run.
 4. **Repository (phase 2, steps 6–10).**
@@ -167,9 +167,9 @@ Every check, with its command and what ✓ means, is in
 - **Never turn on Run nightly before Deploy to Dev has passed.** Preflight refuses a dev
   without Safety Net, and the night fails.
 - **DNS:** the only records this skill adds are dev's own A records in `linchpin.build`,
-  after a yes. Never touch a client's zone. The only Access change it makes is the
-  status-route application with the reusable Safety Net Status policy, after a yes. Never
-  add a bypass to a client's own application or widen its path.
+  after a yes. Never touch a client's zone. The only Access change it makes is adding
+  dev's status route, by its exact hostname, to the shared Safety Net Status application,
+  after a yes. Never add a bypass to a host-wide application or widen the path.
 - No force push, no `--no-verify`. When a check is blocked by missing access, report `?`
   with what it needs, rather than working around it.
 
