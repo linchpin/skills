@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/linchpin/skills/compare/v1.11.1...v1.12.0) (2026-11-19)
+
+
+### Features ✨
+
+* **LINCHPIN-6220:** Keep client names and client task keys out of public repositories ([#85](https://github.com/linchpin/skills/issues/85)) ([41d9c6d](https://github.com/linchpin/skills/commit/41d9c6d077c852932561ad50e3991bd16db629d1))
+
 ## [1.11.1](https://github.com/linchpin/skills/compare/v1.11.0...v1.11.1) (2026-11-19)
 
 
