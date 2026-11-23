@@ -1,7 +1,8 @@
 ---
 name: wp-block-conventions
-description: Build and edit custom Gutenberg blocks the way Linchpin structures them — apiVersion 3 under the `linchpin/` namespace, dynamic `render.php` plus Interactivity API `view.js`, parent/child blocks wired through block context, and the shared wp-scripts build with `--blocks-manifest --webpack-copy-php --experimental-modules`. Use when creating a custom block, editing an existing one, deciding whether a block belongs in the shared linchpin-blocks plugin or a project's functionality plugin, or reviewing block code. Not for authoring page content from blocks — use `wordpress-blocks`.
-version: 1.2.0
+description: Build and edit custom Gutenberg blocks the way Linchpin structures them — apiVersion 3 under the `linchpin/` namespace, dynamic `render.php` plus Interactivity API `view.js`, parent/child blocks wired through block context, and the shared wp-scripts build with `--blocks-manifest --webpack-copy-php --experimental-modules`. Use when creating a custom block, editing an existing one, adding a control, style setting or toolbar button to a core block in the editor, deciding whether a block belongs in the shared linchpin-blocks plugin or a project's functionality plugin, or reviewing block or editor JavaScript. Not for authoring page content from blocks — use `wordpress-blocks`.
+version: 1.3.0
+when_to_use: Also when someone asks to "add a setting to the Quote block", "add a color picker to a block style", "extend a core block", "add a sidebar panel in the editor", or writes an editor.BlockEdit filter, registerPlugin or registerFormatType.
 allowed-tools: Read Grep Glob Bash(npm run lint:js) Bash(npm run lint:css) Bash(npm run build)
 ---
 
@@ -17,6 +18,8 @@ This skill is the house layer. Generic "how blocks work" is the upstream
 ## When to use
 
 - Creating a new custom block, or extending an existing one.
+- Adding editor JavaScript to a core block or to the editor itself: a control on a core
+  block, a setting for a block style, a toolbar button, a sidebar plugin, a format type.
 - Deciding where a block belongs — shared library vs one project.
 - Reviewing block code for house consistency.
 - A block builds but doesn't register, or the editor shows it as invalid.
@@ -29,8 +32,8 @@ templates and `theme.json` — upstream `wp-block-themes`.
 ## Owns
 
 Canonical for: where blocks live, the file layout, house `block.json` fields, the
-dynamic-render + Interactivity pattern, parent/child context, and the build/registration
-chain. Defers block *semantics* to upstream and content authoring to `wordpress-blocks`.
+dynamic-render + Interactivity pattern, parent/child context, the build/registration
+chain, and **where editor extensions live and how they are built and enqueued**. Defers block *semantics* to upstream and content authoring to `wordpress-blocks`.
 
 ## Preflight — which home does this block belong in?
 
@@ -131,7 +134,38 @@ build/blocks-manifest.php )`, with a per-block `register_block_type()` loop as t
 **A block that doesn't appear in the editor is usually unbuilt, not misregistered** — build
 first, then debug.
 
+## Editor extensions
+
+JavaScript that changes the editor without being a block (a filter on a core block, a
+setting for a block style, a toolbar button, a sidebar plugin) is built exactly like block
+code. It is the case most often hand-rolled, because it looks too small to need a build.
+
+- **It lives in the project's `blocks/` workspace**, under `src/editor/<extension>/`, beside
+  the blocks. Find that workspace first: the nested `package.json` whose `devDependencies`
+  include `@wordpress/scripts`. A theme with its own legacy webpack setup (Foundation, Sass
+  only) is not that workspace. If the project has none, stop and ask before creating one.
+- **Import from `@wordpress/*` packages**, never from `window.wp`. The build turns each
+  import into a dependency in the generated `.asset.php`.
+- **Add it as an entry** in `blocks/webpack.config.js` that spreads the default config, so
+  block discovery keeps working. With `--experimental-modules` the default config is an
+  array; extend the first (classic script) config.
+- **Enqueue on `enqueue_block_editor_assets` from `build/editor/<extension>.asset.php`**:
+  dependencies and version both come from that file. Skip quietly when it is missing.
+- **Decide where a picked value is stored** (a `supports` value, a class in `className`, or
+  a registered attribute) and say why in the PR.
+- **A block style variation needs no JavaScript.** `register_block_style` plus CSS in the
+  theme. Reach for an extension only when the style needs a setting.
+
+Config template, module and enqueue code, and the storage table:
+[`references/editor-extensions.md`](references/editor-extensions.md).
+
 ## Guardrails
+
+- **Never ship editor JavaScript that reads `window.wp` or skips the build**, however small
+  it is. It works, so it slips through, and then it has a hand-typed dependency list, no lint
+  and no translations. Put it in the `blocks/` workspace.
+- **Never put source in a folder a build cleans** (a theme's `js/` emptied by
+  `CleanWebpackPlugin`, any `build/`). The next build deletes it.
 
 - **Never edit anything in `build/`** — it's generated, and the next build discards it.
 - **Never put a client-specific block in the shared library** (see Preflight).
@@ -159,3 +193,6 @@ first, then debug.
       ([`wp-studio-cli`](../wp-studio-cli/SKILL.md) `validate_blocks`).
 - [ ] `npm run lint:js` and `npm run lint:css` pass in that workspace
       ([`quality-gates`](../quality-gates/SKILL.md)).
+- [ ] Editor extensions: source under `blocks/src/editor/`, `@wordpress/*` imports only, a
+      `webpack.config.js` entry, and an `enqueue_block_editor_assets` hook that reads the
+      generated `.asset.php`. No `window.wp` anywhere outside `build/`.
