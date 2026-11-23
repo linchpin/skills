@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/linchpin/skills/compare/v1.11.1...v1.12.0) (2026-11-23)
+
+
+### Features ✨
+
+* **LINCHPIN-6220:** Keep client names and client task keys out of public repositories ([#85](https://github.com/linchpin/skills/issues/85)) ([41d9c6d](https://github.com/linchpin/skills/commit/41d9c6d077c852932561ad50e3991bd16db629d1))
+* **NO-TASK:** Teach the wp-scripts build for editor extensions of core blocks ([#87](https://github.com/linchpin/skills/issues/87)) ([e2f90a5](https://github.com/linchpin/skills/commit/e2f90a59e703fb5c82c7df21d8d6c02d6d06d9ad))
+
 ## [1.11.1](https://github.com/linchpin/skills/compare/v1.11.0...v1.11.1) (2026-11-19)
 
 
